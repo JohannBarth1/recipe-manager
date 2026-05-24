@@ -1192,71 +1192,50 @@ function showToast(msg) {
 }
 
 // ══════════════════════════════════════════════════
-// DATA & EXPORT
+// EPUB EXPORT
 // ══════════════════════════════════════════════════
-const LS_KEY = 'hk_recipe_book_v2';
 async function exportEpub() {
-    const data = JSON.parse(localStorage.getItem(LS_KEY)) || DEFAULT_DATA;
-    const zip = new JSZip();
-
-    // 1. CSS for Page Breaks and Styling
-    const css = `
-        body { font-family: 'Helvetica', sans-serif; line-height: 1.6; padding: 2em; }
-        .page-break { page-break-before: always; }
-        .cover { text-align: center; margin-top: 20%; }
-        h1 { color: #6b4c2a; border-bottom: 2px solid #c8952a; }
-        h2 { color: #c0571a; margin-top: 1em; }
-        h3 { color: #8a7060; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.1em; }
-        ul, ol { margin-bottom: 1em; }
-    `;
-
-    // 2. Build the HTML content
-    let htmlContent = `<html><head><style>${css}</style></head><body>`;
-    
-    // Cover Page
-    htmlContent += `
-        <div class="cover">
-            <h1>Home Kitchen</h1>
-            <p><em>My Personal Recipe Collection</em></p>
-        </div>`;
-    
-    data.chapters.forEach(chapter => {
-        // Chapter as a top-level page
-        htmlContent += `<div class="page-break"><h1>${chapter.name}</h1></div>`;
-        
-        const recipes = data.recipes.filter(r => r.chapterId === chapter.id);
-        recipes.forEach(r => {
-            // Recipe as a nested page
-            htmlContent += `<div class="page-break">
-                <h2>${r.title}</h2>
-                <p><em>${r.desc}</em></p>
-                <h3>Ingredients</h3>
-                <ul>${r.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
-                <h3>Instructions</h3>
-                <ol>${r.steps.map(s => `<li>${s}</li>`).join('')}</ol>
-                ${r.tip ? `<p><strong>✦ Tip:</strong> ${r.tip}</p>` : ''}
-            </div>`;
-        });
+  showToast('Building EPUB…');
+  const zip = new JSZip();
+  zip.file('mimetype', 'application/epub+zip', {compression:'STORE'});
+  zip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:schemas:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
+  const css = `body{font-family:Georgia,serif;margin:2em;line-height:1.6}h1{font-size:2em;border-bottom:2px solid #333;padding-bottom:.3em;margin-top:1em}h2{font-size:1.5em;margin-top:2em;border-bottom:1px solid #aaa;padding-bottom:.2em}h3{font-size:1.2em;margin-top:1.5em}ul,ol{margin:.5em 0 .5em 1.5em}li{margin:.3em 0}.ing{background:#f9f9f9;border-left:3px solid #888;padding:.8em 1em;margin:1em 0}.tip{font-style:italic;color:#555;padding:.6em 1em;border:1px dashed #bbb;margin-top:1em}.intro{font-style:italic;color:#555;margin-bottom:1.5em}hr{border:none;border-top:1px solid #ccc;margin:2em 0}`;
+  zip.file('OEBPS/style/main.css', css);
+  const x = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const wrap = (title, body) => `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${x(title)}</title><link rel="stylesheet" type="text/css" href="style/main.css"/></head><body>${body}</body></html>`;
+  zip.file('OEBPS/cover.xhtml', wrap('Home Kitchen Recipe Book', `<h1>Home Kitchen Recipe Book</h1><p class="intro">A collection of beloved recipes.</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul>`));
+  const mf = [`<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>`,`<item id="css" href="style/main.css" media-type="text/css"/>`,`<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>`,`<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>`];
+  const sp = [`<itemref idref="cover"/>`];
+  const nc = [`<navPoint id="cover" playOrder="1"><navLabel><text>Title Page</text></navLabel><content src="cover.xhtml"/></navPoint>`];
+  const ni = [`<li><a href="cover.xhtml">Title Page</a></li>`];
+  let po = 2;
+  for (const ch of data.chapters) {
+    const rs = data.recipes.filter(r => r.chapterId === ch.id);
+    let body = `<h1>${x(ch.name)}</h1>`;
+    rs.forEach((r,i) => {
+      body += `<h2>${x(r.title)}</h2>`;
+      if (r.desc) body += `<p class="intro">${x(r.desc)}</p>`;
+      body += `<h3>Ingredients</h3><div class="ing"><ul>${r.ingredients.map(i=>`<li>${x(i)}</li>`).join('')}</ul></div>`;
+      body += `<h3>Instructions</h3><ol>${r.steps.map(s=>`<li>${x(s)}</li>`).join('')}</ol>`;
+      if (r.tip) body += `<div class="tip"><strong>Tip:</strong> ${x(r.tip)}</div>`;
+      if (i < rs.length-1) body += '<hr/>';
     });
-    
-    htmlContent += `</body></html>`;
-
-    // 3. Create EPUB structure
-    zip.file("mimetype", "application/epub+zip");
-    zip.file("OEBPS/content.html", htmlContent);
-    
-    // Minimal Container
-    zip.file("META-INF/container.xml", '<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="content.opf" media-type="application/oebps-package+xml"/></container>');
-    
-    // Minimal OPF
-    zip.file("content.opf", `<?xml version="1.0" encoding="UTF-8"?><package version="3.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="pub-id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>Home Kitchen Recipe Book</dc:title></metadata><manifest><item id="c1" href="OEBPS/content.html" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="c1"/></spine></package>`);
-
-    // 4. Generate and download
-    const blob = await zip.generateAsync({ type: "blob" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "Home_Kitchen_Recipes.epub";
-    link.click();
+    const fname = `ch_${ch.id}.xhtml`;
+    zip.file(`OEBPS/${fname}`, wrap(ch.name, body));
+    mf.push(`<item id="ch_${ch.id}" href="${fname}" media-type="application/xhtml+xml"/>`);
+    sp.push(`<itemref idref="ch_${ch.id}"/>`);
+    nc.push(`<navPoint id="ch_${ch.id}" playOrder="${po}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${fname}"/></navPoint>`);
+    ni.push(`<li><a href="${fname}">${x(ch.name)}</a></li>`);
+    po++;
+  }
+  zip.file('OEBPS/content.opf', `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">home-kitchen-recipe-book</dc:identifier><dc:title>Home Kitchen Recipe Book</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
+  zip.file('OEBPS/toc.ncx', `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="home-kitchen-recipe-book"/></head><docTitle><text>Home Kitchen Recipe Book</text></docTitle><navMap>${nc.join('')}</navMap></ncx>`);
+  zip.file('OEBPS/nav.xhtml', `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><h1>Contents</h1><ol>${ni.join('')}</ol></nav></body></html>`);
+  const blob = await zip.generateAsync({type:'blob', mimeType:'application/epub+zip'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'Home_Kitchen_Recipe_Book.epub'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('EPUB downloaded!');
 }
 
 // ══════════════════════════════════════════════════
