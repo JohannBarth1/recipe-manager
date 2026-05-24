@@ -6,81 +6,1264 @@
 <title>Home Kitchen — Recipe Book</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
-/* ... Keep all your existing CSS styles exactly as they are ... */
-/* (I have omitted the CSS here for brevity, but keep your existing styles) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+
+:root {
+  --cream: #faf6f0;
+  --warm-white: #fffdf9;
+  --ink: #1a1208;
+  --brown: #6b4c2a;
+  --rust: #c0571a;
+  --gold: #c8952a;
+  --light-brown: #e8d5b7;
+  --border: #d4b896;
+  --muted: #8a7060;
+  --panel: #f2ebe0;
+  --danger: #b03030;
+  --header-h: 64px;
+  --mob-nav-h: 60px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── HEADER ───────────────────────────────────── */
+header {
+  background: var(--ink);
+  color: var(--cream);
+  padding: 0 1.5rem;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid var(--gold);
+  flex-shrink: 0;
+  gap: 0.8rem;
+}
+.brand-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: var(--light-brown);
+  white-space: nowrap;
+}
+.brand-sub {
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 2px;
+}
+.header-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.hbtn {
+  border: none;
+  padding: 0.45rem 0.9rem;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.hbtn-epub { background: var(--rust); color: #fff; }
+.hbtn-epub:hover { background: #a04415; }
+.hbtn-save { background: var(--gold); color: #fff; }
+.hbtn-save:hover { background: #a87820; }
+.hbtn-load { background: transparent; color: var(--light-brown); border: 1px solid #555; }
+.hbtn-load:hover { background: #2a2010; }
+
+/* ── APP BODY ─────────────────────────────────── */
+.app {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════
+   DESKTOP SIDEBAR
+══════════════════════════════════════════════ */
+.sidebar {
+  width: 250px;
+  min-width: 210px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sidebar-hdr {
+  padding: 0.9rem 1.2rem 0.6rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+}
+.chapter-list { flex: 1; overflow-y: auto; padding: 0.4rem 0; }
+.chapter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem 0.5rem 0.9rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.88rem;
+  color: var(--brown);
+  cursor: pointer;
+  user-select: none;
+  border-left: 3px solid transparent;
+  transition: background 0.15s;
+}
+.chapter-heading:hover { background: var(--light-brown); }
+.chapter-heading .ch-arrow { font-size: 0.6rem; color: var(--muted); transition: transform 0.2s; }
+.chapter-heading.open .ch-arrow { transform: rotate(90deg); }
+.recipe-list { display: none; }
+.recipe-list.open { display: block; }
+.recipe-item {
+  padding: 0.35rem 1rem 0.35rem 1.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.12s;
+}
+.recipe-item:hover { background: rgba(200,149,42,0.12); }
+.recipe-item.active { background: rgba(192,87,26,0.1); border-left-color: var(--rust); font-weight: 700; color: var(--rust); }
+.sidebar-footer {
+  border-top: 1px solid var(--border);
+  padding: 0.7rem;
+  display: flex;
+  gap: 0.4rem;
+}
+.sidebar-footer button {
+  flex: 1;
+  padding: 0.5rem 0.3rem;
+  font-size: 0.7rem;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--border);
+}
+.btn-add-recipe { background: var(--gold); color: #fff; border-color: var(--gold); }
+.btn-add-recipe:hover { background: #a87820; }
+.btn-add-chapter { background: transparent; color: var(--brown); }
+.btn-add-chapter:hover { background: var(--light-brown); }
+
+/* ══════════════════════════════════════════════
+   MAIN PANEL
+══════════════════════════════════════════════ */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Welcome */
+.welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted);
+}
+.welcome-icon { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.35; }
+.welcome h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--brown); margin-bottom: 0.5rem; }
+.welcome p { font-size: 0.88rem; max-width: 300px; line-height: 1.6; }
+
+/* Recipe view */
+.recipe-view { padding: 2rem 2.5rem; max-width: 740px; display: none; }
+.recipe-view.active { display: block; }
+.recipe-chapter-tag {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.recipe-view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.3rem;
+}
+.recipe-view h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+.view-actions { display: flex; gap: 0.4rem; flex-shrink: 0; margin-top: 0.4rem; }
+.btn-edit, .btn-delete {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.72rem;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.15s;
+}
+.btn-edit { background: transparent; color: var(--brown); border-color: var(--border); }
+.btn-edit:hover { background: var(--light-brown); }
+.btn-delete { background: transparent; color: var(--danger); border-color: #e0b0b0; }
+.btn-delete:hover { background: #fbeaea; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+.recipe-desc { font-style: italic; color: var(--muted); font-size: 0.93rem; margin-bottom: 1.2rem; line-height: 1.6; }
+.section-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rust);
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+}
+.ingredients-box {
+  background: var(--panel);
+  border-left: 3px solid var(--gold);
+  padding: 0.9rem 1.1rem;
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 1.3rem;
+}
+.ingredients-box ul { padding-left: 1.1rem; }
+.ingredients-box li { font-size: 0.88rem; margin-bottom: 0.3rem; line-height: 1.5; }
+.steps-list { padding-left: 0; list-style: none; margin-bottom: 1.3rem; }
+.steps-list li { display: flex; gap: 0.9rem; margin-bottom: 0.8rem; font-size: 0.88rem; line-height: 1.6; }
+.step-num {
+  flex-shrink: 0;
+  width: 1.5rem; height: 1.5rem;
+  background: var(--rust);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 700;
+  margin-top: 0.15rem;
+}
+.recipe-tip {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.83rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+}
+.recipe-tip::before { content: "✦ Tip: "; color: var(--gold); font-style: normal; font-weight: 700; }
+
+/* Editor */
+.editor { padding: 2rem 2.5rem; max-width: 740px; display: none; }
+.editor.active { display: block; }
+.editor h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--brown); margin-bottom: 1.3rem; }
+.form-row { margin-bottom: 1rem; }
+.form-row label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+.form-row input, .form-row select, .form-row textarea {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  font-family: 'Lato', sans-serif;
+  font-size: 1rem; /* 1rem prevents iOS zoom */
+  color: var(--ink);
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-row select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7060' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  padding-right: 2.2rem;
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--gold); }
+.form-row textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+.form-hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.25rem; }
+.editor-actions {
+  display: flex; gap: 0.7rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.btn-save {
+  background: var(--rust); color: #fff; border: none;
+  padding: 0.7rem 1.6rem;
+  font-family: 'Lato', sans-serif; font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: 2px; cursor: pointer; transition: background 0.15s;
+}
+.btn-save:hover { background: #a04415; }
+.btn-cancel {
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 0.7rem 1.2rem;
+  font-family: 'Lato', sans-serif; font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: 2px; cursor: pointer; transition: all 0.15s;
+}
+.btn-cancel:hover { background: var(--light-brown); }
+
+/* ══════════════════════════════════════════════
+   MOBILE BOTTOM NAV
+══════════════════════════════════════════════ */
+.mob-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--mob-nav-h);
+  background: var(--ink);
+  border-top: 2px solid var(--gold);
+  z-index: 50;
+}
+.mob-nav-inner {
+  display: flex;
+  height: 100%;
+}
+.mob-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border: none;
+  background: none;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-tab .tab-icon { font-size: 1.3rem; line-height: 1; }
+.mob-tab.active { color: var(--gold); }
+.mob-tab:active { background: rgba(255,255,255,0.05); }
+
+/* Mobile panels — stacked, one visible at a time */
+.mob-panel {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.mob-panel.active { display: flex; }
+
+/* Mobile recipe list panel */
+.mob-list-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.mob-chapter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.2rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--brown);
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.mob-chapter-heading .ch-arrow { transition: transform 0.2s; color: var(--muted); font-size: 0.7rem; }
+.mob-chapter-heading.open .ch-arrow { transform: rotate(90deg); }
+.mob-recipe-list { display: none; }
+.mob-recipe-list.open { display: block; }
+.mob-recipe-row {
+  padding: 0.85rem 1.4rem 0.85rem 1.8rem;
+  font-size: 0.92rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--warm-white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s;
+}
+.mob-recipe-row:active { background: var(--light-brown); }
+.mob-recipe-row .arrow { color: var(--muted); font-size: 0.8rem; }
+
+/* Mobile recipe view */
+.mob-view-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.2rem 1.2rem 1.5rem; }
+.mob-back {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rust);
+  cursor: pointer;
+  margin-bottom: 1rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-view-actions { display: flex; gap: 0.5rem; margin-top: 0.8rem; margin-bottom: 0.4rem; }
+
+/* Mobile editor */
+.mob-editor-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.2rem 1.2rem 2rem; }
+.mob-editor-scroll h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--brown); margin-bottom: 1.2rem; }
+.mob-editor-scroll .form-row textarea { min-height: 120px; }
+.mob-editor-bar {
+  padding: 0.7rem 1rem;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 0.5rem;
+}
+.mob-editor-bar .btn-save { flex: 2; text-align: center; }
+.mob-editor-bar .btn-cancel { flex: 1; text-align: center; }
+
+/* Mobile add buttons bar */
+.mob-add-bar {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.mob-add-bar button {
+  flex: 1;
+  padding: 0.7rem;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-add-bar button:active { filter: brightness(0.9); }
+.mob-btn-recipe { background: var(--gold); color: #fff; border-right: 1px solid rgba(255,255,255,0.2); }
+.mob-btn-chapter { background: var(--brown); color: var(--cream); }
+
+/* Mobile settings panel */
+.mob-settings-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.5rem 1.2rem; }
+.mob-settings-scroll h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--brown); margin-bottom: 1.5rem; }
+.settings-group { margin-bottom: 2rem; }
+.settings-group-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+.settings-btn {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.settings-btn:active { filter: brightness(0.95); }
+.settings-btn .s-icon { font-size: 1.3rem; }
+.settings-btn.epub { background: var(--rust); color: #fff; border-color: var(--rust); }
+.settings-btn.save-data { background: var(--gold); color: #fff; border-color: var(--gold); }
+.settings-btn.load-data { background: var(--warm-white); color: var(--brown); }
+.settings-note { font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-top: 0.3rem; }
+
+/* ── MODAL ─────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(26,18,8,0.55);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.8rem;
+  width: 100%;
+  max-width: 360px;
+}
+.modal h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 1rem; color: var(--brown); }
+.modal .form-row { margin-bottom: 0.8rem; }
+.modal-actions { display: flex; gap: 0.6rem; margin-top: 1.2rem; justify-content: flex-end; }
+
+/* ── TOAST ─────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: calc(var(--mob-nav-h) + 1rem);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: var(--ink);
+  color: var(--light-brown);
+  padding: 0.7rem 1.3rem;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  z-index: 200;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── RESPONSIVE ────────────────────────────────── */
+@media (max-width: 640px) {
+  .sidebar { display: none; }
+  .desktop-main { display: none; }
+  .mob-nav { display: block; }
+  .mob-panels { display: flex; flex-direction: column; flex: 1; overflow: hidden; padding-bottom: var(--mob-nav-h); }
+  .toast { bottom: calc(var(--mob-nav-h) + 0.8rem); }
+  .header-actions .hbtn-epub,
+  .header-actions .hbtn-save,
+  .header-actions .hbtn-load { display: none; }
+  header { padding: 0 1rem; }
+}
+@media (min-width: 641px) {
+  .mob-panels { display: none; }
+  .desktop-main { display: flex; flex: 1; overflow: hidden; }
+  .toast { bottom: 1.5rem; left: auto; right: 2rem; transform: translateY(6px); }
+  .toast.show { transform: translateY(0); }
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="brand-title">Home Kitchen</div>
+    <div class="brand-sub">Recipe Book</div>
+  </div>
+  <div class="header-actions">
+    <button class="hbtn hbtn-load" onclick="loadData()">⬆ Load</button>
+    <button class="hbtn hbtn-save" onclick="saveData()">⬇ Save</button>
+    <button class="hbtn hbtn-epub" onclick="exportEpub()">📖 Export EPUB</button>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- ══ DESKTOP LAYOUT ══ -->
+  <div class="desktop-main">
+    <aside class="sidebar">
+      <div class="sidebar-hdr">Chapters &amp; Recipes</div>
+      <div class="chapter-list" id="deskChapterList"></div>
+      <div class="sidebar-footer">
+        <button class="btn-add-recipe" onclick="desk_showAddRecipe()">+ Recipe</button>
+        <button class="btn-add-chapter" onclick="showAddChapter()">+ Chapter</button>
+      </div>
+    </aside>
+
+    <main class="main" id="deskMain">
+      <div class="welcome" id="deskWelcome">
+        <div class="welcome-icon">📖</div>
+        <h2>Your Recipe Book</h2>
+        <p>Select a recipe to view it, or click <strong>+ Recipe</strong> to add something new.</p>
+      </div>
+      <div class="recipe-view" id="deskRecipeView">
+        <div class="recipe-chapter-tag" id="deskViewChapter"></div>
+        <div class="recipe-view-header">
+          <h1 id="deskViewTitle"></h1>
+          <div class="view-actions">
+            <button class="btn-edit" onclick="desk_editCurrentRecipe()">Edit</button>
+            <button class="btn-delete" onclick="desk_deleteCurrentRecipe()">Delete</button>
+          </div>
+        </div>
+        <hr class="divider"/>
+        <p class="recipe-desc" id="deskViewDesc"></p>
+        <div class="section-label">Ingredients</div>
+        <div class="ingredients-box"><ul id="deskViewIngredients"></ul></div>
+        <div class="section-label">Instructions</div>
+        <ol class="steps-list" id="deskViewSteps"></ol>
+        <div class="recipe-tip" id="deskViewTip" style="display:none"></div>
+      </div>
+      <div class="editor" id="deskEditor">
+        <h2 id="deskEditorTitle">Add Recipe</h2>
+        <div class="form-row"><label>Recipe Name</label><input id="deskFTitle" type="text" placeholder="e.g. Cowboy Coffee Cake"/></div>
+        <div class="form-row"><label>Chapter</label><select id="deskFChapter"></select></div>
+        <div class="form-row"><label>Description</label><textarea id="deskFDesc" rows="2" placeholder="A short description..."></textarea></div>
+        <div class="form-row">
+          <label>Ingredients</label>
+          <textarea id="deskFIngredients" rows="8" placeholder="One ingredient per line&#10;e.g. 2 cups flour"></textarea>
+          <div class="form-hint">One ingredient per line</div>
+        </div>
+        <div class="form-row">
+          <label>Instructions</label>
+          <textarea id="deskFSteps" rows="9" placeholder="One step per line&#10;e.g. Preheat oven to 375F."></textarea>
+          <div class="form-hint">One step per line</div>
+        </div>
+        <div class="form-row"><label>Tip (optional)</label><input id="deskFTip" type="text" placeholder="e.g. No buttermilk? Use milk + 1 tbsp vinegar."/></div>
+        <div class="editor-actions">
+          <button class="btn-save" onclick="desk_saveRecipe()">Save Recipe</button>
+          <button class="btn-cancel" onclick="desk_cancelEdit()">Cancel</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ══ MOBILE LAYOUT ══ -->
+  <div class="mob-panels">
+
+    <!-- Panel 1: Recipe List -->
+    <div class="mob-panel active" id="mobPanelList">
+      <div class="mob-list-scroll" id="mobChapterList"></div>
+      <div class="mob-add-bar">
+        <button class="mob-btn-recipe" onclick="mob_showAddRecipe()">+ Add Recipe</button>
+        <button class="mob-btn-chapter" onclick="showAddChapter()">+ Chapter</button>
+      </div>
+    </div>
+
+    <!-- Panel 2: Recipe View (slides in) -->
+    <div class="mob-panel" id="mobPanelView">
+      <div class="mob-view-scroll">
+        <div class="mob-back" onclick="mob_backToList()">← Recipes</div>
+        <div class="recipe-chapter-tag" id="mobViewChapter"></div>
+        <h1 style="font-family:'Playfair Display',serif;font-size:1.6rem;line-height:1.2;margin-bottom:0.3rem" id="mobViewTitle"></h1>
+        <div class="mob-view-actions">
+          <button class="btn-edit" onclick="mob_editCurrentRecipe()">Edit</button>
+          <button class="btn-delete" onclick="mob_deleteCurrentRecipe()">Delete</button>
+        </div>
+        <hr class="divider"/>
+        <p class="recipe-desc" id="mobViewDesc"></p>
+        <div class="section-label">Ingredients</div>
+        <div class="ingredients-box"><ul id="mobViewIngredients"></ul></div>
+        <div class="section-label">Instructions</div>
+        <ol class="steps-list" id="mobViewSteps"></ol>
+        <div class="recipe-tip" id="mobViewTip" style="display:none;margin-bottom:1rem"></div>
+      </div>
+    </div>
+
+    <!-- Panel 3: Editor -->
+    <div class="mob-panel" id="mobPanelEditor">
+      <div class="mob-editor-scroll">
+        <h2 id="mobEditorTitle">Add Recipe</h2>
+        <div class="form-row"><label>Recipe Name</label><input id="mobFTitle" type="text" placeholder="e.g. Cowboy Coffee Cake" autocomplete="off"/></div>
+        <div class="form-row"><label>Chapter</label><select id="mobFChapter"></select></div>
+        <div class="form-row"><label>Description</label><textarea id="mobFDesc" rows="2" placeholder="A short description..."></textarea></div>
+        <div class="form-row">
+          <label>Ingredients</label>
+          <textarea id="mobFIngredients" rows="7" placeholder="One ingredient per line&#10;e.g. 2 cups flour"></textarea>
+          <div class="form-hint">One ingredient per line</div>
+        </div>
+        <div class="form-row">
+          <label>Instructions</label>
+          <textarea id="mobFSteps" rows="8" placeholder="One step per line&#10;e.g. Preheat oven to 375F."></textarea>
+          <div class="form-hint">One step per line</div>
+        </div>
+        <div class="form-row"><label>Tip (optional)</label><input id="mobFTip" type="text" placeholder="e.g. No buttermilk? Use milk + 1 tbsp vinegar." autocomplete="off"/></div>
+      </div>
+      <div class="mob-editor-bar">
+        <button class="btn-save" onclick="mob_saveRecipe()">Save</button>
+        <button class="btn-cancel" onclick="mob_cancelEdit()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Panel 4: Settings -->
+    <div class="mob-panel" id="mobPanelSettings">
+      <div class="mob-settings-scroll">
+        <h2>Settings</h2>
+        <div class="settings-group">
+          <div class="settings-group-label">Recipe Data</div>
+          <button class="settings-btn save-data" onclick="saveData()">
+            <span class="s-icon">⬇</span>
+            <div><div>Save Data</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Download recipes.json to your device</div></div>
+          </button>
+          <button class="settings-btn load-data" onclick="loadData()">
+            <span class="s-icon">⬆</span>
+            <div><div>Load Data</div><div class="settings-note">Restore from a saved recipes.json file</div></div>
+          </button>
+          <p class="settings-note">Save your data regularly and keep the file alongside this HTML file. Load it back any time to restore your recipes.</p>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-label">Export</div>
+          <button class="settings-btn epub" onclick="exportEpub()">
+            <span class="s-icon">📖</span>
+            <div><div>Export EPUB</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Download for Kobo or other e-readers</div></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /mob-panels -->
+</div><!-- /app -->
+
+<!-- Mobile bottom nav -->
+<nav class="mob-nav">
+  <div class="mob-nav-inner">
+    <button class="mob-tab active" id="tabRecipes" onclick="mob_switchTab('recipes')">
+      <span class="tab-icon">📋</span><span>Recipes</span>
+    </button>
+    <button class="mob-tab" id="tabSettings" onclick="mob_switchTab('settings')">
+      <span class="tab-icon">⚙️</span><span>Settings</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Add Chapter Modal -->
+<div class="modal-overlay" id="chapterModal">
+  <div class="modal">
+    <h3>Add New Chapter</h3>
+    <div class="form-row">
+      <label>Chapter Name</label>
+      <input type="text" id="newChapterName" placeholder="e.g. Soups & Stews" autocomplete="off"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeChapterModal()">Cancel</button>
+      <button class="btn-save" onclick="addChapter()">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileLoad(event)"/>
+
 <script>
-// ... [Keep all your existing data and functions up to exportEpub] ...
+// ══════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════
+const LS_KEY = 'hk_recipe_book_v2';
+
+const DEFAULT_DATA = {
+  chapters: [
+    {id:'breakfast', name:'Breakfast Foods'},
+    {id:'cakes',     name:'Cakes'},
+    {id:'cookies',   name:'Cookies'},
+    {id:'candy',     name:'Candy'},
+    {id:'mains',     name:'Meat & Main Dishes'},
+  ],
+  recipes: [
+    {id:'r1',chapterId:'breakfast',title:'Cowboy Coffee Cake',desc:'A rustic, hearty coffee cake with a thick brown sugar crumble. Simple pantry ingredients, big flavor.',ingredients:['2 cups all-purpose flour','3/4 cup brown sugar, packed','1/4 cup granulated sugar','1/2 tsp salt','1 1/2 tsp cinnamon','1/2 cup cold unsalted butter, cut into pieces','1 tsp baking powder','1/2 tsp baking soda','1 large egg','1 cup buttermilk'],steps:['Preheat oven to 375F (190C). Grease an 8x8 inch baking pan.','Combine flour, both sugars, salt, and cinnamon. Cut in cold butter until the mixture resembles coarse crumbs.','Scoop out 1/2 cup of the crumb mixture and set aside for the topping.','Stir baking powder and baking soda into the remaining mix. Whisk egg and buttermilk, then stir into dry ingredients until just combined.','Spread batter in the pan, sprinkle reserved crumble on top.','Bake 25-30 minutes until golden and a toothpick comes out clean.','Cool 10 minutes before slicing. Serve warm from the pan.'],tip:'No buttermilk? Add 1 tbsp vinegar to 1 cup regular milk, stir, and let sit 5 minutes.'},
+    {id:'r2',chapterId:'breakfast',title:'Morning Maple Muffins',desc:'Tender, warmly spiced muffins sweetened with real maple syrup — perfect with a cup of coffee.',ingredients:['2 cups all-purpose flour','2 tsp baking powder','1/2 tsp baking soda','1/2 tsp salt','1 tsp cinnamon','3/4 cup pure maple syrup','1/2 cup unsalted butter, melted and cooled','2 large eggs','1/2 cup whole milk','1/2 cup plain Greek yogurt','1 tsp vanilla extract','1/2 cup chopped walnuts or pecans (optional)','2 tbsp maple syrup, for drizzling','1 tbsp coarse sugar, for topping'],steps:['Preheat oven to 375F (190C). Line a 12-cup muffin tin with liners.','Whisk together flour, baking powder, baking soda, salt, and cinnamon.','In a separate bowl, whisk maple syrup, melted butter, eggs, milk, yogurt, and vanilla until smooth.','Fold wet into dry until just combined. Fold in nuts if using.','Fill muffin cups 3/4 full. Drizzle maple syrup over tops and sprinkle with coarse sugar.','Bake 18-22 minutes until golden and a toothpick comes out clean.','Cool 5 minutes in pan, then transfer to a wire rack.'],tip:'Add 1/4 tsp maple extract to the batter for even bolder maple flavor.'},
+    {id:'r3',chapterId:'breakfast',title:'Classic Buttermilk Pancakes',desc:'Fluffy, golden stacks ready in under 20 minutes.',ingredients:['1 1/2 cups all-purpose flour','2 tbsp sugar','1 tsp baking powder','1/2 tsp baking soda','1/2 tsp salt','1 1/2 cups buttermilk','1 large egg','2 tbsp melted butter','1 tsp vanilla extract'],steps:['Whisk together flour, sugar, baking powder, baking soda, and salt.','Whisk buttermilk, egg, melted butter, and vanilla together.','Fold wet into dry until just combined — lumpy batter makes fluffier pancakes.','Heat a greased griddle over medium heat. Pour 1/4 cup batter per pancake.','Cook until bubbles form on the surface (about 2 min), flip, cook 1-2 min more.','Serve with butter and maple syrup.'],tip:'Let batter rest 5 minutes before cooking for extra fluffy results.'},
+    {id:'r4',chapterId:'breakfast',title:'Sheet Pan Eggs & Sausage',desc:'Feed a crowd with almost zero effort — everything roasts on one pan.',ingredients:['8 large eggs','1 lb breakfast sausage links or patties','1 bell pepper, diced','1 cup cherry tomatoes','1 cup frozen hash browns','Salt, pepper, and garlic powder to taste','2 tbsp olive oil'],steps:['Preheat oven to 400F (200C). Line a large sheet pan with foil and grease lightly.','Spread hash browns, sausage, pepper, and tomatoes across pan. Drizzle with oil and season.','Roast 15 minutes until sausage starts to brown.','Make 8 small wells in the mixture and crack an egg into each.','Bake 8-10 minutes until egg whites are set but yolks still slightly runny.','Season and serve straight from the pan.'],tip:'Add shredded cheese over the eggs in the last 2 minutes of baking.'},
+    {id:'r5',chapterId:'cakes',title:'Classic Yellow Birthday Cake',desc:'A buttery, tender yellow cake with fluffy chocolate buttercream.',ingredients:['2 1/2 cups all-purpose flour','2 1/2 tsp baking powder','1/2 tsp salt','1 cup unsalted butter, softened','2 cups sugar','4 large eggs','1 tbsp vanilla extract','1 cup whole milk','Frosting: 1 cup butter, 3 cups powdered sugar, 1/2 cup cocoa powder, 1/4 cup heavy cream, 1 tsp vanilla'],steps:['Preheat oven to 350F (175C). Grease and flour two 9-inch round pans.','Whisk flour, baking powder, and salt together.','Beat butter and sugar until pale and fluffy, about 4 minutes. Add eggs one at a time, then vanilla.','Alternate adding flour mix and milk, beginning and ending with flour.','Divide between pans and bake 30-35 minutes until a toothpick comes out clean.','Cool completely. Beat frosting ingredients until smooth and frost the cake.'],tip:'Refrigerate the frosted cake 20 minutes before slicing for cleaner cuts.'},
+    {id:'r6',chapterId:'cakes',title:'One-Bowl Chocolate Cake',desc:'Rich, moist, and deeply chocolatey — made entirely in one bowl.',ingredients:['2 cups all-purpose flour','2 cups sugar','3/4 cup cocoa powder','2 tsp baking soda','1 tsp baking powder','1 tsp salt','2 large eggs','1 cup buttermilk','1 cup strong black coffee, cooled','1/2 cup vegetable oil','1 tsp vanilla extract'],steps:['Preheat oven to 350F (175C). Grease a 9x13 pan.','Whisk all dry ingredients in a large bowl.','Add eggs, buttermilk, coffee, oil, and vanilla. Beat on medium 2 minutes — batter will be thin.','Pour into pan and bake 35-40 minutes until a toothpick comes out clean.','Cool completely then frost as desired.'],tip:'The coffee deepens the chocolate flavor without tasting like coffee.'},
+    {id:'r7',chapterId:'cakes',title:'Lemon Olive Oil Cake',desc:'Bright, moist, and elegantly simple. Naturally dairy-free and keeps beautifully for days.',ingredients:['1 1/2 cups all-purpose flour','1 cup sugar','1/2 tsp baking powder','1/4 tsp baking soda','1/2 tsp salt','3 large eggs','3/4 cup good olive oil','3/4 cup plain yogurt','Zest and juice of 2 lemons','1 tsp vanilla extract','Powdered sugar for dusting'],steps:['Preheat oven to 350F (175C). Grease a 9-inch round pan.','Whisk dry ingredients. Separately whisk eggs, olive oil, yogurt, lemon zest and juice, and vanilla.','Fold wet into dry until smooth. Pour into pan.','Bake 40-45 minutes until golden and a toothpick comes out clean.','Cool 15 minutes before turning out. Dust with powdered sugar.'],tip:'Drizzle with a lemon glaze (powdered sugar + lemon juice) for extra zing.'},
+    {id:'r8',chapterId:'cookies',title:'Brown Butter Chocolate Chip Cookies',desc:"Brown butter and a fridge rest make these the best chocolate chip cookies you'll ever bake.",ingredients:['2 1/4 cups all-purpose flour','1 tsp baking soda','1 tsp salt','1 cup unsalted butter','3/4 cup granulated sugar','3/4 cup brown sugar, packed','2 large eggs','2 tsp vanilla extract','2 cups chocolate chips','Flaky sea salt for topping'],steps:['Brown butter in a saucepan until golden and nutty. Pour into a large bowl and cool 10 minutes.','Whisk both sugars into butter. Add eggs and vanilla, whisking until smooth.','Stir in flour, baking soda, and salt until just combined. Fold in chocolate chips.','Cover and refrigerate at least 1 hour (overnight is even better).','Preheat oven to 375F (190C). Scoop into balls onto a lined baking sheet.','Bake 10-12 minutes until edges are set and centers look just underdone.','Sprinkle with flaky salt. Cool on pan 5 minutes before transferring.'],tip:'Dough keeps in the fridge 3 days or freezer 3 months — bake from frozen, adding 2 minutes.'},
+    {id:'r9',chapterId:'cookies',title:'Snickerdoodles',desc:'Pillowy soft with a crinkly cinnamon-sugar crust. One of the all-time greats.',ingredients:['2 3/4 cups all-purpose flour','2 tsp cream of tartar','1 tsp baking soda','1/2 tsp salt','1 cup unsalted butter, softened','1 1/2 cups sugar','2 large eggs','Rolling mix: 3 tbsp sugar + 1 1/2 tsp cinnamon'],steps:['Preheat oven to 375F (190C).','Whisk flour, cream of tartar, baking soda, and salt.','Beat butter and sugar until fluffy. Add eggs one at a time.','Mix in flour until combined. Refrigerate dough 30 minutes.','Roll into 1 1/2-inch balls, then coat in cinnamon sugar.','Bake 10-11 minutes until edges set but centers look soft.'],tip:"Don't skip the cream of tartar — it gives snickerdoodles their signature tang."},
+    {id:'r10',chapterId:'cookies',title:'Oatmeal Raisin Cookies',desc:'Chewy, spiced, and satisfying — the underdog cookie that always wins converts.',ingredients:['1 1/2 cups all-purpose flour','1 tsp cinnamon','1/2 tsp baking soda','1/2 tsp salt','1 cup unsalted butter, softened','1 cup brown sugar, packed','1/2 cup granulated sugar','2 large eggs','1 tsp vanilla extract','3 cups old-fashioned rolled oats','1 1/2 cups raisins'],steps:['Preheat oven to 350F (175C).','Whisk flour, cinnamon, baking soda, and salt.','Beat butter and both sugars until fluffy. Add eggs and vanilla.','Mix in flour, then stir in oats and raisins.','Drop rounded tablespoons onto a lined baking sheet.','Bake 10-12 minutes until edges are golden. Cool on pan 5 minutes.'],tip:'Soak raisins in warm water 10 minutes for extra plump, juicy results.'},
+    {id:'r11',chapterId:'candy',title:'Salted Caramels',desc:'Buttery, chewy, melt-in-your-mouth caramels with a perfect hit of flaky salt.',ingredients:['1 cup heavy cream','1 cup granulated sugar','1/2 cup brown sugar, packed','1/2 cup light corn syrup','4 tbsp unsalted butter','1 tsp vanilla extract','1 tsp flaky sea salt'],steps:['Line an 8x8 pan with parchment and grease lightly.','Combine sugars, corn syrup, and cream in a heavy saucepan over medium heat. Stir until sugar dissolves.','Clip a candy thermometer and cook without stirring to 245F (firm ball stage).','Remove from heat and stir in butter and vanilla — it will bubble vigorously.','Pour into pan. Sprinkle with flaky salt. Cool at room temperature at least 2 hours.','Lift out, cut into pieces, and wrap individually in wax paper.'],tip:'A candy thermometer is essential — do not skip it.'},
+    {id:'r12',chapterId:'candy',title:'Peanut Butter Fudge',desc:'Creamy, rich, no-fuss fudge that comes together in about 10 minutes.',ingredients:['2 cups granulated sugar','1/2 cup milk','1 1/4 cups creamy peanut butter','1 jar (7 oz) marshmallow creme','1 tsp vanilla extract'],steps:['Line an 8x8 pan with parchment.','Bring sugar and milk to a boil, stirring constantly. Boil exactly 3 minutes.','Remove from heat and quickly stir in peanut butter, marshmallow creme, and vanilla until smooth.','Pour into pan and smooth the top. Cool completely before cutting, about 2 hours.'],tip:'Work quickly once off the heat — it sets fast.'},
+    {id:'r13',chapterId:'candy',title:'Chocolate Bark',desc:'Endlessly customizable, beautiful, and ready in 30 minutes. Perfect for gifting.',ingredients:['12 oz good quality chocolate (dark, milk, or white)','Toppings: crushed pretzels, dried cranberries, pistachios, sprinkles, flaky salt, toasted coconut'],steps:['Line a baking sheet with parchment.','Melt chocolate in a double boiler or microwave in 30-second bursts, stirring between each.','Pour onto parchment and spread to about 1/4-inch thickness.','Scatter toppings over top and press in gently.','Refrigerate 20 minutes until fully set. Break into irregular pieces.'],tip:'Drizzle melted white chocolate over dark chocolate and drag a toothpick through for a pretty swirl.'},
+    {id:'r14',chapterId:'mains',title:'Cast Iron Skillet Chicken Thighs',desc:'Crispy-skinned, juicy chicken thighs with minimal effort and maximum flavor.',ingredients:['6 bone-in, skin-on chicken thighs','1 1/2 tsp salt','1 tsp black pepper','1 tsp garlic powder','1 tsp smoked paprika','2 tbsp olive oil','4 garlic cloves, smashed','4 sprigs fresh thyme'],steps:['Pat chicken dry and season all over with salt, pepper, garlic powder, and paprika.','Heat oil in a cast iron skillet over medium-high heat until shimmering.','Place chicken skin-side down. Cook without moving 8-10 minutes until skin is deeply golden.','Flip, add garlic and thyme to the pan, then transfer to a 425F (220C) oven.','Roast 15-18 minutes until internal temperature reaches 165F (74C).','Rest 5 minutes before serving.'],tip:'Starting skin-side down and not moving it is the secret to truly crispy skin.'},
+    {id:'r15',chapterId:'mains',title:'Sunday Pot Roast',desc:'Fork-tender beef in a rich, savory broth — the kind of meal that fills the whole house with good smells.',ingredients:['3-4 lb chuck roast','Salt and pepper','2 tbsp vegetable oil','1 large onion, quartered','4 garlic cloves','3 carrots, cut into chunks','3 celery stalks, cut into chunks','1 lb baby potatoes','2 cups beef broth','1 tbsp Worcestershire sauce','2 sprigs rosemary, 3 sprigs thyme'],steps:['Preheat oven to 325F (165C). Season roast generously with salt and pepper.','Heat oil in a Dutch oven over high heat. Sear roast on all sides until deeply browned, about 4 minutes per side.','Remove roast. Saute onion and garlic 2 minutes, then deglaze with beef broth.','Add Worcestershire, herbs, carrots, celery, and roast back to the pot.','Cover and braise in the oven for 3 hours.','Add potatoes, cover, and cook another 45 minutes until tender.','Rest 15 minutes before serving. Spoon braising liquid over everything.'],tip:'Even better the next day. Shred leftovers for tacos or sandwiches.'},
+    {id:'r16',chapterId:'mains',title:'Garlic Butter Pork Tenderloin',desc:'Elegant enough for company, quick enough for a weeknight — on the table in 35 minutes.',ingredients:['1 1/2 lb pork tenderloin','Salt, pepper, and Italian seasoning','2 tbsp olive oil','4 tbsp butter','5 garlic cloves, minced','1 tsp fresh thyme leaves','Juice of 1/2 lemon'],steps:['Preheat oven to 400F (200C). Pat tenderloin dry and season all over.','Heat oil in an oven-safe skillet over high heat. Sear on all sides until browned, about 3 minutes per side.','Reduce heat, add butter and garlic. Cook 1 minute, basting the pork with the butter.','Transfer pan to oven. Roast 15-18 minutes until internal temp reaches 145F (63C).','Rest 5 minutes, then slice. Spoon garlic butter and lemon juice over top.'],tip:'A little pink at 145F is perfectly safe and much juicier than fully cooked through.'},
+    {id:'r17',chapterId:'mains',title:'Beef & Vegetable Chili',desc:'A big, bold pot of chili that gets better the longer it simmers.',ingredients:['2 lbs ground beef','1 large onion, diced','1 bell pepper, diced','4 garlic cloves, minced','2 cans (15 oz each) kidney beans, drained','1 can (28 oz) crushed tomatoes','1 cup beef broth','2 tbsp chili powder','1 tsp cumin','1 tsp smoked paprika','Salt and pepper to taste'],steps:['Brown ground beef in a large pot over medium-high heat. Drain excess fat.','Add onion, pepper, and garlic. Cook 5 minutes until softened.','Stir in chili powder, cumin, and paprika. Cook 1 minute until fragrant.','Add tomatoes, broth, and beans. Stir to combine.','Bring to a boil, then simmer uncovered 45 minutes, stirring occasionally.','Serve with cornbread, shredded cheese, and sour cream.'],tip:'A square of dark chocolate stirred in at the end adds incredible depth.'},
+  ]
+};
+
+let data = loadFromStorage();
+let openChapters = new Set([data.chapters[0]?.id]);
+
+// current selection
+let deskCurrentId = null;
+let deskEditingId = null;
+let mobCurrentId  = null;
+let mobEditingId  = null;
 
 // ══════════════════════════════════════════════════
-// UPDATED EPUB EXPORT
+// STORAGE
 // ══════════════════════════════════════════════════
-async function exportEpub() {
-  showToast('Building EPUB…');
-  const zip = new JSZip();
-  zip.file('mimetype', 'application/epub+zip', {compression:'STORE'});
-  zip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:schemas:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
-  
-  const css = `body{font-family:Georgia,serif;margin:2em;line-height:1.6}h1{font-size:2em;border-bottom:2px solid #333;padding-bottom:.3em;margin-top:1em}h2{font-size:1.5em;margin-top:2em;border-bottom:1px solid #aaa;padding-bottom:.2em}h3{font-size:1.2em;margin-top:1.5em}ul,ol{margin:.5em 0 .5em 1.5em}li{margin:.3em 0}.ing{background:#f9f9f9;border-left:3px solid #888;padding:.8em 1em;margin:1em 0}.tip{font-style:italic;color:#555;padding:.6em 1em;border:1px dashed #bbb;margin-top:1em}.intro{font-style:italic;color:#555;margin-bottom:1.5em}.recipe-page{page-break-after:always}`;
-  zip.file('OEBPS/style/main.css', css);
-  
-  const x = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const wrap = (title, body) => `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${x(title)}</title><link rel="stylesheet" type="text/css" href="style/main.css"/></head><body>${body}</body></html>`;
-  
-  const mf = [`<item id="css" href="style/main.css" media-type="text/css"/>`,`<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>`,`<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>`];
-  const sp = [];
-  const nc = [];
-  const ni = [];
-  let po = 1;
-
-  for (const ch of data.chapters) {
-    const rs = data.recipes.filter(r => r.chapterId === ch.id);
-    
-    // Create Chapter Index Page
-    const chFname = `ch_${ch.id}.xhtml`;
-    const chBody = `<h1>${x(ch.name)}</h1><ul>${rs.map(r=>`<li><a href="${r.id}.xhtml">${x(r.title)}</a></li>`).join('')}</ul>`;
-    zip.file(`OEBPS/${chFname}`, wrap(ch.name, chBody));
-    
-    mf.push(`<item id="ch_${ch.id}" href="${chFname}" media-type="application/xhtml+xml"/>`);
-    sp.push(`<itemref idref="ch_${ch.id}"/>`);
-    
-    let navPoints = ``;
-    let navItems = ``;
-    
-    for (const r of rs) {
-      const rFname = `${r.id}.xhtml`;
-      let rBody = `<div class="recipe-page"><h1>${x(r.title)}</h1>`;
-      if (r.desc) rBody += `<p class="intro">${x(r.desc)}</p>`;
-      rBody += `<h3>Ingredients</h3><div class="ing"><ul>${r.ingredients.map(i=>`<li>${x(i)}</li>`).join('')}</ul></div>`;
-      rBody += `<h3>Instructions</h3><ol>${r.steps.map(s=>`<li>${x(s)}</li>`).join('')}</ol>`;
-      if (r.tip) rBody += `<div class="tip"><strong>Tip:</strong> ${x(r.tip)}</div></div>`;
-      
-      zip.file(`OEBPS/${rFname}`, wrap(r.title, rBody));
-      mf.push(`<item id="${r.id}" href="${rFname}" media-type="application/xhtml+xml"/>`);
-      sp.push(`<itemref idref="${r.id}"/>`);
-      
-      po++;
-      navPoints += `<navPoint id="${r.id}" playOrder="${po}"><navLabel><text>${x(r.title)}</text></navLabel><content src="${rFname}"/></navPoint>`;
-      navItems += `<li><a href="${rFname}">${x(r.title)}</a></li>`;
-    }
-    
-    nc.push(`<navPoint id="ch_${ch.id}" playOrder="${po}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chFname}"/>${navPoints}</navPoint>`);
-    ni.push(`<li><a href="${chFname}">${x(ch.name)}</a><ol>${navItems}</ol></li>`);
-  }
-
-  zip.file('OEBPS/content.opf', `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">home-kitchen-recipe-book</dc:identifier><dc:title>Home Kitchen Recipe Book</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
-  zip.file('OEBPS/toc.ncx', `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="home-kitchen-recipe-book"/></head><docTitle><text>Home Kitchen Recipe Book</text></docTitle><navMap>${nc.join('')}</navMap></ncx>`);
-  zip.file('OEBPS/nav.xhtml', `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><h1>Contents</h1><ol>${ni.join('')}</ol></nav></body></html>`);
-  
-  const blob = await zip.generateAsync({type:'blob', mimeType:'application/epub+zip'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'Home_Kitchen_Recipe_Book.epub'; a.click();
-  URL.revokeObjectURL(url);
-  showToast('EPUB downloaded!');
+function loadFromStorage() {
+  try { const s = localStorage.getItem(LS_KEY); if (s) return JSON.parse(s); } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
+function persistToStorage() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+// Save data to JSON file
+function saveData() {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'recipes.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('recipes.json saved!');
+}
+
+// Load data from JSON file
+function loadData() {
+  document.getElementById('fileInput').click();
+}
+function handleFileLoad(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const parsed = JSON.parse(evt.target.result);
+      if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+      data = parsed;
+      openChapters = new Set([data.chapters[0]?.id]);
+      persistToStorage();
+      deskCurrentId = null; deskEditingId = null;
+      mobCurrentId = null; mobEditingId = null;
+      renderAll();
+      // reset to list view
+      showPanel('deskWelcome');
+      mob_backToList();
+      showToast('Recipes loaded!');
+    } catch(err) {
+      showToast('Could not read file — is it a valid recipes.json?');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ══════════════════════════════════════════════════
+// SHARED RENDER HELPERS
+// ══════════════════════════════════════════════════
+function renderAll() {
+  renderDesktopSidebar();
+  renderMobileList();
+  populateChapterSelects();
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderRecipeInto(recipe, ids) {
+  const ch = data.chapters.find(c => c.id === recipe.chapterId);
+  document.getElementById(ids.chapter).textContent = ch ? ch.name : '';
+  document.getElementById(ids.title).textContent = recipe.title;
+  if (ids.desc) document.getElementById(ids.desc).textContent = recipe.desc || '';
+  document.getElementById(ids.ingredients).innerHTML = recipe.ingredients.map(i => `<li>${esc(i)}</li>`).join('');
+  document.getElementById(ids.steps).innerHTML = recipe.steps.map((s,i) =>
+    `<li><span class="step-num">${i+1}</span><span>${esc(s)}</span></li>`).join('');
+  const tipEl = document.getElementById(ids.tip);
+  if (recipe.tip) { tipEl.textContent = recipe.tip; tipEl.style.display = 'block'; }
+  else { tipEl.style.display = 'none'; }
+}
+
+function populateChapterSelects() {
+  const opts = data.chapters.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('deskFChapter').innerHTML = opts;
+  document.getElementById('mobFChapter').innerHTML = opts;
+}
+
+function showPanel(id) {
+  ['deskWelcome','deskRecipeView','deskEditor'].forEach(p => {
+    const el = document.getElementById(p);
+    if (el.classList) { el.classList.remove('active'); el.style.display = ''; }
+  });
+  const target = document.getElementById(id);
+  if (id === 'deskWelcome') target.style.display = '';
+  else target.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+// DESKTOP
+// ══════════════════════════════════════════════════
+function renderDesktopSidebar() {
+  const list = document.getElementById('deskChapterList');
+  list.innerHTML = data.chapters.map(ch => {
+    const recipes = data.recipes.filter(r => r.chapterId === ch.id);
+    const isOpen = openChapters.has(ch.id);
+    return `<div class="chapter-group">
+      <div class="chapter-heading ${isOpen?'open':''}" onclick="toggleChapter('${ch.id}')">
+        <span>${esc(ch.name)}</span><span class="ch-arrow">▶</span>
+      </div>
+      <div class="recipe-list ${isOpen?'open':''}">
+        ${recipes.map(r => `<div class="recipe-item ${r.id===deskCurrentId?'active':''}" onclick="desk_showRecipe('${r.id}')">${esc(r.title)}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleChapter(id) {
+  openChapters.has(id) ? openChapters.delete(id) : openChapters.add(id);
+  renderDesktopSidebar();
+}
+
+function desk_showRecipe(id) {
+  const r = data.recipes.find(x => x.id === id);
+  if (!r) return;
+  deskCurrentId = id; deskEditingId = null;
+  renderRecipeInto(r, {
+    chapter:'deskViewChapter', title:'deskViewTitle', desc:'deskViewDesc',
+    ingredients:'deskViewIngredients', steps:'deskViewSteps', tip:'deskViewTip'
+  });
+  showPanel('deskRecipeView');
+  renderDesktopSidebar();
+}
+
+function desk_showAddRecipe() {
+  deskEditingId = null;
+  document.getElementById('deskEditorTitle').textContent = 'Add New Recipe';
+  ['deskFTitle','deskFDesc','deskFIngredients','deskFSteps','deskFTip'].forEach(id => document.getElementById(id).value = '');
+  populateChapterSelects();
+  showPanel('deskEditor');
+}
+
+function desk_editCurrentRecipe() {
+  if (!deskCurrentId) return;
+  const r = data.recipes.find(x => x.id === deskCurrentId);
+  if (!r) return;
+  deskEditingId = deskCurrentId;
+  document.getElementById('deskEditorTitle').textContent = 'Edit Recipe';
+  document.getElementById('deskFTitle').value = r.title;
+  document.getElementById('deskFDesc').value = r.desc || '';
+  document.getElementById('deskFIngredients').value = r.ingredients.join('\n');
+  document.getElementById('deskFSteps').value = r.steps.join('\n');
+  document.getElementById('deskFTip').value = r.tip || '';
+  populateChapterSelects();
+  document.getElementById('deskFChapter').value = r.chapterId;
+  showPanel('deskEditor');
+}
+
+function desk_saveRecipe() {
+  const title       = document.getElementById('deskFTitle').value.trim();
+  const chapterId   = document.getElementById('deskFChapter').value;
+  const desc        = document.getElementById('deskFDesc').value.trim();
+  const ingredients = document.getElementById('deskFIngredients').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const steps       = document.getElementById('deskFSteps').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const tip         = document.getElementById('deskFTip').value.trim();
+  if (!title) return showToast('Please enter a recipe name');
+  if (!ingredients.length) return showToast('Please add at least one ingredient');
+  if (!steps.length) return showToast('Please add at least one step');
+  if (deskEditingId) {
+    const idx = data.recipes.findIndex(r => r.id === deskEditingId);
+    data.recipes[idx] = {...data.recipes[idx], title, chapterId, desc, ingredients, steps, tip};
+    deskCurrentId = deskEditingId;
+    showToast('Recipe updated!');
+  } else {
+    const id = 'r_' + Date.now();
+    data.recipes.push({id, chapterId, title, desc, ingredients, steps, tip});
+    deskCurrentId = id;
+    showToast('Recipe added!');
+  }
+  openChapters.add(chapterId);
+  persistToStorage();
+  deskEditingId = null;
+  renderAll();
+  desk_showRecipe(deskCurrentId);
+}
+
+function desk_cancelEdit() {
+  if (deskCurrentId) desk_showRecipe(deskCurrentId);
+  else showPanel('deskWelcome');
+}
+
+function desk_deleteCurrentRecipe() {
+  if (!deskCurrentId) return;
+  const r = data.recipes.find(x => x.id === deskCurrentId);
+  if (!confirm(`Delete "${r.title}"? This cannot be undone.`)) return;
+  data.recipes = data.recipes.filter(x => x.id !== deskCurrentId);
+  deskCurrentId = null;
+  persistToStorage();
+  renderAll();
+  showPanel('deskWelcome');
+  showToast('Recipe deleted');
+}
+
+// ══════════════════════════════════════════════════
+// MOBILE
+// ══════════════════════════════════════════════════
+function renderMobileList() {
+  const list = document.getElementById('mobChapterList');
+  list.innerHTML = data.chapters.map(ch => {
+    const recipes = data.recipes.filter(r => r.chapterId === ch.id);
+    const isOpen = openChapters.has(ch.id);
+    return `<div>
+      <div class="mob-chapter-heading ${isOpen?'open':''}" onclick="mob_toggleChapter('${ch.id}')">
+        <span>${esc(ch.name)}</span><span class="ch-arrow">▶</span>
+      </div>
+      <div class="mob-recipe-list ${isOpen?'open':''}">
+        ${recipes.map(r => `<div class="mob-recipe-row" onclick="mob_showRecipe('${r.id}')">
+          <span>${esc(r.title)}</span><span class="arrow">›</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function mob_toggleChapter(id) {
+  openChapters.has(id) ? openChapters.delete(id) : openChapters.add(id);
+  renderMobileList();
+}
+
+function mob_showPanel(panelId) {
+  document.querySelectorAll('.mob-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+}
+
+function mob_showRecipe(id) {
+  const r = data.recipes.find(x => x.id === id);
+  if (!r) return;
+  mobCurrentId = id;
+  renderRecipeInto(r, {
+    chapter:'mobViewChapter', title:'mobViewTitle', desc:'mobViewDesc',
+    ingredients:'mobViewIngredients', steps:'mobViewSteps', tip:'mobViewTip'
+  });
+  mob_showPanel('mobPanelView');
+  // scroll to top
+  document.querySelector('#mobPanelView .mob-view-scroll').scrollTop = 0;
+}
+
+function mob_backToList() {
+  mob_showPanel('mobPanelList');
+  // make sure recipes tab is active
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tabRecipes').classList.add('active');
+}
+
+function mob_showAddRecipe() {
+  mobEditingId = null;
+  document.getElementById('mobEditorTitle').textContent = 'Add New Recipe';
+  ['mobFTitle','mobFDesc','mobFIngredients','mobFSteps','mobFTip'].forEach(id => document.getElementById(id).value = '');
+  populateChapterSelects();
+  mob_showPanel('mobPanelEditor');
+  document.querySelector('#mobPanelEditor .mob-editor-scroll').scrollTop = 0;
+}
+
+function mob_editCurrentRecipe() {
+  if (!mobCurrentId) return;
+  const r = data.recipes.find(x => x.id === mobCurrentId);
+  if (!r) return;
+  mobEditingId = mobCurrentId;
+  document.getElementById('mobEditorTitle').textContent = 'Edit Recipe';
+  document.getElementById('mobFTitle').value = r.title;
+  document.getElementById('mobFDesc').value = r.desc || '';
+  document.getElementById('mobFIngredients').value = r.ingredients.join('\n');
+  document.getElementById('mobFSteps').value = r.steps.join('\n');
+  document.getElementById('mobFTip').value = r.tip || '';
+  populateChapterSelects();
+  document.getElementById('mobFChapter').value = r.chapterId;
+  mob_showPanel('mobPanelEditor');
+  document.querySelector('#mobPanelEditor .mob-editor-scroll').scrollTop = 0;
+}
+
+function mob_saveRecipe() {
+  const title       = document.getElementById('mobFTitle').value.trim();
+  const chapterId   = document.getElementById('mobFChapter').value;
+  const desc        = document.getElementById('mobFDesc').value.trim();
+  const ingredients = document.getElementById('mobFIngredients').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const steps       = document.getElementById('mobFSteps').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const tip         = document.getElementById('mobFTip').value.trim();
+  if (!title) return showToast('Please enter a recipe name');
+  if (!ingredients.length) return showToast('Please add at least one ingredient');
+  if (!steps.length) return showToast('Please add at least one step');
+  if (mobEditingId) {
+    const idx = data.recipes.findIndex(r => r.id === mobEditingId);
+    data.recipes[idx] = {...data.recipes[idx], title, chapterId, desc, ingredients, steps, tip};
+    mobCurrentId = mobEditingId;
+    showToast('Recipe updated!');
+  } else {
+    const id = 'r_' + Date.now();
+    data.recipes.push({id, chapterId, title, desc, ingredients, steps, tip});
+    mobCurrentId = id;
+    showToast('Recipe added!');
+  }
+  openChapters.add(chapterId);
+  persistToStorage();
+  mobEditingId = null;
+  renderAll();
+  mob_showRecipe(mobCurrentId);
+}
+
+function mob_cancelEdit() {
+  if (mobCurrentId) mob_showRecipe(mobCurrentId);
+  else mob_backToList();
+}
+
+function mob_deleteCurrentRecipe() {
+  if (!mobCurrentId) return;
+  const r = data.recipes.find(x => x.id === mobCurrentId);
+  if (!confirm(`Delete "${r.title}"?`)) return;
+  data.recipes = data.recipes.filter(x => x.id !== mobCurrentId);
+  mobCurrentId = null;
+  persistToStorage();
+  renderAll();
+  mob_backToList();
+  showToast('Recipe deleted');
+}
+
+function mob_switchTab(tab) {
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  if (tab === 'recipes') {
+    document.getElementById('tabRecipes').classList.add('active');
+    mob_showPanel('mobPanelList');
+  } else {
+    document.getElementById('tabSettings').classList.add('active');
+    mob_showPanel('mobPanelSettings');
+  }
+}
+
+// ══════════════════════════════════════════════════
+// CHAPTER MODAL (shared)
+// ══════════════════════════════════════════════════
+function showAddChapter() {
+  document.getElementById('newChapterName').value = '';
+  document.getElementById('chapterModal').classList.add('open');
+  setTimeout(() => document.getElementById('newChapterName').focus(), 80);
+}
+function closeChapterModal() {
+  document.getElementById('chapterModal').classList.remove('open');
+}
+function addChapter() {
+  const name = document.getElementById('newChapterName').value.trim();
+  if (!name) return showToast('Please enter a chapter name');
+  const id = 'ch_' + Date.now();
+  data.chapters.push({id, name});
+  openChapters.add(id);
+  persistToStorage();
+  renderAll();
+  closeChapterModal();
+  showToast(`"${name}" added`);
+}
+document.getElementById('newChapterName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addChapter();
+  if (e.key === 'Escape') closeChapterModal();
+});
+
+// ══════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ══════════════════════════════════════════════════
+// DATA & EXPORT
+// ══════════════════════════════════════════════════
+const LS_KEY = 'hk_recipe_book_v2';
+async function exportEpub() {
+    const data = JSON.parse(localStorage.getItem(LS_KEY)) || DEFAULT_DATA;
+    const zip = new JSZip();
+
+    // 1. CSS for Page Breaks and Styling
+    const css = `
+        body { font-family: 'Helvetica', sans-serif; line-height: 1.6; padding: 2em; }
+        .page-break { page-break-before: always; }
+        .cover { text-align: center; margin-top: 20%; }
+        h1 { color: #6b4c2a; border-bottom: 2px solid #c8952a; }
+        h2 { color: #c0571a; margin-top: 1em; }
+        h3 { color: #8a7060; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.1em; }
+        ul, ol { margin-bottom: 1em; }
+    `;
+
+    // 2. Build the HTML content
+    let htmlContent = `<html><head><style>${css}</style></head><body>`;
+    
+    // Cover Page
+    htmlContent += `
+        <div class="cover">
+            <h1>Home Kitchen</h1>
+            <p><em>My Personal Recipe Collection</em></p>
+        </div>`;
+    
+    data.chapters.forEach(chapter => {
+        // Chapter as a top-level page
+        htmlContent += `<div class="page-break"><h1>${chapter.name}</h1></div>`;
+        
+        const recipes = data.recipes.filter(r => r.chapterId === chapter.id);
+        recipes.forEach(r => {
+            // Recipe as a nested page
+            htmlContent += `<div class="page-break">
+                <h2>${r.title}</h2>
+                <p><em>${r.desc}</em></p>
+                <h3>Ingredients</h3>
+                <ul>${r.ingredients.map(i => `<li>${i}</li>`).join('')}</ul>
+                <h3>Instructions</h3>
+                <ol>${r.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+                ${r.tip ? `<p><strong>✦ Tip:</strong> ${r.tip}</p>` : ''}
+            </div>`;
+        });
+    });
+    
+    htmlContent += `</body></html>`;
+
+    // 3. Create EPUB structure
+    zip.file("mimetype", "application/epub+zip");
+    zip.file("OEBPS/content.html", htmlContent);
+    
+    // Minimal Container
+    zip.file("META-INF/container.xml", '<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="content.opf" media-type="application/oebps-package+xml"/></container>');
+    
+    // Minimal OPF
+    zip.file("content.opf", `<?xml version="1.0" encoding="UTF-8"?><package version="3.0" xmlns="http://www.idpf.org/2007/opf" unique-identifier="pub-id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>Home Kitchen Recipe Book</dc:title></metadata><manifest><item id="c1" href="OEBPS/content.html" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="c1"/></spine></package>`);
+
+    // 4. Generate and download
+    const blob = await zip.generateAsync({ type: "blob" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Home_Kitchen_Recipes.epub";
+    link.click();
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+renderAll();
+showPanel('deskWelcome');
 </script>
 </body>
 </html>
