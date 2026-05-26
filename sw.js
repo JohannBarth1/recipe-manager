@@ -1,7 +1,7 @@
 const CACHE = 'erecipe-v2';
 
 const ASSETS = [
-  '/recipe-manager/recipe_book_manager.html',
+  '/recipe-manager/index.html',
   '/recipe-manager/manifest.json',
   '/recipe-manager/icon-192.png',
   '/recipe-manager/icon-512.png'
