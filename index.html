@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Home Kitchen — Recipe Book</title>
+<title>eRecipe</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
 <style>
@@ -582,6 +582,86 @@ header {
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── DESKTOP SETTINGS POPOVER ──────────────────── */
+.desk-settings {
+  display: none;
+  position: fixed;
+  top: calc(var(--header-h) + 8px);
+  right: 1rem;
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.2rem 1.4rem;
+  width: 300px;
+  z-index: 80;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.desk-settings.open { display: block; }
+.desk-settings h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--brown);
+  margin-bottom: .9rem;
+  padding-bottom: .4rem;
+  border-bottom: 1px solid var(--border);
+}
+.desk-settings .ds-label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: .35rem;
+}
+.desk-settings .ds-note {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: .3rem;
+  line-height: 1.5;
+}
+.desk-settings .path-row { display: flex; gap: .5rem; align-items: center; }
+.desk-settings .path-row input {
+  flex: 1;
+  padding: .5rem .7rem;
+  font-size: .88rem;
+  font-family: 'Lato', sans-serif;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--cream);
+  color: var(--ink);
+  outline: none;
+}
+.desk-settings .path-row input:focus { border-color: var(--gold); }
+.desk-settings .path-row button {
+  padding: .5rem .8rem;
+  background: var(--brown);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  font-family: 'Lato', sans-serif;
+  font-size: .75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.desk-settings .path-row button:hover { background: #4e3520; }
+.desk-settings .ds-divider { border: none; border-top: 1px solid var(--border); margin: .9rem 0; }
+.desk-settings .ds-row { display: flex; gap: .5rem; margin-top: .5rem; }
+.desk-settings .ds-row button {
+  flex: 1;
+  padding: .45rem;
+  font-size: .72rem;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--cream);
+  color: var(--brown);
+}
+.desk-settings .ds-row button:hover { background: var(--light-brown); }
 </style>
 </head>
 <body>
@@ -589,13 +669,14 @@ header {
 <!-- HEADER -->
 <header>
   <div>
-    <div class="brand-title">Home Kitchen</div>
-    <div class="brand-sub">Recipe Book</div>
+    <div class="brand-title">eRecipe</div>
+    <div class="brand-sub">Digital Recipe Book</div>
   </div>
   <div class="header-actions">
     <button class="hbtn hbtn-load" onclick="dropboxLoad()">☁ Load</button>
     <button class="hbtn hbtn-save" onclick="dropboxSave()">☁ Save</button>
     <button class="hbtn hbtn-epub" onclick="exportEpub()">📖 Export EPUB</button>
+    <button class="hbtn hbtn-load" onclick="toggleDeskSettings()" title="Settings">⚙</button>
   </div>
 </header>
 
@@ -731,6 +812,16 @@ header {
             <div><div>Load from Dropbox</div><div class="settings-note">Fetch the latest recipes from Dropbox</div></div>
           </button>
           <p class="settings-note">Both buttons will open a Dropbox sign-in if needed. Your recipes are stored as <strong>recipes.json</strong> in your Dropbox.</p>
+          <div style="margin-top:1rem">
+            <div class="settings-group-label" style="margin-bottom:.5rem">Dropbox File Path</div>
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <input class="dbx-path-input" type="text" placeholder="/recipes.json"
+                style="flex:1;padding:.6rem .8rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
+                onchange="setDbxPath(this.value)"/>
+              <button onclick="setDbxPath(this.previousElementSibling.value)" style="padding:.6rem .9rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">Set</button>
+            </div>
+            <p class="settings-note" style="margin-top:.4rem">e.g. /Kitchen/recipes.json — must start with / and end with .json</p>
+          </div>
         </div>
         <div class="settings-group">
           <div class="settings-group-label">Local Backup</div>
@@ -755,6 +846,24 @@ header {
 
   </div><!-- /mob-panels -->
 </div><!-- /app -->
+
+<!-- Desktop settings popover -->
+<div class="desk-settings" id="deskSettings">
+  <h3>⚙ Settings</h3>
+  <span class="ds-label">Dropbox File Path</span>
+  <div class="path-row">
+    <input class="dbx-path-input" type="text" placeholder="/recipes.json"
+      onkeydown="if(event.key==='Enter') setDbxPath(this.value)"/>
+    <button onclick="setDbxPath(this.previousElementSibling.value)">Set</button>
+  </div>
+  <p class="ds-note">e.g. /Kitchen/recipes.json<br/>Must start with / and end with .json</p>
+  <hr class="ds-divider"/>
+  <span class="ds-label">Local Backup</span>
+  <div class="ds-row">
+    <button onclick="saveLocalFile()">⬇ Download</button>
+    <button onclick="loadLocalFile()">⬆ Load File</button>
+  </div>
+</div>
 
 <!-- Mobile bottom nav -->
 <nav class="mob-nav">
@@ -844,9 +953,26 @@ function persistToStorage() {
 // ══════════════════════════════════════════════════
 // DROPBOX
 // ══════════════════════════════════════════════════
-const DBX_APP_KEY   = 'ke5hk7ze3ld6hqr';
-const DBX_FILE_PATH = '/recipes.json';
-const DBX_TOKEN_KEY = 'hk_dbx_token';
+const DBX_APP_KEY    = 'ke5hk7ze3ld6hqr';
+const DBX_TOKEN_KEY  = 'hk_dbx_token';
+const DBX_PATH_KEY   = 'hk_dbx_path';
+const DBX_PATH_DEFAULT = '/recipes.json';
+
+function getDbxPath() {
+  return localStorage.getItem(DBX_PATH_KEY) || DBX_PATH_DEFAULT;
+}
+function setDbxPath(val) {
+  // Ensure it starts with / and ends with .json
+  let p = val.trim();
+  if (!p) p = DBX_PATH_DEFAULT;
+  if (!p.startsWith('/')) p = '/' + p;
+  if (!p.endsWith('.json')) p += '.json';
+  localStorage.setItem(DBX_PATH_KEY, p);
+  // Update both path inputs
+  document.querySelectorAll('.dbx-path-input').forEach(el => el.value = p);
+  showToast('Dropbox path saved');
+  return p;
+}
 
 function getDbxToken() {
   // Check URL hash for token returned from OAuth redirect
@@ -888,7 +1014,7 @@ async function dropboxSave() {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Dropbox-API-Arg': JSON.stringify({
-          path: DBX_FILE_PATH,
+          path: getDbxPath(),
           mode: 'overwrite',
           autorename: false,
           mute: true
@@ -925,7 +1051,7 @@ async function dropboxLoad() {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Dropbox-API-Arg': JSON.stringify({ path: DBX_FILE_PATH })
+        'Dropbox-API-Arg': JSON.stringify({ path: getDbxPath() })
       }
     });
     if (response.status === 401) {
@@ -1390,8 +1516,8 @@ li    { margin: .2em 0; font-size: .95em; }
     `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${x(title)}</title><link rel="stylesheet" type="text/css" href="style/main.css"/></head><body>${body}</body></html>`;
 
   // Cover page
-  zip.file('OEBPS/cover.xhtml', wrap('Home Kitchen Recipe Book',
-    `<h1>Home Kitchen Recipe Book</h1><p class="intro">A collection of beloved recipes.</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul>`));
+  zip.file('OEBPS/cover.xhtml', wrap('eRecipe',
+    `<h1>eRecipe</h1><p class="intro">All your favourite recipes, in an epub file</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul>`));
 
   const mf = [
     `<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>`,
@@ -1450,26 +1576,41 @@ li    { margin: .2em 0; font-size: .95em; }
   }
 
   zip.file('OEBPS/content.opf',
-    `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">home-kitchen-recipe-book</dc:identifier><dc:title>Home Kitchen Recipe Book</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
+    `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">eRecipe</dc:identifier><dc:title>eRecipe</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
 
   zip.file('OEBPS/toc.ncx',
-    `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="home-kitchen-recipe-book"/></head><docTitle><text>Home Kitchen Recipe Book</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
+    `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="eRecipe"/></head><docTitle><text>eRecipe</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
 
   zip.file('OEBPS/nav.xhtml',
     `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><h1>Contents</h1><ol>${navItems.join('')}</ol></nav></body></html>`);
 
   const blob = await zip.generateAsync({type:'blob', mimeType:'application/epub+zip'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'Home_Kitchen_Recipe_Book.epub'; a.click();
+  const a = document.createElement('a'); a.href = url; a.download = 'eRecipe.epub'; a.click();
   URL.revokeObjectURL(url);
   showToast('EPUB downloaded!');
 }
+
+function toggleDeskSettings() {
+  document.getElementById('deskSettings').classList.toggle('open');
+}
+// Close popover if clicking outside it
+document.addEventListener('click', e => {
+  const s = document.getElementById('deskSettings');
+  if (s.classList.contains('open') &&
+      !s.contains(e.target) &&
+      !e.target.closest('[onclick="toggleDeskSettings()"]')) {
+    s.classList.remove('open');
+  }
+});
 
 // ══════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════
 renderAll();
 showPanel('deskWelcome');
+// Populate path inputs with saved value
+document.querySelectorAll('.dbx-path-input').forEach(el => el.value = getDbxPath());
 
 // Handle OAuth redirect — if we just came back from Dropbox auth,
 // resume whatever action the user was trying to do
