@@ -2,7 +2,7 @@
   "name": "eRecipe",
   "short_name": "eRecipe",
   "description": "All your favourite recipes",
-  "start_url": "/recipe-manager/recipe_book_manager.html",
+  "start_url": "/recipe-manager/index.html",
   "scope": "/recipe-manager/",
   "display": "standalone",
   "orientation": "any",
