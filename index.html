@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>eRecipe</title>
+<title>Home Kitchen — Recipe Book</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
 
@@ -569,7 +570,8 @@ header {
   .toast { bottom: calc(var(--mob-nav-h) + 0.8rem); }
   .header-actions .hbtn-epub,
   .header-actions .hbtn-save,
-  .header-actions .hbtn-load { display: none; }
+  .header-actions .hbtn-load,
+  .header-actions button { display: none; }
   header { padding: 0 1rem; }
 }
 @media (min-width: 641px) {
@@ -669,13 +671,15 @@ header {
 <!-- HEADER -->
 <header>
   <div>
-    <div class="brand-title">eRecipe</div>
-    <div class="brand-sub">Digital Recipe Book</div>
+    <div class="brand-title">Home Kitchen</div>
+    <div class="brand-sub">Recipe Book</div>
   </div>
   <div class="header-actions">
-    <button class="hbtn hbtn-load" onclick="dropboxLoad()">☁ Load</button>
-    <button class="hbtn hbtn-save" onclick="dropboxSave()">☁ Save</button>
-    <button class="hbtn hbtn-epub" onclick="exportEpub()">📖 Export EPUB</button>
+    <button class="hbtn hbtn-load" onclick="dropboxLoad()" title="Load from Dropbox">📦 DBX Load</button>
+    <button class="hbtn hbtn-save" onclick="dropboxSave()" title="Save to Dropbox">📦 DBX Save</button>
+    <button class="hbtn hbtn-load" style="background:#1a73e8;color:#fff;border:none" onclick="gdriveLoad()" title="Load from Google Drive">▲ GDrive Load</button>
+    <button class="hbtn hbtn-save" style="background:#1a73e8;color:#fff" onclick="gdriveSave()" title="Save to Google Drive">▲ GDrive Save</button>
+    <button class="hbtn hbtn-epub" onclick="exportEpub()">📖 EPUB</button>
     <button class="hbtn hbtn-load" onclick="toggleDeskSettings()" title="Settings">⚙</button>
   </div>
 </header>
@@ -802,6 +806,28 @@ header {
       <div class="mob-settings-scroll">
         <h2>Settings</h2>
         <div class="settings-group">
+          <div class="settings-group-label">Google Drive Sync</div>
+          <button class="settings-btn" style="background:#1a73e8;color:#fff;border-color:#1a73e8" onclick="gdriveSave()">
+            <span class="s-icon">▲</span>
+            <div><div>Save to Google Drive</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Upload recipes.json to your Drive</div></div>
+          </button>
+          <button class="settings-btn load-data" onclick="gdriveLoad()">
+            <span class="s-icon">▲</span>
+            <div><div>Load from Google Drive</div><div class="settings-note">Fetch the latest recipes from Drive</div></div>
+          </button>
+          <p class="settings-note">Sign in with Google when prompted. The app remembers the file between saves.</p>
+          <div style="margin-top:1rem">
+            <div class="settings-group-label" style="margin-bottom:.5rem">Google Drive Folder</div>
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <input class="gdrive-folder-input" type="text" placeholder="My Drive (root)"
+                style="flex:1;padding:.6rem .8rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
+                onchange="setGdriveFolder(this.value)"/>
+              <button onclick="setGdriveFolder(this.previousElementSibling.value)" style="padding:.6rem .9rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">Set</button>
+            </div>
+            <p class="settings-note" style="margin-top:.4rem">Folder name in your Drive, e.g. Kitchen. Leave blank for root.</p>
+          </div>
+        </div>
+        <div class="settings-group">
           <div class="settings-group-label">Dropbox Sync</div>
           <button class="settings-btn save-data" onclick="dropboxSave()">
             <span class="s-icon">☁</span>
@@ -856,7 +882,15 @@ header {
       onkeydown="if(event.key==='Enter') setDbxPath(this.value)"/>
     <button onclick="setDbxPath(this.previousElementSibling.value)">Set</button>
   </div>
-  <p class="ds-note">e.g. /Kitchen/recipes.json<br/>Must start with / and end with .json</p>
+  <p class="ds-note">e.g. /Kitchen/recipes.json — must start with /</p>
+  <hr class="ds-divider"/>
+  <span class="ds-label">Google Drive Folder</span>
+  <div class="path-row">
+    <input class="gdrive-folder-input" type="text" placeholder="My Drive (root)"
+      onkeydown="if(event.key==='Enter') setGdriveFolder(this.value)"/>
+    <button onclick="setGdriveFolder(this.previousElementSibling.value)">Set</button>
+  </div>
+  <p class="ds-note">Folder name in your Drive, e.g. Kitchen. Leave blank for root.</p>
   <hr class="ds-divider"/>
   <span class="ds-label">Local Backup</span>
   <div class="ds-row">
@@ -1489,6 +1523,194 @@ function showToast(msg) {
 }
 
 // ══════════════════════════════════════════════════
+// GOOGLE DRIVE
+// ══════════════════════════════════════════════════
+const GD_CLIENT_ID  = '970185316494-1et3pq5g5bqk7ckt59079ra008lgfvq0.apps.googleusercontent.com';
+const GD_SCOPE      = 'https://www.googleapis.com/auth/drive.file';
+const GD_FOLDER_KEY = 'hk_gdrive_folder';
+const GD_FILE_ID_KEY= 'hk_gdrive_file_id';
+const GD_TOKEN_KEY  = 'hk_gdrive_token';
+const GD_FILE_NAME  = 'recipes.json';
+
+function getGdriveFolder() {
+  return localStorage.getItem(GD_FOLDER_KEY) || '';
+}
+function setGdriveFolder(val) {
+  const f = val.trim();
+  localStorage.setItem(GD_FOLDER_KEY, f);
+  // Clear saved file ID — folder changed so we'll need to find/create fresh
+  localStorage.removeItem(GD_FILE_ID_KEY);
+  document.querySelectorAll('.gdrive-folder-input').forEach(el => el.value = f);
+  showToast('Google Drive folder saved');
+}
+
+function getGdriveToken() {
+  return localStorage.getItem(GD_TOKEN_KEY);
+}
+
+// Trigger Google OAuth popup using the newer tokenClient approach
+let gTokenClient = null;
+function gdriveAuth(callback) {
+  if (!window.google) {
+    showToast('Google API not loaded yet — try again');
+    return;
+  }
+  gTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GD_CLIENT_ID,
+    scope: GD_SCOPE,
+    callback: (resp) => {
+      if (resp.error) { showToast('Google sign-in failed'); return; }
+      localStorage.setItem(GD_TOKEN_KEY, resp.access_token);
+      callback(resp.access_token);
+    }
+  });
+  gTokenClient.requestAccessToken();
+}
+
+async function gdriveApiCall(token, url, options = {}) {
+  const resp = await fetch(url, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      ...(options.headers || {})
+    }
+  });
+  if (resp.status === 401) {
+    // Token expired — clear and re-auth
+    localStorage.removeItem(GD_TOKEN_KEY);
+    return null; // signal caller to re-auth
+  }
+  return resp;
+}
+
+// Find or optionally create the target folder, return its ID (or null for root)
+async function gdriveFindFolder(token, folderName) {
+  if (!folderName) return null; // root
+  const q = encodeURIComponent(`name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const resp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  if (!resp) return 'AUTH_EXPIRED';
+  const json = await resp.json();
+  if (json.files && json.files.length > 0) return json.files[0].id;
+  // Folder not found — create it
+  const createResp = await gdriveApiCall(token, 'https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: folderName, mimeType: 'application/vnd.google-apps.folder' })
+  });
+  if (!createResp) return 'AUTH_EXPIRED';
+  const created = await createResp.json();
+  return created.id;
+}
+
+// Find existing recipes.json in the target folder
+async function gdriveFindFile(token, folderId) {
+  const savedId = localStorage.getItem(GD_FILE_ID_KEY);
+  if (savedId) return savedId; // use cached ID
+  const parent = folderId ? `'${folderId}'` : `'root'`;
+  const q = encodeURIComponent(`name='${GD_FILE_NAME}' and ${parent} in parents and trashed=false`);
+  const resp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  if (!resp) return 'AUTH_EXPIRED';
+  const json = await resp.json();
+  if (json.files && json.files.length > 0) {
+    localStorage.setItem(GD_FILE_ID_KEY, json.files[0].id);
+    return json.files[0].id;
+  }
+  return null; // doesn't exist yet
+}
+
+async function gdriveSave() {
+  const doSave = async (token) => {
+    showToast('Saving to Google Drive…');
+    try {
+      const folderName = getGdriveFolder();
+      const folderId = await gdriveFindFolder(token, folderName);
+      if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
+
+      const json = JSON.stringify(data, null, 2);
+      const existingId = await gdriveFindFile(token, folderId);
+      if (existingId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
+
+      let resp;
+      if (existingId) {
+        // Update existing file
+        resp = await gdriveApiCall(token,
+          `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: json
+        });
+      } else {
+        // Create new file with metadata + content (multipart)
+        const boundary = 'boundary_recipes_hk';
+        const parents = folderId ? [folderId] : [];
+        const metadata = JSON.stringify({ name: GD_FILE_NAME, mimeType: 'application/json', parents });
+        const multipart = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${json}\r\n--${boundary}--`;
+        resp = await gdriveApiCall(token,
+          'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+          body: multipart
+        });
+      }
+
+      if (!resp) { gdriveAuth(doSave); return; }
+      const result = await resp.json();
+      if (result.id) {
+        localStorage.setItem(GD_FILE_ID_KEY, result.id);
+        showToast('Saved to Google Drive ✓');
+      } else {
+        throw new Error(JSON.stringify(result));
+      }
+    } catch(e) {
+      showToast('Google Drive save failed');
+      console.error(e);
+    }
+  };
+
+  const token = getGdriveToken();
+  if (token) doSave(token);
+  else gdriveAuth(doSave);
+}
+
+async function gdriveLoad() {
+  const doLoad = async (token) => {
+    showToast('Loading from Google Drive…');
+    try {
+      const folderName = getGdriveFolder();
+      const folderId = await gdriveFindFolder(token, folderName);
+      if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
+
+      const fileId = await gdriveFindFile(token, folderId);
+      if (fileId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
+      if (!fileId) { showToast('No recipes.json found in Drive'); return; }
+
+      const resp = await gdriveApiCall(token,
+        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+      if (!resp) { gdriveAuth(doLoad); return; }
+
+      const parsed = await resp.json();
+      if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+      data = parsed;
+      openChapters = new Set([data.chapters[0]?.id]);
+      persistToStorage();
+      deskCurrentId = null; deskEditingId = null;
+      mobCurrentId = null; mobEditingId = null;
+      renderAll();
+      showPanel('deskWelcome');
+      mob_backToList();
+      showToast('Loaded from Google Drive ✓');
+    } catch(e) {
+      showToast('Google Drive load failed');
+      console.error(e);
+    }
+  };
+
+  const token = getGdriveToken();
+  if (token) doLoad(token);
+  else gdriveAuth(doLoad);
+}
+
+// ══════════════════════════════════════════════════
 // EPUB EXPORT
 // ══════════════════════════════════════════════════
 async function exportEpub() {
@@ -1516,8 +1738,8 @@ li    { margin: .2em 0; font-size: .95em; }
     `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${x(title)}</title><link rel="stylesheet" type="text/css" href="style/main.css"/></head><body>${body}</body></html>`;
 
   // Cover page
-  zip.file('OEBPS/cover.xhtml', wrap('eRecipe',
-    `<h1>eRecipe</h1><p class="intro">All your favourite recipes, in an epub file</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul>`));
+  zip.file('OEBPS/cover.xhtml', wrap('Home Kitchen Recipe Book',
+    `<h1>Home Kitchen Recipe Book</h1><p class="intro">A collection of beloved recipes.</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul>`));
 
   const mf = [
     `<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>`,
@@ -1576,17 +1798,17 @@ li    { margin: .2em 0; font-size: .95em; }
   }
 
   zip.file('OEBPS/content.opf',
-    `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">eRecipe</dc:identifier><dc:title>eRecipe</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
+    `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">home-kitchen-recipe-book</dc:identifier><dc:title>Home Kitchen Recipe Book</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
 
   zip.file('OEBPS/toc.ncx',
-    `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="eRecipe"/></head><docTitle><text>eRecipe</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
+    `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="home-kitchen-recipe-book"/></head><docTitle><text>Home Kitchen Recipe Book</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
 
   zip.file('OEBPS/nav.xhtml',
     `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><h1>Contents</h1><ol>${navItems.join('')}</ol></nav></body></html>`);
 
   const blob = await zip.generateAsync({type:'blob', mimeType:'application/epub+zip'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'eRecipe.epub'; a.click();
+  const a = document.createElement('a'); a.href = url; a.download = 'Home_Kitchen_Recipe_Book.epub'; a.click();
   URL.revokeObjectURL(url);
   showToast('EPUB downloaded!');
 }
@@ -1609,8 +1831,9 @@ document.addEventListener('click', e => {
 // ══════════════════════════════════════════════════
 renderAll();
 showPanel('deskWelcome');
-// Populate path inputs with saved value
+// Populate path/folder inputs with saved values
 document.querySelectorAll('.dbx-path-input').forEach(el => el.value = getDbxPath());
+document.querySelectorAll('.gdrive-folder-input').forEach(el => el.value = getGdriveFolder());
 
 // Handle OAuth redirect — if we just came back from Dropbox auth,
 // resume whatever action the user was trying to do
