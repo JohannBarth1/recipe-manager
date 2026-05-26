@@ -643,6 +643,7 @@ header {
   border: 1px solid #c8952a;
   border-radius: 3mm;
   padding: 4mm 5mm;
+  padding-left: 10mm;
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
@@ -713,37 +714,46 @@ header {
   font-size: 5.5pt;
   color: #bbb;
 }
-/* Spine label — rotated text readable when card stored landscape */
+/* Spine label — readable when stored landscape */
 .card-spine {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
-  width: 144mm;   /* card height becomes width when rotated */
+
+  width: 144mm;          /* original card height */
   height: 6mm;
+
   display: flex;
   align-items: center;
-  padding-left: 4mm;
   gap: 3mm;
-  transform: rotate(-90deg) translateX(-144mm);
-  transform-origin: bottom left;
+
+  padding: 0 3mm;
+
   background: #c8952a;
   color: #fff;
+
   font-size: 6pt;
   font-weight: 700;
   letter-spacing: .08em;
+
   white-space: nowrap;
   overflow: hidden;
+
+  transform-origin: top left;
+  transform: rotate(-90deg) translateX(-144mm);
 }
+
 .card-spine .spine-title {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .card-spine .spine-book {
-  font-weight: 400;
-  opacity: 0.75;
-  font-size: 5.5pt;
   flex-shrink: 0;
+  opacity: .75;
+  font-size: 5.5pt;
+  font-weight: 400;
 }
 
 /* ── DESKTOP SETTINGS POPOVER ──────────────────── */
