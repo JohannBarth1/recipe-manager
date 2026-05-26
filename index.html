@@ -670,15 +670,29 @@ header {
 
 <!-- HEADER -->
 <header>
-  <div>
-    <div class="brand-title">Home Kitchen</div>
-    <div class="brand-sub">Recipe Book</div>
+  <div style="display:flex;align-items:center;gap:.8rem">
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Book base -->
+      <rect x="4" y="6" width="28" height="24" rx="3" fill="#c8952a"/>
+      <rect x="6" y="8" width="24" height="20" rx="2" fill="#1a1208"/>
+      <!-- Spine -->
+      <rect x="4" y="6" width="4" height="24" rx="2" fill="#a87820"/>
+      <!-- Pages -->
+      <rect x="10" y="12" width="14" height="1.5" rx=".75" fill="#c8952a"/>
+      <rect x="10" y="15.5" width="14" height="1.5" rx=".75" fill="#c8952a"/>
+      <rect x="10" y="19" width="10" height="1.5" rx=".75" fill="#c8952a"/>
+      <!-- Fork & knife icon on cover -->
+      <path d="M21 10v4M21 14c0 1.1.9 2 2 2v4" stroke="#c8952a" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M24 10v2.5a1.5 1.5 0 0 1-3 0V10" stroke="#c8952a" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-title">eRecipe</div>
+      <div class="brand-sub">All your favourite recipes</div>
+    </div>
   </div>
   <div class="header-actions">
-    <button class="hbtn hbtn-load" onclick="dropboxLoad()" title="Load from Dropbox">📦 DBX Load</button>
-    <button class="hbtn hbtn-save" onclick="dropboxSave()" title="Save to Dropbox">📦 DBX Save</button>
-    <button class="hbtn hbtn-load" style="background:#1a73e8;color:#fff;border:none" onclick="gdriveLoad()" title="Load from Google Drive">▲ GDrive Load</button>
-    <button class="hbtn hbtn-save" style="background:#1a73e8;color:#fff" onclick="gdriveSave()" title="Save to Google Drive">▲ GDrive Save</button>
+    <button class="hbtn hbtn-load" onclick="gdriveLoad()" title="Load from Cloud">☁ Load</button>
+    <button class="hbtn hbtn-save" onclick="gdriveSave()" title="Save to Cloud">☁ Save</button>
     <button class="hbtn hbtn-epub" onclick="exportEpub()">📖 EPUB</button>
     <button class="hbtn hbtn-load" onclick="toggleDeskSettings()" title="Settings">⚙</button>
   </div>
@@ -700,8 +714,8 @@ header {
     <main class="main" id="deskMain">
       <div class="welcome" id="deskWelcome">
         <div class="welcome-icon">📖</div>
-        <h2>Your Recipe Book</h2>
-        <p>Select a recipe to view it, or click <strong>+ Recipe</strong> to add something new.</p>
+        <h2>eRecipe</h2>
+        <p>All your favourite recipes in one place. Select a recipe to view it, or click <strong>+ Recipe</strong> to add something new.</p>
       </div>
       <div class="recipe-view" id="deskRecipeView">
         <div class="recipe-chapter-tag" id="deskViewChapter"></div>
@@ -806,14 +820,14 @@ header {
       <div class="mob-settings-scroll">
         <h2>Settings</h2>
         <div class="settings-group">
-          <div class="settings-group-label">Google Drive Sync</div>
-          <button class="settings-btn" style="background:#1a73e8;color:#fff;border-color:#1a73e8" onclick="gdriveSave()">
-            <span class="s-icon">▲</span>
-            <div><div>Save to Google Drive</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Upload recipes.json to your Drive</div></div>
+          <div class="settings-group-label">Cloud Sync</div>
+          <button class="settings-btn save-data" onclick="gdriveSave()">
+            <span class="s-icon">☁</span>
+            <div><div>Save to Cloud</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Upload recipes to Google Drive</div></div>
           </button>
           <button class="settings-btn load-data" onclick="gdriveLoad()">
-            <span class="s-icon">▲</span>
-            <div><div>Load from Google Drive</div><div class="settings-note">Fetch the latest recipes from Drive</div></div>
+            <span class="s-icon">☁</span>
+            <div><div>Load from Cloud</div><div class="settings-note">Fetch the latest recipes from Google Drive</div></div>
           </button>
           <p class="settings-note">Sign in with Google when prompted. The app remembers the file between saves.</p>
           <div style="margin-top:1rem">
@@ -828,28 +842,6 @@ header {
           </div>
         </div>
         <div class="settings-group">
-          <div class="settings-group-label">Dropbox Sync</div>
-          <button class="settings-btn save-data" onclick="dropboxSave()">
-            <span class="s-icon">☁</span>
-            <div><div>Save to Dropbox</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Upload recipes.json to your Dropbox</div></div>
-          </button>
-          <button class="settings-btn load-data" onclick="dropboxLoad()">
-            <span class="s-icon">☁</span>
-            <div><div>Load from Dropbox</div><div class="settings-note">Fetch the latest recipes from Dropbox</div></div>
-          </button>
-          <p class="settings-note">Both buttons will open a Dropbox sign-in if needed. Your recipes are stored as <strong>recipes.json</strong> in your Dropbox.</p>
-          <div style="margin-top:1rem">
-            <div class="settings-group-label" style="margin-bottom:.5rem">Dropbox File Path</div>
-            <div style="display:flex;gap:.5rem;align-items:center">
-              <input class="dbx-path-input" type="text" placeholder="/recipes.json"
-                style="flex:1;padding:.6rem .8rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
-                onchange="setDbxPath(this.value)"/>
-              <button onclick="setDbxPath(this.previousElementSibling.value)" style="padding:.6rem .9rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">Set</button>
-            </div>
-            <p class="settings-note" style="margin-top:.4rem">e.g. /Kitchen/recipes.json — must start with / and end with .json</p>
-          </div>
-        </div>
-        <div class="settings-group">
           <div class="settings-group-label">Local Backup</div>
           <button class="settings-btn load-data" onclick="saveLocalFile()">
             <span class="s-icon">⬇</span>
@@ -859,6 +851,33 @@ header {
             <span class="s-icon">⬆</span>
             <div><div>Load from File</div><div class="settings-note">Restore from a local recipes.json</div></div>
           </button>
+        </div>
+        <div class="settings-group">
+          <details>
+            <summary style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding-bottom:.4rem;border-bottom:1px solid var(--border)">
+              Dropbox <span style="font-size:.8rem">▶</span>
+            </summary>
+            <div style="margin-top:.8rem">
+              <button class="settings-btn load-data" style="margin-bottom:.6rem" onclick="dropboxSave()">
+                <span class="s-icon">📦</span>
+                <div><div>Save to Dropbox</div><div class="settings-note">Upload recipes.json to Dropbox</div></div>
+              </button>
+              <button class="settings-btn load-data" style="margin-bottom:.6rem" onclick="dropboxLoad()">
+                <span class="s-icon">📦</span>
+                <div><div>Load from Dropbox</div><div class="settings-note">Fetch the latest from Dropbox</div></div>
+              </button>
+              <div style="margin-top:.6rem">
+                <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.4rem">Dropbox File Path</div>
+                <div style="display:flex;gap:.5rem;align-items:center">
+                  <input class="dbx-path-input" type="text" placeholder="/recipes.json"
+                    style="flex:1;padding:.6rem .8rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
+                    onchange="setDbxPath(this.value)"/>
+                  <button onclick="setDbxPath(this.previousElementSibling.value)" style="padding:.6rem .9rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">Set</button>
+                </div>
+                <p class="settings-note" style="margin-top:.4rem">e.g. /Kitchen/recipes.json</p>
+              </div>
+            </div>
+          </details>
         </div>
         <div class="settings-group">
           <div class="settings-group-label">Export</div>
@@ -876,14 +895,6 @@ header {
 <!-- Desktop settings popover -->
 <div class="desk-settings" id="deskSettings">
   <h3>⚙ Settings</h3>
-  <span class="ds-label">Dropbox File Path</span>
-  <div class="path-row">
-    <input class="dbx-path-input" type="text" placeholder="/recipes.json"
-      onkeydown="if(event.key==='Enter') setDbxPath(this.value)"/>
-    <button onclick="setDbxPath(this.previousElementSibling.value)">Set</button>
-  </div>
-  <p class="ds-note">e.g. /Kitchen/recipes.json — must start with /</p>
-  <hr class="ds-divider"/>
   <span class="ds-label">Google Drive Folder</span>
   <div class="path-row">
     <input class="gdrive-folder-input" type="text" placeholder="My Drive (root)"
@@ -891,6 +902,23 @@ header {
     <button onclick="setGdriveFolder(this.previousElementSibling.value)">Set</button>
   </div>
   <p class="ds-note">Folder name in your Drive, e.g. Kitchen. Leave blank for root.</p>
+  <hr class="ds-divider"/>
+  <details>
+    <summary style="cursor:pointer;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);font-weight:700;list-style:none;display:flex;justify-content:space-between">Dropbox <span>▶</span></summary>
+    <div style="margin-top:.7rem">
+      <span class="ds-label">Dropbox File Path</span>
+      <div class="path-row">
+        <input class="dbx-path-input" type="text" placeholder="/recipes.json"
+          onkeydown="if(event.key==='Enter') setDbxPath(this.value)"/>
+        <button onclick="setDbxPath(this.previousElementSibling.value)">Set</button>
+      </div>
+      <p class="ds-note">e.g. /Kitchen/recipes.json — must start with /</p>
+      <div class="ds-row" style="margin-top:.6rem">
+        <button onclick="dropboxSave()">📦 Save</button>
+        <button onclick="dropboxLoad()">📦 Load</button>
+      </div>
+    </div>
+  </details>
   <hr class="ds-divider"/>
   <span class="ds-label">Local Backup</span>
   <div class="ds-row">
