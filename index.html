@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Home Kitchen — Recipe Book</title>
+<title>eRecipe</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
@@ -581,11 +581,133 @@ header {
   .toast.show { transform: translateY(0); }
 }
 
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* ── NAMING MODAL ──────────────────────────────── */
+.name-modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(26,18,8,0.6);
+  z-index: 150;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.name-modal-overlay.open { display: flex; }
+.name-modal {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.8rem;
+  width: 100%;
+  max-width: 380px;
+}
+.name-modal h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: .3rem; color: var(--brown); }
+.name-modal p  { font-size: .82rem; color: var(--muted); margin-bottom: 1rem; }
+.name-modal input {
+  width: 100%; padding: .65rem .9rem;
+  font-family: 'Lato', sans-serif; font-size: 1rem;
+  border: 1px solid var(--border); border-radius: 3px;
+  background: var(--cream); color: var(--ink); outline: none;
+  margin-bottom: .3rem;
+}
+.name-modal input:focus { border-color: var(--gold); }
+.name-modal .name-hint { font-size: .72rem; color: var(--muted); margin-bottom: 1rem; }
+.name-modal .modal-actions { display: flex; gap: .6rem; justify-content: flex-end; }
 
-/* ── DESKTOP SETTINGS POPOVER ──────────────────── */
+/* ── PRINT / RECIPE CARDS ──────────────────────── */
+@media print {
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; }
+  @page { size: A4; margin: 8mm; }
+}
+#printArea {
+  display: none;
+  font-family: Georgia, serif;
+}
+.card-page {
+  width: 210mm;
+  height: 297mm;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 4mm;
+  page-break-after: always;
+  box-sizing: border-box;
+}
+.recipe-card {
+  border: 1px solid #c8952a;
+  border-radius: 3mm;
+  padding: 4mm 5mm;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 99mm;
+  height: 144mm;
+  font-size: 7.5pt;
+  line-height: 1.35;
+  position: relative;
+}
+.recipe-card.back {
+  background: #faf6f0;
+}
+.card-header {
+  border-bottom: 0.5mm solid #c8952a;
+  margin-bottom: 2mm;
+  padding-bottom: 1.5mm;
+}
+.card-book-name {
+  font-size: 5.5pt;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #8a7060;
+  margin-bottom: .5mm;
+}
+.card-title {
+  font-family: Georgia, serif;
+  font-size: 11pt;
+  font-weight: bold;
+  line-height: 1.2;
+  color: #1a1208;
+}
+.card-desc {
+  font-style: italic;
+  color: #8a7060;
+  font-size: 6.5pt;
+  margin-top: 1mm;
+}
+.card-section {
+  font-size: 6pt;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #c0571a;
+  font-weight: bold;
+  margin: 2mm 0 1mm;
+}
+.card-ing-box {
+  border-left: 1mm solid #c8952a;
+  padding-left: 2mm;
+  margin-bottom: 1mm;
+}
+.card ul { padding-left: 3mm; margin: 0; }
+.card ol { padding-left: 3.5mm; margin: 0; }
+.card li { margin: .3mm 0; }
+.card-subhead { font-weight: bold; font-size: 7pt; margin: 1.5mm 0 .5mm; list-style: none; margin-left: -1mm; }
+.card-tip {
+  font-style: italic;
+  color: #666;
+  font-size: 6pt;
+  border-top: .3mm dashed #bbb;
+  padding-top: 1.5mm;
+  margin-top: auto;
+}
+.card-number {
+  position: absolute;
+  bottom: 2.5mm;
+  right: 3mm;
+  font-size: 5.5pt;
+  color: #bbb;
+}
+</style>
 .desk-settings {
   display: none;
   position: fixed;
@@ -694,6 +816,7 @@ header {
     <button class="hbtn hbtn-load" onclick="gdriveLoad()" title="Load from Cloud">☁ Load</button>
     <button class="hbtn hbtn-save" onclick="gdriveSave()" title="Save to Cloud">☁ Save</button>
     <button class="hbtn hbtn-epub" onclick="exportEpub()">📖 EPUB</button>
+    <button class="hbtn hbtn-save" onclick="printCards()" title="Print Recipe Cards">🖨 Cards</button>
     <button class="hbtn hbtn-load" onclick="toggleDeskSettings()" title="Settings">⚙</button>
   </div>
 </header>
@@ -885,6 +1008,10 @@ header {
             <span class="s-icon">📖</span>
             <div><div>Export EPUB</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Download for Kobo or other e-readers</div></div>
           </button>
+          <button class="settings-btn" style="background:var(--brown);color:#fff;border-color:var(--brown)" onclick="printCards()">
+            <span class="s-icon">🖨</span>
+            <div><div>Print Recipe Cards</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">A6 cards, 4 per A4 sheet</div></div>
+          </button>
         </div>
       </div>
     </div>
@@ -950,6 +1077,23 @@ header {
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeChapterModal()">Cancel</button>
       <button class="btn-save" onclick="addChapter()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Print area (hidden, shown only during print) -->
+<div id="printArea"></div>
+
+<!-- Naming modal (for local save + EPUB) -->
+<div class="name-modal-overlay" id="nameModal">
+  <div class="name-modal">
+    <h3 id="nameModalTitle">Name your file</h3>
+    <p id="nameModalDesc">This name will be used for the downloaded file and as the book title.</p>
+    <input type="text" id="nameModalInput" placeholder="e.g. Italian Favourites" autocomplete="off"/>
+    <div class="name-hint" id="nameModalHint"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeNameModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmNameModal()">Continue</button>
     </div>
   </div>
 </div>
@@ -1146,15 +1290,62 @@ async function dropboxLoad() {
 }
 
 // Local file fallback (backup)
-function saveLocalFile() {
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'recipes.json'; a.click();
-  URL.revokeObjectURL(url);
-  showToast('recipes.json downloaded');
+// ══════════════════════════════════════════════════
+// NAMING MODAL
+// ══════════════════════════════════════════════════
+let nameModalCallback = null;
+
+function showNameModal({ title, desc, placeholder, hint, defaultVal, callback }) {
+  document.getElementById('nameModalTitle').textContent = title;
+  document.getElementById('nameModalDesc').textContent = desc;
+  document.getElementById('nameModalInput').placeholder = placeholder || '';
+  document.getElementById('nameModalInput').value = defaultVal || '';
+  document.getElementById('nameModalHint').textContent = hint || '';
+  nameModalCallback = callback;
+  document.getElementById('nameModal').classList.add('open');
+  setTimeout(() => document.getElementById('nameModalInput').select(), 80);
 }
+function closeNameModal() {
+  document.getElementById('nameModal').classList.remove('open');
+  nameModalCallback = null;
+}
+function confirmNameModal() {
+  const val = document.getElementById('nameModalInput').value.trim();
+  if (!val) { document.getElementById('nameModalInput').focus(); return; }
+  closeNameModal();
+  if (nameModalCallback) nameModalCallback(val);
+}
+document.getElementById('nameModalInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmNameModal();
+  if (e.key === 'Escape') closeNameModal();
+});
+
+// Saved book name (persisted)
+const BOOK_NAME_KEY = 'hk_book_name';
+function getBookName() { return localStorage.getItem(BOOK_NAME_KEY) || 'My Recipes'; }
+function setBookName(n) { localStorage.setItem(BOOK_NAME_KEY, n); }
+
+function saveLocalFile() {
+  showNameModal({
+    title: 'Save Recipe File',
+    desc: 'Choose a name for this recipe book. The file will download as a .json file.',
+    placeholder: 'e.g. Italian Favourites',
+    defaultVal: getBookName(),
+    hint: 'Saved as: [name].json',
+    callback: (name) => {
+      setBookName(name);
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const fname = name.replace(/[^a-z0-9\-_ ]/gi, '').trim().replace(/ /g, '_') || 'recipes';
+      a.href = url; a.download = `${fname}.json`; a.click();
+      URL.revokeObjectURL(url);
+      showToast(`${fname}.json saved`);
+    }
+  });
+}
+
 function loadLocalFile() {
   document.getElementById('fileInput').click();
 }
@@ -1167,6 +1358,9 @@ function handleFileLoad(e) {
       const parsed = JSON.parse(evt.target.result);
       if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
       data = parsed;
+      // Use filename (minus extension) as book name
+      const guessedName = file.name.replace(/\.json$/i,'').replace(/_/g,' ');
+      if (guessedName) setBookName(guessedName);
       openChapters = new Set([data.chapters[0]?.id]);
       persistToStorage();
       deskCurrentId = null; deskEditingId = null;
@@ -1174,13 +1368,97 @@ function handleFileLoad(e) {
       renderAll();
       showPanel('deskWelcome');
       mob_backToList();
-      showToast('Recipes loaded!');
+      showToast(`Loaded: ${file.name}`);
     } catch(err) {
-      showToast('Could not read file — is it a valid recipes.json?');
+      showToast('Could not read file — is it a valid .json?');
     }
     e.target.value = '';
   };
   reader.readAsText(file);
+}
+
+// ══════════════════════════════════════════════════
+// RECIPE CARDS PRINT
+// ══════════════════════════════════════════════════
+function cardSectionedList(lines, tag) {
+  const open = () => `<${tag} style="padding-left:3.5mm;margin:0">`;
+  const close = () => `</${tag}>`;
+  let html = open(); let isOpen = true;
+  for (const line of lines) {
+    const t = line.trim(); if (!t) continue;
+    if (t.endsWith(':')) {
+      if (isOpen) { html += close(); isOpen = false; }
+      html += `<li class="card-subhead">${esc(t.slice(0,-1))}</li>${open()}`;
+      isOpen = true;
+    } else {
+      html += `<li>${esc(t)}</li>`;
+    }
+  }
+  if (isOpen) html += close();
+  return html;
+}
+
+function buildCard(recipe, side, cardNum, totalCards, bookName) {
+  const ch = data.chapters.find(c => c.id === recipe.chapterId);
+  if (side === 'front') {
+    // Front: title, description, ingredients
+    return `<div class="recipe-card">
+      <div class="card-header">
+        <div class="card-book-name">${esc(bookName)}${ch ? ' · ' + esc(ch.name) : ''}</div>
+        <div class="card-title">${esc(recipe.title)}</div>
+        ${recipe.desc ? `<div class="card-desc">${esc(recipe.desc)}</div>` : ''}
+      </div>
+      <div class="card-section">Ingredients</div>
+      <div class="card-ing-box">${cardSectionedList(recipe.ingredients, 'ul')}</div>
+      <div class="card-number">${cardNum} / ${totalCards} · Front</div>
+    </div>`;
+  } else {
+    // Back: instructions + tip
+    return `<div class="recipe-card back">
+      <div class="card-header">
+        <div class="card-book-name">${esc(bookName)}</div>
+        <div class="card-title">${esc(recipe.title)}</div>
+      </div>
+      <div class="card-section">Instructions</div>
+      ${cardSectionedList(recipe.steps, 'ol')}
+      ${recipe.tip ? `<div class="card-tip"><strong>Tip:</strong> ${esc(recipe.tip)}</div>` : ''}
+      <div class="card-number">${cardNum} / ${totalCards} · Back</div>
+    </div>`;
+  }
+}
+
+function printCards() {
+  const bookName = getBookName();
+  const recipes = data.recipes;
+  if (!recipes.length) { showToast('No recipes to print'); return; }
+
+  const totalCards = recipes.length;
+  // Build pages: 4 cards per page (2 front + 2 back interleaved for duplex)
+  // We group recipes in pairs per sheet: front page has cards 1F,2F,3F,4F; back has 1B,2B,3B,4B
+  const pages = [];
+  for (let i = 0; i < recipes.length; i += 4) {
+    const batch = recipes.slice(i, i + 4);
+    // Front side page
+    let frontHtml = '<div class="card-page">';
+    for (let j = 0; j < 4; j++) {
+      const r = batch[j];
+      frontHtml += r ? buildCard(r, 'front', i + j + 1, totalCards, bookName) : '<div class="recipe-card" style="border:1px dashed #ddd;background:#fafafa"></div>';
+    }
+    frontHtml += '</div>';
+    // Back side page (reversed left/right for duplex: card 2,1,4,3)
+    let backHtml = '<div class="card-page">';
+    const backOrder = [1,0,3,2]; // flip horizontally for duplex printing
+    for (const j of backOrder) {
+      const r = batch[j];
+      backHtml += r ? buildCard(r, 'back', i + j + 1, totalCards, bookName) : '<div class="recipe-card" style="border:1px dashed #ddd;background:#fafafa"></div>';
+    }
+    backHtml += '</div>';
+    pages.push(frontHtml, backHtml);
+  }
+
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = pages.join('');
+  window.print();
 }
 
 // ══════════════════════════════════════════════════
@@ -1565,11 +1843,11 @@ function getGdriveFolder() {
 }
 function setGdriveFolder(val) {
   const f = val.trim();
+  if (!f) { showToast('Please enter a folder name'); return; }
   localStorage.setItem(GD_FOLDER_KEY, f);
-  // Clear saved file ID — folder changed so we'll need to find/create fresh
   localStorage.removeItem(GD_FILE_ID_KEY);
   document.querySelectorAll('.gdrive-folder-input').forEach(el => el.value = f);
-  showToast('Google Drive folder saved');
+  showToast(`Drive folder set to "${f}"`);
 }
 
 function getGdriveToken() {
@@ -1611,9 +1889,9 @@ async function gdriveApiCall(token, url, options = {}) {
   return resp;
 }
 
-// Find or optionally create the target folder, return its ID (or null for root)
+// Find or create the target folder — folder name is required
 async function gdriveFindFolder(token, folderName) {
-  if (!folderName) return null; // root
+  if (!folderName) return 'NO_FOLDER'; // signal missing folder
   const q = encodeURIComponent(`name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
   const resp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
   if (!resp) return 'AUTH_EXPIRED';
@@ -1627,15 +1905,16 @@ async function gdriveFindFolder(token, folderName) {
   });
   if (!createResp) return 'AUTH_EXPIRED';
   const created = await createResp.json();
+  showToast(`Created folder "${folderName}" in Drive`);
   return created.id;
 }
 
-// Find existing recipes.json in the target folder
-async function gdriveFindFile(token, folderId) {
+// Find existing file in the target folder by name
+async function gdriveFindFile(token, folderId, fileName) {
   const savedId = localStorage.getItem(GD_FILE_ID_KEY);
-  if (savedId) return savedId; // use cached ID
-  const parent = folderId ? `'${folderId}'` : `'root'`;
-  const q = encodeURIComponent(`name='${GD_FILE_NAME}' and ${parent} in parents and trashed=false`);
+  if (savedId) return savedId;
+  const parent = `'${folderId}'`;
+  const q = encodeURIComponent(`name='${fileName}' and ${parent} in parents and trashed=false`);
   const resp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
   if (!resp) return 'AUTH_EXPIRED';
   const json = await resp.json();
@@ -1643,105 +1922,150 @@ async function gdriveFindFile(token, folderId) {
     localStorage.setItem(GD_FILE_ID_KEY, json.files[0].id);
     return json.files[0].id;
   }
-  return null; // doesn't exist yet
+  return null;
 }
 
 async function gdriveSave() {
-  const doSave = async (token) => {
-    showToast('Saving to Google Drive…');
-    try {
-      const folderName = getGdriveFolder();
-      const folderId = await gdriveFindFolder(token, folderName);
-      if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
+  const folderName = getGdriveFolder();
+  if (!folderName) {
+    showToast('Please set a Drive folder in Settings first');
+    return;
+  }
 
-      const json = JSON.stringify(data, null, 2);
-      const existingId = await gdriveFindFile(token, folderId);
-      if (existingId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
+  showNameModal({
+    title: 'Save to Google Drive',
+    desc: `File will be saved as [name].json in your "${folderName}" folder.`,
+    placeholder: 'e.g. Italian Favourites',
+    defaultVal: getBookName(),
+    hint: `Destination: ${folderName}/[name].json`,
+    callback: (name) => {
+      setBookName(name);
+      const fileName = name.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') + '.json';
+      const doSave = async (token) => {
+        showToast('Saving to Google Drive…');
+        try {
+          const folderId = await gdriveFindFolder(token, folderName);
+          if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
+          if (folderId === 'NO_FOLDER') { showToast('Please set a Drive folder in Settings'); return; }
 
-      let resp;
-      if (existingId) {
-        // Update existing file
-        resp = await gdriveApiCall(token,
-          `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: json
-        });
-      } else {
-        // Create new file with metadata + content (multipart)
-        const boundary = 'boundary_recipes_hk';
-        const parents = folderId ? [folderId] : [];
-        const metadata = JSON.stringify({ name: GD_FILE_NAME, mimeType: 'application/json', parents });
-        const multipart = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${json}\r\n--${boundary}--`;
-        resp = await gdriveApiCall(token,
-          'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-          method: 'POST',
-          headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-          body: multipart
-        });
-      }
+          const json = JSON.stringify(data, null, 2);
+          const existingId = await gdriveFindFile(token, folderId, fileName);
+          if (existingId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
 
-      if (!resp) { gdriveAuth(doSave); return; }
-      const result = await resp.json();
-      if (result.id) {
-        localStorage.setItem(GD_FILE_ID_KEY, result.id);
-        showToast('Saved to Google Drive ✓');
-      } else {
-        throw new Error(JSON.stringify(result));
-      }
-    } catch(e) {
-      showToast('Google Drive save failed');
-      console.error(e);
+          let resp;
+          if (existingId) {
+            resp = await gdriveApiCall(token,
+              `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: json
+            });
+          } else {
+            const boundary = 'boundary_recipes_hk';
+            const metadata = JSON.stringify({ name: fileName, mimeType: 'application/json', parents: [folderId] });
+            const multipart = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${json}\r\n--${boundary}--`;
+            resp = await gdriveApiCall(token,
+              'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+              method: 'POST',
+              headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+              body: multipart
+            });
+          }
+
+          if (!resp) { gdriveAuth(doSave); return; }
+          const result = await resp.json();
+          if (result.id) {
+            localStorage.setItem(GD_FILE_ID_KEY, result.id);
+            showToast(`Saved to Drive: ${folderName}/${fileName} ✓`);
+          } else {
+            throw new Error(JSON.stringify(result));
+          }
+        } catch(e) {
+          showToast('Google Drive save failed');
+          console.error(e);
+        }
+      };
+      const token = getGdriveToken();
+      if (token) doSave(token);
+      else gdriveAuth(doSave);
     }
-  };
-
-  const token = getGdriveToken();
-  if (token) doSave(token);
-  else gdriveAuth(doSave);
+  });
 }
 
 async function gdriveLoad() {
-  const doLoad = async (token) => {
-    showToast('Loading from Google Drive…');
-    try {
-      const folderName = getGdriveFolder();
-      const folderId = await gdriveFindFolder(token, folderName);
-      if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
+  const folderName = getGdriveFolder();
+  if (!folderName) {
+    showToast('Please set a Drive folder in Settings first');
+    return;
+  }
 
-      const fileId = await gdriveFindFile(token, folderId);
-      if (fileId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
-      if (!fileId) { showToast('No recipes.json found in Drive'); return; }
+  showNameModal({
+    title: 'Load from Google Drive',
+    desc: `Enter the name of the recipe book file to load from "${folderName}".`,
+    placeholder: 'e.g. Italian Favourites',
+    defaultVal: getBookName(),
+    hint: `Will look for: ${folderName}/[name].json`,
+    callback: (name) => {
+      setBookName(name);
+      // Clear cached file ID so we search fresh
+      localStorage.removeItem(GD_FILE_ID_KEY);
+      const fileName = name.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') + '.json';
+      const doLoad = async (token) => {
+        showToast('Loading from Google Drive…');
+        try {
+          const folderId = await gdriveFindFolder(token, folderName);
+          if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
+          if (folderId === 'NO_FOLDER') { showToast('Please set a Drive folder in Settings'); return; }
 
-      const resp = await gdriveApiCall(token,
-        `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
-      if (!resp) { gdriveAuth(doLoad); return; }
+          const fileId = await gdriveFindFile(token, folderId, fileName);
+          if (fileId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
+          if (!fileId) { showToast(`Not found: ${folderName}/${fileName}`); return; }
 
-      const parsed = await resp.json();
-      if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
-      data = parsed;
-      openChapters = new Set([data.chapters[0]?.id]);
-      persistToStorage();
-      deskCurrentId = null; deskEditingId = null;
-      mobCurrentId = null; mobEditingId = null;
-      renderAll();
-      showPanel('deskWelcome');
-      mob_backToList();
-      showToast('Loaded from Google Drive ✓');
-    } catch(e) {
-      showToast('Google Drive load failed');
-      console.error(e);
+          const resp = await gdriveApiCall(token,
+            `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+          if (!resp) { gdriveAuth(doLoad); return; }
+
+          const parsed = await resp.json();
+          if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+          data = parsed;
+          openChapters = new Set([data.chapters[0]?.id]);
+          persistToStorage();
+          deskCurrentId = null; deskEditingId = null;
+          mobCurrentId = null; mobEditingId = null;
+          renderAll();
+          showPanel('deskWelcome');
+          mob_backToList();
+          showToast(`Loaded: ${folderName}/${fileName} ✓`);
+        } catch(e) {
+          showToast('Google Drive load failed');
+          console.error(e);
+        }
+      };
+      const token = getGdriveToken();
+      if (token) doLoad(token);
+      else gdriveAuth(doLoad);
     }
-  };
-
-  const token = getGdriveToken();
-  if (token) doLoad(token);
-  else gdriveAuth(doLoad);
+  });
 }
 
 // ══════════════════════════════════════════════════
 // EPUB EXPORT
 // ══════════════════════════════════════════════════
 async function exportEpub() {
+  showNameModal({
+    title: 'Export EPUB',
+    desc: 'This name will be used as the book title and filename.',
+    placeholder: 'e.g. Italian Favourites',
+    defaultVal: getBookName(),
+    hint: 'Saved as: [name].epub',
+    callback: async (name) => {
+      setBookName(name);
+      await buildEpub(name);
+    }
+  });
+}
+
+async function buildEpub(bookName) {
   showToast('Building EPUB…');
   const zip = new JSZip();
   zip.file('mimetype', 'application/epub+zip', {compression:'STORE'});
@@ -1758,6 +2082,7 @@ ul, ol { margin: .2em 0 .2em 1.3em; padding: 0; }
 li    { margin: .2em 0; font-size: .95em; }
 .tip  { font-style: italic; color: #666; padding: .4em .7em; border: 1px dashed #bbb; margin-top: .8em; font-size: .88em; }
 .chapter-title { page-break-before: always; }
+.cover-date { color: #888; font-size: .85em; margin-top: 2em; }
 `;
   zip.file('OEBPS/style/main.css', css);
 
@@ -1765,9 +2090,13 @@ li    { margin: .2em 0; font-size: .95em; }
   const wrap = (title, body) =>
     `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${x(title)}</title><link rel="stylesheet" type="text/css" href="style/main.css"/></head><body>${body}</body></html>`;
 
+  // Date for cover
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
   // Cover page
-  zip.file('OEBPS/cover.xhtml', wrap('Home Kitchen Recipe Book',
-    `<h1>Home Kitchen Recipe Book</h1><p class="intro">A collection of beloved recipes.</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul>`));
+  zip.file('OEBPS/cover.xhtml', wrap(bookName,
+    `<h1>${x(bookName)}</h1><p class="intro">All your favourite recipes in an epub file.</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul><p class="cover-date">Last updated: ${dateStr}</p>`));
 
   const mf = [
     `<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>`,
@@ -1776,10 +2105,7 @@ li    { margin: .2em 0; font-size: .95em; }
     `<item id="nav"   href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>`,
   ];
   const sp = [`<itemref idref="cover"/>`];
-
-  // NCX: top-level navPoints for chapters, nested navPoints for recipes
   const ncxPoints = [`<navPoint id="cover" playOrder="1"><navLabel><text>Title Page</text></navLabel><content src="cover.xhtml"/></navPoint>`];
-  // NAV: nested ol structure
   const navItems = [`<li><a href="cover.xhtml">Title Page</a></li>`];
 
   let po = 2;
@@ -1788,8 +2114,6 @@ li    { margin: .2em 0; font-size: .95em; }
     const rs = data.recipes.filter(r => r.chapterId === ch.id);
     if (!rs.length) continue;
 
-    // Each recipe gets its own XHTML file
-    // Chapter intro page (just the chapter heading + recipe list)
     const chIntroFname = `ch_${ch.id}.xhtml`;
     const chIntroBody = `<h1 class="chapter-title">${x(ch.name)}</h1><ul>${rs.map(r=>`<li>${x(r.title)}</li>`).join('')}</ul>`;
     zip.file(`OEBPS/${chIntroFname}`, wrap(ch.name, chIntroBody));
@@ -1798,7 +2122,6 @@ li    { margin: .2em 0; font-size: .95em; }
 
     const chNavPoints = [];
     const chNavLiItems = [];
-
     chNavPoints.push(`<navPoint id="chi_${ch.id}" playOrder="${po}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chIntroFname}"/></navPoint>`);
     po++;
 
@@ -1815,7 +2138,6 @@ li    { margin: .2em 0; font-size: .95em; }
       zip.file(`OEBPS/${fname}`, wrap(r.title, body));
       mf.push(`<item id="${rid}" href="${fname}" media-type="application/xhtml+xml"/>`);
       sp.push(`<itemref idref="${rid}"/>`);
-
       chNavPoints.push(`<navPoint id="r_${rid}" playOrder="${po}"><navLabel><text>${x(r.title)}</text></navLabel><content src="${fname}"/></navPoint>`);
       chNavLiItems.push(`<li><a href="${fname}">${x(r.title)}</a></li>`);
       po++;
@@ -1825,18 +2147,21 @@ li    { margin: .2em 0; font-size: .95em; }
     navItems.push(`<li><a href="${chIntroFname}">${x(ch.name)}</a><ol>${chNavLiItems.join('')}</ol></li>`);
   }
 
+  const safeId = bookName.replace(/[^a-z0-9]/gi,'-').toLowerCase();
   zip.file('OEBPS/content.opf',
-    `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">home-kitchen-recipe-book</dc:identifier><dc:title>Home Kitchen Recipe Book</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
+    `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">${safeId}</dc:identifier><dc:title>${x(bookName)}</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
 
   zip.file('OEBPS/toc.ncx',
-    `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="home-kitchen-recipe-book"/></head><docTitle><text>Home Kitchen Recipe Book</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
+    `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="${safeId}"/></head><docTitle><text>${x(bookName)}</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
 
   zip.file('OEBPS/nav.xhtml',
     `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><h1>Contents</h1><ol>${navItems.join('')}</ol></nav></body></html>`);
 
   const blob = await zip.generateAsync({type:'blob', mimeType:'application/epub+zip'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'Home_Kitchen_Recipe_Book.epub'; a.click();
+  const a = document.createElement('a');
+  const fname = bookName.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') || 'recipes';
+  a.href = url; a.download = `${fname}.epub`; a.click();
   URL.revokeObjectURL(url);
   showToast('EPUB downloaded!');
 }
@@ -1859,7 +2184,7 @@ document.addEventListener('click', e => {
 // ══════════════════════════════════════════════════
 renderAll();
 showPanel('deskWelcome');
-// Populate path/folder inputs with saved values
+// Populate settings inputs with saved values
 document.querySelectorAll('.dbx-path-input').forEach(el => el.value = getDbxPath());
 document.querySelectorAll('.gdrive-folder-input').forEach(el => el.value = getGdriveFolder());
 
