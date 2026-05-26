@@ -4,6 +4,12 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>eRecipe</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#1a1208"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="eRecipe"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
@@ -707,7 +713,8 @@ header {
   font-size: 5.5pt;
   color: #bbb;
 }
-</style>
+
+/* ── DESKTOP SETTINGS POPOVER ──────────────────── */
 .desk-settings {
   display: none;
   position: fixed;
@@ -2199,6 +2206,14 @@ document.querySelectorAll('.gdrive-folder-input').forEach(el => el.value = getGd
     if (intent === 'load') await dropboxLoad();
   }
 })();
+// Register service worker for PWA / offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('eRecipe: service worker registered'))
+      .catch(e => console.warn('eRecipe: SW registration failed', e));
+  });
+}
 </script>
 </body>
 </html>
