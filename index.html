@@ -2252,7 +2252,7 @@ document.querySelectorAll('.gdrive-folder-input').forEach(el => el.value = getGd
 // Only runs when hosted on GitHub Pages (not in Claude or local file)
 if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent.com' && location.protocol === 'https:') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker.register('/recipe-manager/sw.js')
       .then(() => console.log('eRecipe: service worker registered'))
       .catch(e => console.warn('eRecipe: SW registration failed', e));
   });
