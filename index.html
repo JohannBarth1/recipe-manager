@@ -1008,14 +1008,62 @@ function esc(s) {
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// Renders a list where lines ending in ':' become bold subheadings.
+// tag = 'ul' for ingredients, 'ol' for steps (numbered).
+// For steps, subheadings reset the visible counter and suppress the number.
+function renderSectionedList(lines, tag) {
+  const subStyle = `list-style:none;font-weight:700;margin-top:.7em;margin-left:-0.5em`;
+  let html = `<${tag}>`;
+  let open = true;
+  let stepNum = 0;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.endsWith(':')) {
+      if (open) { html += `</${tag}>`; open = false; }
+      html += `<li style="${subStyle}">${esc(trimmed.slice(0, -1))}</li><${tag}>`;
+      open = true;
+      if (tag === 'ol') stepNum = 0; // reset counter visually via restart attr below
+    } else {
+      if (tag === 'ol') {
+        stepNum++;
+        html += `<li><span class="step-num">${stepNum}</span><span>${esc(trimmed)}</span></li>`;
+      } else {
+        html += `<li>${esc(trimmed)}</li>`;
+      }
+    }
+  }
+  if (open) html += `</${tag}>`;
+  return html;
+}
+
+// Same logic but returns clean XHTML for the EPUB (no inline styles for steps,
+// uses semantic class names instead).
+function epubSectionedList(lines, tag) {
+  let html = `<${tag}>`;
+  let open = true;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.endsWith(':')) {
+      if (open) { html += `</${tag}>`; open = false; }
+      html += `<p class="sec-head">${esc(trimmed.slice(0, -1))}</p><${tag}>`;
+      open = true;
+    } else {
+      html += `<li>${esc(trimmed)}</li>`;
+    }
+  }
+  if (open) html += `</${tag}>`;
+  return html;
+}
+
 function renderRecipeInto(recipe, ids) {
   const ch = data.chapters.find(c => c.id === recipe.chapterId);
   document.getElementById(ids.chapter).textContent = ch ? ch.name : '';
   document.getElementById(ids.title).textContent = recipe.title;
   if (ids.desc) document.getElementById(ids.desc).textContent = recipe.desc || '';
-  document.getElementById(ids.ingredients).innerHTML = recipe.ingredients.map(i => `<li>${esc(i)}</li>`).join('');
-  document.getElementById(ids.steps).innerHTML = recipe.steps.map((s,i) =>
-    `<li><span class="step-num">${i+1}</span><span>${esc(s)}</span></li>`).join('');
+  document.getElementById(ids.ingredients).innerHTML = renderSectionedList(recipe.ingredients, 'ul');
+  document.getElementById(ids.steps).innerHTML = renderSectionedList(recipe.steps, 'ol');
   const tipEl = document.getElementById(ids.tip);
   if (recipe.tip) { tipEl.textContent = recipe.tip; tipEl.style.display = 'block'; }
   else { tipEl.style.display = 'none'; }
@@ -1324,15 +1372,15 @@ async function exportEpub() {
   zip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:schemas:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
 
   const css = `
-body { font-family: Georgia, serif; margin: 2em; line-height: 1.6; }
-h1   { font-size: 2em;   border-bottom: 3px solid #333; padding-bottom: .4em; margin-top: 1.2em; margin-bottom: .6em; }
-h2   { font-size: 1.4em; border-bottom: 1px solid #aaa; padding-bottom: .25em; margin-top: 1.8em; margin-bottom: .5em; }
-h3   { font-size: 1.1em; text-transform: uppercase; letter-spacing: .08em; color: #8a4a1a; margin-top: 1.4em; margin-bottom: .4em; }
-ul, ol { margin: .5em 0 .5em 1.5em; }
-li   { margin: .35em 0; }
-.ing { background: #f9f9f9; border-left: 3px solid #c8952a; padding: .8em 1em; margin: .6em 0 1em; }
-.tip { font-style: italic; color: #666; padding: .6em 1em; border: 1px dashed #bbb; margin-top: 1.2em; border-radius: 3px; }
-.intro { font-style: italic; color: #666; margin-bottom: 1.2em; }
+body  { font-family: Georgia, serif; margin: 1em 1.2em; line-height: 1.4; font-size: 1em; }
+h1    { font-size: 1.5em; border-bottom: 2px solid #333; padding-bottom: .2em; margin-top: .8em; margin-bottom: .2em; }
+h2    { font-size: 1.1em; border-bottom: 1px solid #bbb; padding-bottom: .15em; margin-top: .9em; margin-bottom: .3em; }
+p.intro { font-style: italic; color: #555; margin: .2em 0 .6em; font-size: .9em; }
+p.sec-head { font-weight: bold; margin: .6em 0 .1em; font-size: .95em; }
+.ing  { border-left: 2px solid #c8952a; padding: .3em .6em; margin: .3em 0 .6em; }
+ul, ol { margin: .2em 0 .2em 1.3em; padding: 0; }
+li    { margin: .2em 0; font-size: .95em; }
+.tip  { font-style: italic; color: #666; padding: .4em .7em; border: 1px dashed #bbb; margin-top: .8em; font-size: .88em; }
 .chapter-title { page-break-before: always; }
 `;
   zip.file('OEBPS/style/main.css', css);
@@ -1383,10 +1431,9 @@ li   { margin: .35em 0; }
       const fname = `recipe_${rid}.xhtml`;
 
       let body = `<h1>${x(r.title)}</h1>`;
-      body += `<p class="intro"><em>${x(ch.name)}</em></p>`;
       if (r.desc) body += `<p class="intro">${x(r.desc)}</p>`;
-      body += `<h2>Ingredients</h2><div class="ing"><ul>${r.ingredients.map(i=>`<li>${x(i)}</li>`).join('')}</ul></div>`;
-      body += `<h2>Instructions</h2><ol>${r.steps.map(s=>`<li>${x(s)}</li>`).join('')}</ol>`;
+      body += `<h2>Ingredients</h2><div class="ing">${epubSectionedList(r.ingredients, 'ul')}</div>`;
+      body += `<h2>Instructions</h2>${epubSectionedList(r.steps, 'ol')}`;
       if (r.tip) body += `<div class="tip"><strong>Tip:</strong> ${x(r.tip)}</div>`;
 
       zip.file(`OEBPS/${fname}`, wrap(r.title, body));
