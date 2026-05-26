@@ -1,14 +1,10 @@
 const CACHE = 'erecipe-v2';
 
 const ASSETS = [
-  '/recipe-manager/',
   '/recipe-manager/recipe_book_manager.html',
   '/recipe-manager/manifest.json',
   '/recipe-manager/icon-192.png',
-  '/recipe-manager/icon-512.png',
-
-  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
-  'https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js'
+  '/recipe-manager/icon-512.png'
 ];
 
 // Install
