@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>eRecipe Book</title>
+<title>Home Kitchen — Recipe Book</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
 
@@ -592,8 +593,8 @@ header {
     <div class="brand-sub">Recipe Book</div>
   </div>
   <div class="header-actions">
-    <button class="hbtn hbtn-load" onclick="loadData()">⬆ Load</button>
-    <button class="hbtn hbtn-save" onclick="saveData()">⬇ Save</button>
+    <button class="hbtn hbtn-load" onclick="dropboxLoad()">☁ Load</button>
+    <button class="hbtn hbtn-save" onclick="dropboxSave()">☁ Save</button>
     <button class="hbtn hbtn-epub" onclick="exportEpub()">📖 Export EPUB</button>
   </div>
 </header>
@@ -720,16 +721,27 @@ header {
       <div class="mob-settings-scroll">
         <h2>Settings</h2>
         <div class="settings-group">
-          <div class="settings-group-label">Recipe Data</div>
-          <button class="settings-btn save-data" onclick="saveData()">
+          <div class="settings-group-label">Dropbox Sync</div>
+          <button class="settings-btn save-data" onclick="dropboxSave()">
+            <span class="s-icon">☁</span>
+            <div><div>Save to Dropbox</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Upload recipes.json to your Dropbox</div></div>
+          </button>
+          <button class="settings-btn load-data" onclick="dropboxLoad()">
+            <span class="s-icon">☁</span>
+            <div><div>Load from Dropbox</div><div class="settings-note">Fetch the latest recipes from Dropbox</div></div>
+          </button>
+          <p class="settings-note">Both buttons will open a Dropbox sign-in if needed. Your recipes are stored as <strong>recipes.json</strong> in your Dropbox.</p>
+        </div>
+        <div class="settings-group">
+          <div class="settings-group-label">Local Backup</div>
+          <button class="settings-btn load-data" onclick="saveLocalFile()">
             <span class="s-icon">⬇</span>
-            <div><div>Save Data</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Download recipes.json to your device</div></div>
+            <div><div>Download Backup</div><div class="settings-note">Save a local copy of recipes.json</div></div>
           </button>
-          <button class="settings-btn load-data" onclick="loadData()">
+          <button class="settings-btn load-data" onclick="loadLocalFile()">
             <span class="s-icon">⬆</span>
-            <div><div>Load Data</div><div class="settings-note">Restore from a saved recipes.json file</div></div>
+            <div><div>Load from File</div><div class="settings-note">Restore from a local recipes.json</div></div>
           </button>
-          <p class="settings-note">Save your data regularly and keep the file alongside this HTML file. Load it back any time to restore your recipes.</p>
         </div>
         <div class="settings-group">
           <div class="settings-group-label">Export</div>
@@ -829,21 +841,133 @@ function persistToStorage() {
   try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
 }
 
-// Save data to JSON file
-function saveData() {
+// ══════════════════════════════════════════════════
+// DROPBOX
+// ══════════════════════════════════════════════════
+const DBX_APP_KEY   = 'ke5hk7ze3ld6hqr';
+const DBX_FILE_PATH = '/recipes.json';
+const DBX_TOKEN_KEY = 'hk_dbx_token';
+
+function getDbxToken() {
+  // Check URL hash for token returned from OAuth redirect
+  const hash = window.location.hash;
+  if (hash) {
+    const params = new URLSearchParams(hash.replace('#', '?').slice(1));
+    const token = params.get('access_token');
+    if (token) {
+      localStorage.setItem(DBX_TOKEN_KEY, token);
+      // Clean the token out of the URL
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      return token;
+    }
+  }
+  return localStorage.getItem(DBX_TOKEN_KEY);
+}
+
+function dbxAuth() {
+  // Build the Dropbox OAuth URL and redirect
+  const redirectUri = window.location.href.split('#')[0].split('?')[0];
+  const authUrl = `https://www.dropbox.com/oauth2/authorize?client_id=${DBX_APP_KEY}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  // Store intent so we resume after redirect
+  return authUrl;
+}
+
+async function dropboxSave() {
+  const token = getDbxToken();
+  if (!token) {
+    // Save intent and redirect to auth
+    localStorage.setItem('hk_dbx_intent', 'save');
+    window.location.href = dbxAuth();
+    return;
+  }
+  showToast('Saving to Dropbox…');
+  try {
+    const json = JSON.stringify(data, null, 2);
+    const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Dropbox-API-Arg': JSON.stringify({
+          path: DBX_FILE_PATH,
+          mode: 'overwrite',
+          autorename: false,
+          mute: true
+        }),
+        'Content-Type': 'application/octet-stream'
+      },
+      body: json
+    });
+    if (response.status === 401) {
+      // Token expired — clear and re-auth
+      localStorage.removeItem(DBX_TOKEN_KEY);
+      localStorage.setItem('hk_dbx_intent', 'save');
+      window.location.href = dbxAuth();
+      return;
+    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    showToast('Saved to Dropbox ✓');
+  } catch(e) {
+    showToast('Save failed — try again');
+    console.error(e);
+  }
+}
+
+async function dropboxLoad() {
+  const token = getDbxToken();
+  if (!token) {
+    localStorage.setItem('hk_dbx_intent', 'load');
+    window.location.href = dbxAuth();
+    return;
+  }
+  showToast('Loading from Dropbox…');
+  try {
+    const response = await fetch('https://content.dropboxapi.com/2/files/download', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Dropbox-API-Arg': JSON.stringify({ path: DBX_FILE_PATH })
+      }
+    });
+    if (response.status === 401) {
+      localStorage.removeItem(DBX_TOKEN_KEY);
+      localStorage.setItem('hk_dbx_intent', 'load');
+      window.location.href = dbxAuth();
+      return;
+    }
+    if (response.status === 409) {
+      // File doesn't exist yet — that's fine on first use
+      showToast('No recipes.json found in Dropbox yet');
+      return;
+    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const parsed = await response.json();
+    if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+    data = parsed;
+    openChapters = new Set([data.chapters[0]?.id]);
+    persistToStorage();
+    deskCurrentId = null; deskEditingId = null;
+    mobCurrentId = null; mobEditingId = null;
+    renderAll();
+    showPanel('deskWelcome');
+    mob_backToList();
+    showToast('Loaded from Dropbox ✓');
+  } catch(e) {
+    showToast('Load failed — try again');
+    console.error(e);
+  }
+}
+
+// Local file fallback (backup)
+function saveLocalFile() {
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], {type: 'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = 'recipes.json';
-  a.click();
+  a.href = url; a.download = 'recipes.json'; a.click();
   URL.revokeObjectURL(url);
-  showToast('recipes.json saved!');
+  showToast('recipes.json downloaded');
 }
-
-// Load data from JSON file
-function loadData() {
+function loadLocalFile() {
   document.getElementById('fileInput').click();
 }
 function handleFileLoad(e) {
@@ -860,7 +984,6 @@ function handleFileLoad(e) {
       deskCurrentId = null; deskEditingId = null;
       mobCurrentId = null; mobEditingId = null;
       renderAll();
-      // reset to list view
       showPanel('deskWelcome');
       mob_backToList();
       showToast('Recipes loaded!');
@@ -1300,6 +1423,18 @@ li   { margin: .35em 0; }
 // ══════════════════════════════════════════════════
 renderAll();
 showPanel('deskWelcome');
+
+// Handle OAuth redirect — if we just came back from Dropbox auth,
+// resume whatever action the user was trying to do
+(async () => {
+  const token = getDbxToken(); // also parses + stores token from URL hash if present
+  const intent = localStorage.getItem('hk_dbx_intent');
+  if (token && intent) {
+    localStorage.removeItem('hk_dbx_intent');
+    if (intent === 'save') await dropboxSave();
+    if (intent === 'load') await dropboxLoad();
+  }
+})();
 </script>
 </body>
 </html>
