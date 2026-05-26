@@ -713,6 +713,38 @@ header {
   font-size: 5.5pt;
   color: #bbb;
 }
+/* Spine label — rotated text readable when card stored landscape */
+.card-spine {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 144mm;   /* card height becomes width when rotated */
+  height: 6mm;
+  display: flex;
+  align-items: center;
+  padding-left: 4mm;
+  gap: 3mm;
+  transform: rotate(-90deg) translateX(-144mm);
+  transform-origin: bottom left;
+  background: #c8952a;
+  color: #fff;
+  font-size: 6pt;
+  font-weight: 700;
+  letter-spacing: .08em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.card-spine .spine-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-spine .spine-book {
+  font-weight: 400;
+  opacity: 0.75;
+  font-size: 5.5pt;
+  flex-shrink: 0;
+}
 
 /* ── DESKTOP SETTINGS POPOVER ──────────────────── */
 .desk-settings {
@@ -842,11 +874,7 @@ header {
     </aside>
 
     <main class="main" id="deskMain">
-      <div class="welcome" id="deskWelcome">
-        <div class="welcome-icon">📖</div>
-        <h2>eRecipe</h2>
-        <p>All your favourite recipes in one place. Select a recipe to view it, or click <strong>+ Recipe</strong> to add something new.</p>
-      </div>
+      <div class="welcome" id="deskWelcome" style="display:none"></div>
       <div class="recipe-view" id="deskRecipeView">
         <div class="recipe-chapter-tag" id="deskViewChapter"></div>
         <div class="recipe-view-header">
@@ -1407,9 +1435,13 @@ function cardSectionedList(lines, tag) {
 
 function buildCard(recipe, side, cardNum, totalCards, bookName) {
   const ch = data.chapters.find(c => c.id === recipe.chapterId);
+  const spine = `<div class="card-spine">
+    <span class="spine-title">${esc(recipe.title)}</span>
+    <span class="spine-book">${esc(bookName)}</span>
+  </div>`;
   if (side === 'front') {
-    // Front: title, description, ingredients
     return `<div class="recipe-card">
+      ${spine}
       <div class="card-header">
         <div class="card-book-name">${esc(bookName)}${ch ? ' · ' + esc(ch.name) : ''}</div>
         <div class="card-title">${esc(recipe.title)}</div>
@@ -1420,8 +1452,8 @@ function buildCard(recipe, side, cardNum, totalCards, bookName) {
       <div class="card-number">${cardNum} / ${totalCards} · Front</div>
     </div>`;
   } else {
-    // Back: instructions + tip
     return `<div class="recipe-card back">
+      ${spine}
       <div class="card-header">
         <div class="card-book-name">${esc(bookName)}</div>
         <div class="card-title">${esc(recipe.title)}</div>
@@ -2207,7 +2239,8 @@ document.querySelectorAll('.gdrive-folder-input').forEach(el => el.value = getGd
   }
 })();
 // Register service worker for PWA / offline support
-if ('serviceWorker' in navigator) {
+// Only runs when hosted on GitHub Pages (not in Claude or local file)
+if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent.com' && location.protocol === 'https:') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then(() => console.log('eRecipe: service worker registered'))
