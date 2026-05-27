@@ -1495,18 +1495,34 @@ function printCards() {
   if (!recipes.length) { showToast('No recipes to print'); return; }
 
   const totalCards = recipes.length;
+  
+  // FIX: Save the vector cut lines into a variable to inject onto each page
+  const cutLinesSvg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" 
+       style="position:absolute; top:0; left:0; pointer-events:none; z-index:100;">
+    <line x1="9mm" y1="7.5mm" x2="9mm" y2="289.5mm" stroke="#999" stroke-width="0.35mm" stroke-dasharray="3,3" />
+    <line x1="105mm" y1="7.5mm" x2="105mm" y2="289.5mm" stroke="#999" stroke-width="0.35mm" stroke-dasharray="3,3" />
+    <line x1="201mm" y1="7.5mm" x2="201mm" y2="289.5mm" stroke="#999" stroke-width="0.35mm" stroke-dasharray="3,3" />
+    
+    <line x1="9mm" y1="7.5mm" x2="201mm" y2="7.5mm" stroke="#999" stroke-width="0.35mm" stroke-dasharray="3,3" />
+    <line x1="9mm" y1="148.5mm" x2="201mm" y2="148.5mm" stroke="#999" stroke-width="0.35mm" stroke-dasharray="3,3" />
+    <line x1="9mm" y1="289.5mm" x2="201mm" y2="289.5mm" stroke="#999" stroke-width="0.35mm" stroke-dasharray="3,3" />
+  </svg>`;
+
   // Build pages: 4 cards per page (2 front + 2 back interleaved for duplex)
-  // We group recipes in pairs per sheet: front page has cards 1F,2F,3F,4F; back has 1B,2B,3B,4B
   const pages = [];
   for (let i = 0; i < recipes.length; i += 4) {
     const batch = recipes.slice(i, i + 4);
+    
     // Front side page
     let frontHtml = '<div class="card-page">';
     for (let j = 0; j < 4; j++) {
       const r = batch[j];
       frontHtml += r ? buildCard(r, 'front', i + j + 1, totalCards, bookName) : '<div class="recipe-card" style="border:1px dashed #ddd;background:#fafafa"></div>';
     }
-    frontHtml += '</div>';
+    // FIX: Added the cut lines right before closing the front page container
+    frontHtml += cutLinesSvg + '</div>';
+    
     // Back side page (reversed left/right for duplex: card 2,1,4,3)
     let backHtml = '<div class="card-page">';
     const backOrder = [1,0,3,2]; // flip horizontally for duplex printing
@@ -1514,7 +1530,9 @@ function printCards() {
       const r = batch[j];
       backHtml += r ? buildCard(r, 'back', i + j + 1, totalCards, bookName) : '<div class="recipe-card" style="border:1px dashed #ddd;background:#fafafa"></div>';
     }
-    backHtml += '</div>';
+    // FIX: Added the cut lines right before closing the back page container
+    backHtml += cutLinesSvg + '</div>';
+    
     pages.push(frontHtml, backHtml);
   }
 
