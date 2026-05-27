@@ -713,24 +713,26 @@ header {
   font-size: 5.5pt;
   color: #bbb;
 }
-/* Spine label — rotated text readable when card stored landscape */
+/* Spine label — sits on the left edge, readable when card stored landscape */
 .card-spine {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
-  width: 144mm;        /* card height, becomes the spine length when rotated */
-  height: 8mm;         /* wider to fit title + chapter + book name */
+  width: 8mm;
+  height: 144mm;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 0 4mm;
-  gap: 0.5mm;
-  transform: rotate(-90deg) translateX(-144mm);
-  transform-origin: bottom left;
+  padding: 3mm 0;
+  gap: 1mm;
   background: #c8952a;
   color: #fff;
-  white-space: nowrap;
   overflow: hidden;
+  /* Rotate text so it reads bottom-to-top (left edge = top when landscape) */
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
 }
 .card-spine .spine-title {
   font-size: 7pt;
@@ -738,14 +740,16 @@ header {
   letter-spacing: .06em;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .card-spine .spine-meta {
   font-size: 5.5pt;
   font-weight: 400;
-  opacity: 0.8;
-  letter-spacing: .05em;
+  opacity: 0.85;
+  letter-spacing: .04em;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── DESKTOP SETTINGS POPOVER ──────────────────── */
@@ -1451,7 +1455,6 @@ function buildCard(recipe, side, cardNum, totalCards, bookName) {
       </div>
       <div class="card-section">Ingredients</div>
       <div class="card-ing-box">${cardSectionedList(recipe.ingredients, 'ul')}</div>
-      <div class="card-number">${cardNum} / ${totalCards} · Front</div>
     </div>`;
   } else {
     return `<div class="recipe-card back">
@@ -1463,7 +1466,6 @@ function buildCard(recipe, side, cardNum, totalCards, bookName) {
       <div class="card-section">Instructions</div>
       ${cardSectionedList(recipe.steps, 'ol')}
       ${recipe.tip ? `<div class="card-tip"><strong>Tip:</strong> ${esc(recipe.tip)}</div>` : ''}
-      <div class="card-number">${cardNum} / ${totalCards} · Back</div>
     </div>`;
   }
 }
