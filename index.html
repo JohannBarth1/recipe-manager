@@ -724,47 +724,54 @@ header {
   padding-top: 1.5mm;
   margin-top: auto;
 }
-/* Spine — big enough to read as title */
+/* Spine — absolutely positioned, rotated strip on left edge */
 .card-spine {
   position: absolute;
   top: 0;
   left: 0;
   width: 13mm;
   height: 144mm;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 4mm 2mm;
   background: #a87820;
   overflow: hidden;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  transform: rotate(180deg);
 }
-.card-spine .spine-title {
-  font-size: 11pt;
-  font-weight: 700;
-  font-family: Georgia, serif;
-  letter-spacing: .04em;
+.card-spine-inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 144mm;
+  height: 13mm;
+  transform-origin: top left;
+  transform: rotate(90deg) translateY(-13mm);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 4mm;
+  gap: 2mm;
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+}
+.card-spine-inner .spine-title {
+  font-size: 11pt !important;
+  font-weight: 700 !important;
+  font-family: Georgia, serif !important;
   color: #ffffff !important;
-}
-.card-spine .spine-sep {
-  font-size: 9pt;
-  color: rgba(255,255,255,0.6) !important;
-  margin: 0 1.5mm;
-}
-.card-spine .spine-meta {
-  font-size: 7pt;
-  font-weight: 400;
-  color: rgba(255,255,255,0.75) !important;
-  letter-spacing: .04em;
+  letter-spacing: .03em;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+}
+.card-spine-inner .spine-sep {
+  color: rgba(255,255,255,0.55) !important;
+  font-size: 9pt !important;
+  flex-shrink: 0;
+}
+.card-spine-inner .spine-meta {
+  font-size: 6.5pt !important;
+  color: rgba(255,255,255,0.8) !important;
+  font-family: Lato, sans-serif !important;
+  letter-spacing: .04em;
+  flex-shrink: 0;
 }
 /* Cut lines — subtle dashes outside the card border */
 .card-cut {
@@ -1474,9 +1481,11 @@ function cardSectionedList(lines, tag) {
 function buildCard(recipe, side, cardNum, totalCards, bookName) {
   const ch = data.chapters.find(c => c.id === recipe.chapterId);
   const spine = `<div class="card-spine">
-    <span class="spine-title">${esc(recipe.title)}</span>
-    <span class="spine-sep">·</span>
-    <span class="spine-meta">${ch ? esc(ch.name) + ' · ' : ''}${esc(bookName)}</span>
+    <div class="card-spine-inner">
+      <span class="spine-title">${esc(recipe.title)}</span>
+      <span class="spine-sep">·</span>
+      <span class="spine-meta">${ch ? esc(ch.name) + ' · ' : ''}${esc(bookName)}</span>
+    </div>
   </div>`;
   if (side === 'front') {
     return `<div class="recipe-card">
