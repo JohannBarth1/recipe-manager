@@ -660,7 +660,7 @@ header {
 .recipe-card {
   border: 1px solid #c8952a;
   border-radius: 3mm;
-  padding: 4mm 5mm 4mm 16mm; /* left padding = spine (10mm) + 3mm gap */
+  padding: 4mm 5mm 4mm 10mm; /* left padding = spine (10mm) + 3mm gap */
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
@@ -1435,25 +1435,25 @@ function cardSectionedList(lines, tag) {
 function buildCard(recipe, side, cardNum, totalCards, bookName) {
   const ch = data.chapters.find(c => c.id === recipe.chapterId);
 
-  // SVG spine — guaranteed to print correctly, no CSS transform issues
-  // Card is 99mm x 144mm. Spine is 13mm wide, full height.
-  // At 96dpi: 99mm=374px, 144mm=544px, 13mm=49px
-  // We draw the spine as SVG with text rotated along the left edge.
-  const titleText = recipe.title;
-  const metaText = (ch ? ch.name + ' · ' : '') + bookName;
-  const spine = `<svg class="card-spine-svg" xmlns="http://www.w3.org/2000/svg"
-      width="13mm" height="144mm" viewBox="0 0 49 544"
-      style="position:absolute;top:0;left:0;display:block">
-    <rect width="49" height="544" fill="#a87820"/>
-    <!-- Title: large, starts from bottom, reads upward -->
-    <text x="24" y="530" font-family="Georgia,serif" font-size="16" font-weight="bold"
-          fill="#1a1208" text-anchor="start"
-          transform="rotate(-90,24,530)">${esc(titleText)}</text>
-    <!-- Meta: small, at the top end -->
-    <text x="24" y="14" font-family="Georgia,serif" font-size="9"
-          fill="#1a1208" opacity="0.6" text-anchor="start"
-          transform="rotate(-90,24,14)">${esc(metaText)}</text>
-  </svg>`;
+// SVG spine — guaranteed to print correctly, no CSS transform issues
+// Card is 99mm x 144mm. 
+// Narrowed Spine: 8mm wide (~30px at 96dpi). Full height: 144mm (=544px).
+const titleText = recipe.title;
+const metaText = (ch ? ch.name + ' · ' : '') + bookName;
+
+const spine = `<svg class="card-spine-svg" xmlns="http://www.w3.org/2000/svg"
+    width="8mm" height="144mm" viewBox="0 0 30 544"
+    style="position:absolute;top:0;left:0;display:block">
+  <rect width="30" height="544" fill="#a87820"/>
+  
+  <text x="15" y="525" font-family="Georgia,serif" font-size="14" font-weight="bold"
+        fill="#1a1208" text-anchor="start"
+        transform="rotate(-90,15,525)">${esc(titleText)}</text>
+        
+  <text x="15" y="20" font-family="Georgia,serif" font-size="9"
+        fill="#1a1208" opacity="0.6" text-anchor="end"
+        transform="rotate(-90,15,20)">${esc(metaText)}</text>
+</svg>`;
 
   if (side === 'front') {
     return `<div class="recipe-card">
