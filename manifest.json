@@ -2,21 +2,21 @@
   "name": "eRecipe",
   "short_name": "eRecipe",
   "description": "All your favourite recipes",
-  "start_url": "/recipe-manager/index.html",
-  "scope": "/recipe-manager/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#1a1208",
   "theme_color": "#1a1208",
   "icons": [
     {
-      "src": "/recipe-manager/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/recipe-manager/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
