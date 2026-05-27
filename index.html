@@ -733,11 +733,10 @@ header {
   height: 144mm;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  justify-content: space-between;
+  align-items: flex-start;
+  justify-content: flex-start;
   padding: 4mm 2mm;
   background: #a87820;
-  color: #fff;
   overflow: hidden;
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -751,16 +750,21 @@ header {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #ffffff !important;
+}
+.card-spine .spine-sep {
+  font-size: 9pt;
+  color: rgba(255,255,255,0.6) !important;
+  margin: 0 1.5mm;
 }
 .card-spine .spine-meta {
-  font-size: 6pt;
+  font-size: 7pt;
   font-weight: 400;
-  opacity: 0.85;
+  color: rgba(255,255,255,0.75) !important;
   letter-spacing: .04em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: end;
 }
 /* Cut lines — subtle dashes outside the card border */
 .card-cut {
@@ -1471,6 +1475,7 @@ function buildCard(recipe, side, cardNum, totalCards, bookName) {
   const ch = data.chapters.find(c => c.id === recipe.chapterId);
   const spine = `<div class="card-spine">
     <span class="spine-title">${esc(recipe.title)}</span>
+    <span class="spine-sep">·</span>
     <span class="spine-meta">${ch ? esc(ch.name) + ' · ' : ''}${esc(bookName)}</span>
   </div>`;
   if (side === 'front') {
