@@ -640,30 +640,49 @@ header {
 @media print {
   body > *:not(#printArea) { display: none !important; }
   #printArea { display: block !important; }
-  @page { size: A4; margin: 4mm; }
+  
+  /* FIX: Force zero page margins so the browser can't shift our canvas left or right */
+  @page { size: A4; margin: 0; }
+  body { margin: 0; padding: 0; }
+  
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
+
 #printArea {
   display: none;
   font-family: Georgia, serif;
 }
+
 .card-page {
-  width: 100%;
-  height: 289mm;
+  /* FIX: Lock container to exact A4 dimensions */
+  width: 210mm;
+  height: 297mm;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
+  
+  /* FIX: Use exact millimeter dimensions instead of fluid 1fr to stop overflow */
+  grid-template-columns: 99mm 99mm;
+  grid-template-rows: 144mm 144mm;
   gap: 4mm;
+  
+  /* FIX: Perfect mathematical padding to center the 202mm wide grid on the 210mm page */
+  /* This leaves a 4mm safety zone on the left/right edges so outlines aren't cut off */
+  padding-left: 4mm;
+  padding-right: 4mm;
+  padding-top: 2.5mm;
+  padding-bottom: 2.5mm;
+  
   page-break-after: always;
   box-sizing: border-box;
-  margin: 0; /* ADDED: Prevents any default browser shifting */
-  padding: 0;
 }
+
 .recipe-card {
   border: 1px solid #c8952a;
   border-radius: 3mm;
-  padding: 4mm 5mm 4mm 5mm; /* left padding = spine (10mm) + 3mm gap */
-  overflow: hidden;
+  
+  /* FIX: Changed left padding to 12mm so text clears your new narrow spine */
+  padding: 4mm 5mm 4mm 12mm; 
+  
+  overflow: hidden; /* Slices the SVG spine to match the card's rounded corners */
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -673,15 +692,18 @@ header {
   line-height: 1.35;
   position: relative;
 }
+
 .recipe-card.back {
   background: #faf6f0;
-  border: none; /* no border on back — alignment doesn't matter */
+  border: none;
 }
+
 .card-header {
   border-bottom: 0.5mm solid #c8952a;
   margin-bottom: 2mm;
   padding-bottom: 1.5mm;
 }
+
 .card-book-name {
   font-size: 5.5pt;
   letter-spacing: .12em;
@@ -689,6 +711,7 @@ header {
   color: #8a7060;
   margin-bottom: .5mm;
 }
+
 .card-title {
   font-family: Georgia, serif;
   font-size: 11pt;
@@ -696,12 +719,14 @@ header {
   line-height: 1.2;
   color: #1a1208;
 }
+
 .card-desc {
   font-style: italic;
   color: #8a7060;
   font-size: 6.5pt;
   margin-top: 1mm;
 }
+
 .card-section {
   font-size: 6pt;
   letter-spacing: .12em;
@@ -710,15 +735,18 @@ header {
   font-weight: bold;
   margin: 2mm 0 1mm;
 }
+
 .card-ing-box {
   border-left: 1mm solid #c8952a;
   padding-left: 2mm;
   margin-bottom: 1mm;
 }
+
 .card ul { padding-left: 3mm; margin: 0; }
 .card ol { padding-left: 3.5mm; margin: 0; }
 .card li { margin: .3mm 0; }
 .card-subhead { font-weight: bold; font-size: 7pt; margin: 1.5mm 0 .5mm; list-style: none; margin-left: -1mm; }
+
 .card-tip {
   font-style: italic;
   color: #666;
@@ -727,9 +755,18 @@ header {
   padding-top: 1.5mm;
   margin-top: auto;
 }
-/* Spine — rendered as inline SVG for reliable print output */
-.card-spine-svg { position: absolute; top: 0; left: 0; display: block; }
-/* Cut lines — subtle dashes outside the card border */
+
+/* FIX: Spine setup — width handled here, height set to 100% to fill the card top-to-bottom */
+.card-spine-svg { 
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  width: 8mm; 
+  height: 100%; 
+  display: block; 
+}
+
+/* Cut lines */
 .card-cut {
   position: relative;
 }
@@ -741,7 +778,8 @@ header {
   border-radius: 4mm;
   pointer-events: none;
 }
-/* Cut line around front cards only (inset by 1mm outside card) */
+
+/* Cut line around front cards only */
 .recipe-card:not(.back) {
   outline: 0.2mm dashed #ccc;
   outline-offset: 1.5mm;
