@@ -643,7 +643,6 @@ header {
   border: 1px solid #c8952a;
   border-radius: 3mm;
   padding: 4mm 5mm;
-  padding-left: 10mm;
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
@@ -714,46 +713,37 @@ header {
   font-size: 5.5pt;
   color: #bbb;
 }
-/* Spine label — readable when stored landscape */
+/* Spine label — rotated text readable when card stored landscape */
 .card-spine {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
-
-  width: 144mm;          /* original card height */
+  width: 144mm;   /* card height becomes width when rotated */
   height: 6mm;
-
   display: flex;
   align-items: center;
+  padding-left: 4mm;
   gap: 3mm;
-
-  padding: 0 3mm;
-
+  transform: rotate(-90deg) translateX(-144mm);
+  transform-origin: bottom left;
   background: #c8952a;
   color: #fff;
-
   font-size: 6pt;
   font-weight: 700;
   letter-spacing: .08em;
-
   white-space: nowrap;
   overflow: hidden;
-
-  transform-origin: top left;
-  transform: rotate(-90deg) translateX(-144mm);
 }
-
 .card-spine .spine-title {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .card-spine .spine-book {
-  flex-shrink: 0;
-  opacity: .75;
-  font-size: 5.5pt;
   font-weight: 400;
+  opacity: 0.75;
+  font-size: 5.5pt;
+  flex-shrink: 0;
 }
 
 /* ── DESKTOP SETTINGS POPOVER ──────────────────── */
@@ -1974,127 +1964,207 @@ async function gdriveFindFile(token, folderId, fileName) {
   return null;
 }
 
+// List all JSON files in the target Drive folder
+async function driveListJsonFiles(token, folderId) {
+  const parent = `'${folderId}'`;
+  const q = encodeURIComponent(`${parent} in parents and mimeType='application/json' and trashed=false`);
+  const resp = await gdriveApiCall(token,
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc`);
+  if (!resp) return 'AUTH_EXPIRED';
+  const json = await resp.json();
+  return json.files || [];
+}
+
+// Show the Drive file picker modal
+function showDriveFilePicker(files, folderName, mode, onPick) {
+  // Remove any existing picker
+  document.getElementById('drivePickerModal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'drivePickerModal';
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(26,18,8,0.6);z-index:160;display:flex;align-items:center;justify-content:center;padding:1rem`;
+
+  const isSave = mode === 'save';
+  const fileRows = files.map(f => {
+    const date = new Date(f.modifiedTime).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+    return `<div class="dpicker-row" data-id="${f.id}" data-name="${f.name.replace(/\.json$/i,'')}" onclick="dPickerSelect(this)">
+      <span class="dpicker-name">${f.name.replace(/\.json$/i,'')}</span>
+      <span class="dpicker-date">${date}</span>
+    </div>`;
+  }).join('');
+
+  modal.innerHTML = `
+    <div style="background:var(--warm-white);border:1px solid var(--border);border-radius:6px;padding:1.6rem;width:100%;max-width:420px;max-height:80vh;display:flex;flex-direction:column;gap:.8rem">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--brown)">${isSave ? '☁ Save to' : '☁ Load from'} <em>${folderName}</em></h3>
+      <div style="font-size:.8rem;color:var(--muted)">${isSave ? 'Pick an existing file to overwrite, or enter a new name below.' : 'Pick a file to load.'}</div>
+      <div id="dPickerList" style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:4px;max-height:280px">
+        ${files.length ? fileRows : '<div style="padding:1rem;color:var(--muted);font-size:.85rem;text-align:center">No JSON files found in this folder yet.</div>'}
+      </div>
+      ${isSave ? `
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <input id="dPickerNameInput" type="text" placeholder="New file name…" autocomplete="off"
+          value="${getBookName()}"
+          style="flex:1;padding:.55rem .8rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--cream);color:var(--ink);outline:none"
+          oninput="document.querySelectorAll('.dpicker-row').forEach(r=>r.classList.remove('selected'))"/>
+        <span style="font-size:.8rem;color:var(--muted)">.json</span>
+      </div>` : ''}
+      <div style="display:flex;gap:.6rem;justify-content:flex-end">
+        <button class="btn-cancel" onclick="document.getElementById('drivePickerModal').remove()">Cancel</button>
+        <button class="btn-save" onclick="dPickerConfirm('${mode}')">${isSave ? 'Save' : 'Load'}</button>
+      </div>
+    </div>
+    <style>
+      .dpicker-row{display:flex;justify-content:space-between;align-items:center;padding:.65rem 1rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+      .dpicker-row:last-child{border-bottom:none}
+      .dpicker-row:hover{background:var(--light-brown)}
+      .dpicker-row.selected{background:rgba(192,87,26,.12);font-weight:700}
+      .dpicker-name{font-size:.88rem;color:var(--ink)}
+      .dpicker-date{font-size:.75rem;color:var(--muted);flex-shrink:0;margin-left:.5rem}
+    </style>`;
+
+  document.body.appendChild(modal);
+  window._drivePickerCallback = onPick;
+  // Close on backdrop click
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function dPickerSelect(row) {
+  document.querySelectorAll('.dpicker-row').forEach(r => r.classList.remove('selected'));
+  row.classList.add('selected');
+  const nameInput = document.getElementById('dPickerNameInput');
+  if (nameInput) nameInput.value = row.dataset.name;
+}
+
+function dPickerConfirm(mode) {
+  const modal = document.getElementById('drivePickerModal');
+  const selected = modal.querySelector('.dpicker-row.selected');
+  const nameInput = document.getElementById('dPickerNameInput');
+
+  if (mode === 'save') {
+    const name = nameInput ? nameInput.value.trim() : (selected ? selected.dataset.name : '');
+    if (!name) { showToast('Please enter a file name'); return; }
+    const fileId = selected ? selected.dataset.id : null;
+    modal.remove();
+    window._drivePickerCallback({ name, fileId });
+  } else {
+    if (!selected) { showToast('Please select a file'); return; }
+    modal.remove();
+    window._drivePickerCallback({ name: selected.dataset.name, fileId: selected.dataset.id });
+  }
+}
+
 async function gdriveSave() {
   const folderName = getGdriveFolder();
-  if (!folderName) {
-    showToast('Please set a Drive folder in Settings first');
-    return;
-  }
+  if (!folderName) { showToast('Please set a Drive folder in ⚙ Settings first'); return; }
 
-  showNameModal({
-    title: 'Save to Google Drive',
-    desc: `File will be saved as [name].json in your "${folderName}" folder.`,
-    placeholder: 'e.g. Italian Favourites',
-    defaultVal: getBookName(),
-    hint: `Destination: ${folderName}/[name].json`,
-    callback: (name) => {
+  const doSave = async (token) => {
+    showToast('Checking Drive folder…');
+    const folderId = await gdriveFindFolder(token, folderName);
+    if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
+    if (folderId === 'NO_FOLDER') { showToast('Please set a Drive folder in Settings'); return; }
+
+    const files = await driveListJsonFiles(token, folderId);
+    if (files === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
+
+    showDriveFilePicker(files, folderName, 'save', async ({ name, fileId }) => {
       setBookName(name);
       const fileName = name.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') + '.json';
-      const doSave = async (token) => {
-        showToast('Saving to Google Drive…');
-        try {
-          const folderId = await gdriveFindFolder(token, folderName);
-          if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
-          if (folderId === 'NO_FOLDER') { showToast('Please set a Drive folder in Settings'); return; }
-
-          const json = JSON.stringify(data, null, 2);
-          const existingId = await gdriveFindFile(token, folderId, fileName);
-          if (existingId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
-
-          let resp;
-          if (existingId) {
-            resp = await gdriveApiCall(token,
-              `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
+      showToast('Saving to Google Drive…');
+      try {
+        const json = JSON.stringify(data, null, 2);
+        let resp;
+        if (fileId) {
+          // Overwrite existing file (metadata + content update)
+          resp = await gdriveApiCall(token,
+            `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: json
+          });
+          // Also rename if needed
+          if (resp && resp.ok) {
+            await gdriveApiCall(token,
+              `https://www.googleapis.com/drive/v3/files/${fileId}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
-              body: json
-            });
-          } else {
-            const boundary = 'boundary_recipes_hk';
-            const metadata = JSON.stringify({ name: fileName, mimeType: 'application/json', parents: [folderId] });
-            const multipart = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${json}\r\n--${boundary}--`;
-            resp = await gdriveApiCall(token,
-              'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-              method: 'POST',
-              headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-              body: multipart
+              body: JSON.stringify({ name: fileName })
             });
           }
-
-          if (!resp) { gdriveAuth(doSave); return; }
-          const result = await resp.json();
-          if (result.id) {
-            localStorage.setItem(GD_FILE_ID_KEY, result.id);
-            showToast(`Saved to Drive: ${folderName}/${fileName} ✓`);
-          } else {
-            throw new Error(JSON.stringify(result));
-          }
-        } catch(e) {
-          showToast('Google Drive save failed');
-          console.error(e);
+        } else {
+          // Create new file
+          const boundary = 'boundary_recipes_hk';
+          const metadata = JSON.stringify({ name: fileName, mimeType: 'application/json', parents: [folderId] });
+          const multipart = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${json}\r\n--${boundary}--`;
+          resp = await gdriveApiCall(token,
+            'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+            body: multipart
+          });
         }
-      };
-      const token = getGdriveToken();
-      if (token) doSave(token);
-      else gdriveAuth(doSave);
-    }
-  });
+        if (!resp) { gdriveAuth(doSave); return; }
+        const result = await resp.json();
+        if (result.id) {
+          localStorage.setItem(GD_FILE_ID_KEY, result.id);
+          showToast(`Saved: ${folderName}/${fileName} ✓`);
+        } else {
+          throw new Error(JSON.stringify(result));
+        }
+      } catch(e) {
+        showToast('Google Drive save failed');
+        console.error(e);
+      }
+    });
+  };
+
+  const token = getGdriveToken();
+  if (token) doSave(token);
+  else gdriveAuth(doSave);
 }
 
 async function gdriveLoad() {
   const folderName = getGdriveFolder();
-  if (!folderName) {
-    showToast('Please set a Drive folder in Settings first');
-    return;
-  }
+  if (!folderName) { showToast('Please set a Drive folder in ⚙ Settings first'); return; }
 
-  showNameModal({
-    title: 'Load from Google Drive',
-    desc: `Enter the name of the recipe book file to load from "${folderName}".`,
-    placeholder: 'e.g. Italian Favourites',
-    defaultVal: getBookName(),
-    hint: `Will look for: ${folderName}/[name].json`,
-    callback: (name) => {
+  const doLoad = async (token) => {
+    showToast('Checking Drive folder…');
+    const folderId = await gdriveFindFolder(token, folderName);
+    if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
+    if (folderId === 'NO_FOLDER') { showToast('Please set a Drive folder in Settings'); return; }
+
+    const files = await driveListJsonFiles(token, folderId);
+    if (files === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
+    if (!files.length) { showToast(`No JSON files found in "${folderName}"`); return; }
+
+    showDriveFilePicker(files, folderName, 'load', async ({ name, fileId }) => {
       setBookName(name);
-      // Clear cached file ID so we search fresh
-      localStorage.removeItem(GD_FILE_ID_KEY);
-      const fileName = name.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') + '.json';
-      const doLoad = async (token) => {
-        showToast('Loading from Google Drive…');
-        try {
-          const folderId = await gdriveFindFolder(token, folderName);
-          if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
-          if (folderId === 'NO_FOLDER') { showToast('Please set a Drive folder in Settings'); return; }
+      localStorage.setItem(GD_FILE_ID_KEY, fileId);
+      showToast('Loading from Google Drive…');
+      try {
+        const resp = await gdriveApiCall(token,
+          `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+        if (!resp) { gdriveAuth(doLoad); return; }
+        const parsed = await resp.json();
+        if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+        data = parsed;
+        openChapters = new Set([data.chapters[0]?.id]);
+        persistToStorage();
+        deskCurrentId = null; deskEditingId = null;
+        mobCurrentId = null; mobEditingId = null;
+        renderAll();
+        showPanel('deskWelcome');
+        mob_backToList();
+        showToast(`Loaded: ${name} ✓`);
+      } catch(e) {
+        showToast('Google Drive load failed');
+        console.error(e);
+      }
+    });
+  };
 
-          const fileId = await gdriveFindFile(token, folderId, fileName);
-          if (fileId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
-          if (!fileId) { showToast(`Not found: ${folderName}/${fileName}`); return; }
-
-          const resp = await gdriveApiCall(token,
-            `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
-          if (!resp) { gdriveAuth(doLoad); return; }
-
-          const parsed = await resp.json();
-          if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
-          data = parsed;
-          openChapters = new Set([data.chapters[0]?.id]);
-          persistToStorage();
-          deskCurrentId = null; deskEditingId = null;
-          mobCurrentId = null; mobEditingId = null;
-          renderAll();
-          showPanel('deskWelcome');
-          mob_backToList();
-          showToast(`Loaded: ${folderName}/${fileName} ✓`);
-        } catch(e) {
-          showToast('Google Drive load failed');
-          console.error(e);
-        }
-      };
-      const token = getGdriveToken();
-      if (token) doLoad(token);
-      else gdriveAuth(doLoad);
-    }
-  });
+  const token = getGdriveToken();
+  if (token) doLoad(token);
+  else gdriveAuth(doLoad);
 }
 
 // ══════════════════════════════════════════════════
@@ -2249,12 +2319,14 @@ document.querySelectorAll('.gdrive-folder-input').forEach(el => el.value = getGd
   }
 })();
 // Register service worker for PWA / offline support
-// Only runs when hosted on GitHub Pages (not in Claude or local file)
+// Only runs when hosted on HTTPS (not in Claude or local file)
 if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent.com' && location.protocol === 'https:') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/recipe-manager/sw.js')
-      .then(() => console.log('eRecipe: service worker registered'))
-      .catch(e => console.warn('eRecipe: SW registration failed', e));
+    // Use a path relative to this page's location, works regardless of repo/subfolder name
+    const swPath = new URL('./sw.js', window.location.href).pathname;
+    navigator.serviceWorker.register(swPath)
+      .then(reg => console.log('eRecipe: SW registered, scope:', reg.scope))
+      .catch(e => console.warn('eRecipe: SW registration failed:', e.message));
   });
 }
 </script>
