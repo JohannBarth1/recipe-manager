@@ -655,43 +655,73 @@ header {
   height: 297mm;
   display: grid;
   
-  /* FIX: Sliced 4mm off the cards to make room for a bigger outer page margin */
+  /* FIX 2: Set gap to 0 so cards touch perfectly for a single cut */
   grid-template-columns: 95mm 95mm;
   grid-template-rows: 140mm 140mm;
-  gap: 4mm;
+  gap: 0;
   
-  /* FIX: Generous, perfectly balanced margins around the outside edges of the page */
-  /* This centers the grid completely and prevents bottom/side printer clipping. */
-  padding-top: 6.5mm;
-  padding-bottom: 6.5mm;
-  padding-left: 8mm;
-  padding-right: 8mm;
+  /* FIX 2: New padding math to perfectly center the flush 190mm x 280mm card block */
+  padding-top: 8.5mm;
+  padding-bottom: 8.5mm;
+  padding-left: 10mm;
+  padding-right: 10mm;
   
   page-break-after: always;
   box-sizing: border-box;
+  position: relative; /* Allows positioning of straight cut lines */
+}
+
+/* FIX 2: Straight Vertical Cut Line down the exact center of the page */
+.card-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left: 0.2mm dashed #bbb;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* FIX 2: Straight Horizontal Cut Line across the exact center of the page */
+.card-page::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 0.2mm dashed #bbb;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .recipe-card {
   border: 1px solid #c8952a;
   border-radius: 3mm;
-  padding: 4mm 5mm 4mm 9mm; /* Left padding stays at 9mm (5mm spine + 4mm text gap) */
+  padding: 4mm 5mm 4mm 9mm; 
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  
-  /* FIX: Matched the new scaled dimensions */
   width: 95mm;
   height: 140mm;
-  
   font-size: 7.5pt;
   line-height: 1.35;
   position: relative;
+  background: #fff;
 }
 
+/* FIX 3: Styling for the back card only */
 .recipe-card.back {
   background: #faf6f0;
   border: none;
+  /* Removes the thick left margin since the spine is gone from the back */
+  padding: 4mm 5mm 4mm 5mm; 
+}
+
+/* FIX 3: Completely hides the spine graphic and text on the back of the card */
+.recipe-card.back .card-spine-svg {
+  display: none !important;
 }
 
 .card-header {
@@ -761,23 +791,8 @@ header {
   display: block; 
 }
 
-/* Cut lines */
 .card-cut {
   position: relative;
-}
-.card-cut::before, .card-cut::after {
-  content: '';
-  position: absolute;
-  background: transparent;
-  border: 0.2mm dashed #bbb;
-  border-radius: 4mm;
-  pointer-events: none;
-}
-
-/* Cut line around front cards only */
-.recipe-card:not(.back) {
-  outline: 0.2mm dashed #ccc;
-  outline-offset: 1.5mm;
 }
 /* ── DESKTOP SETTINGS POPOVER ──────────────────── */
 .desk-settings {
@@ -1474,15 +1489,16 @@ const metaText = (ch ? ch.name + ' · ' : '') + bookName;
 const spine = `<svg class="card-spine-svg" xmlns="http://www.w3.org/2000/svg"
     width="100%" height="100%" viewBox="0 0 20 544" preserveAspectRatio="none"
     style="position:absolute;top:0;left:0;display:block">
-  <rect width="20" height="544" fill="#a87820"/>
   
-  <text x="10" y="525" font-family="Georgia,serif" font-size="11" font-weight="bold"
+  <rect width="20" height="544" fill="#c8952a"/>
+  
+  <text x="11.5" y="525" font-family="Georgia,serif" font-size="14.5" font-weight="bold"
         fill="#1a1208" text-anchor="start"
-        transform="rotate(-90,10,525)">${esc(titleText)}</text>
+        transform="rotate(-90,11.5,525)">${esc(titleText)}</text>
         
-  <text x="10" y="20" font-family="Georgia,serif" font-size="7.5"
-        fill="#1a1208" opacity="0.6" text-anchor="end"
-        transform="rotate(-90,10,20)">${esc(metaText)}</text>
+  <text x="11.5" y="20" font-family="Georgia,serif" font-size="8.5" font-weight="600"
+        fill="#1a1208" text-anchor="end"
+        transform="rotate(-90,11.5,20)">${esc(metaText)}</text>
 </svg>`;
 
   if (side === 'front') {
