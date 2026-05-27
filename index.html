@@ -655,42 +655,50 @@ header {
   height: 297mm;
   display: grid;
   
-  /* FIX 2: Set gap to 0 so cards touch perfectly for a single cut */
+  /* FIX 2: Set gap to 2mm to allow a 1mm white border safety zone around each card */
   grid-template-columns: 95mm 95mm;
   grid-template-rows: 140mm 140mm;
-  gap: 0;
+  gap: 2mm;
   
-  /* FIX 2: New padding math to perfectly center the flush 190mm x 280mm card block */
-  padding-top: 8.5mm;
-  padding-bottom: 8.5mm;
-  padding-left: 10mm;
-  padding-right: 10mm;
+  /* FIX 2: Adjusted page padding to perfectly square up the new layout math */
+  padding-top: 7.5mm;
+  padding-bottom: 7.5mm;
+  padding-left: 9mm;
+  padding-right: 9mm;
   
   page-break-after: always;
   box-sizing: border-box;
-  position: relative; /* Allows positioning of straight cut lines */
+  position: relative;
 }
 
-/* FIX 2: Straight Vertical Cut Line down the exact center of the page */
+/* FIX 2: 3 Perfectly straight VERTICAL cut lines (Left outside, Center share, Right outside) */
 .card-page::before {
   content: '';
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  border-left: 0.2mm dashed #bbb;
+  top: 7.5mm;
+  bottom: 7.5mm;
+  left: 0;
+  right: 0;
+  background: 
+    linear-gradient(to bottom, #bbb 50%, transparent 50%) repeat-y 9mm 0 / 0.2mm 3mm,
+    linear-gradient(to bottom, #bbb 50%, transparent 50%) repeat-y 105mm 0 / 0.2mm 3mm,
+    linear-gradient(to bottom, #bbb 50%, transparent 50%) repeat-y 201mm 0 / 0.2mm 3mm;
   pointer-events: none;
   z-index: 10;
 }
 
-/* FIX 2: Straight Horizontal Cut Line across the exact center of the page */
+/* FIX 2: 3 Perfectly straight HORIZONTAL cut lines (Top outside, Center share, Bottom outside) */
 .card-page::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  border-top: 0.2mm dashed #bbb;
+  left: 9mm;
+  right: 9mm;
+  top: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(to right, #bbb 50%, transparent 50%) repeat-x 0 7.5mm / 3mm 0.2mm,
+    linear-gradient(to right, #bbb 50%, transparent 50%) repeat-x 0 148.5mm / 3mm 0.2mm,
+    linear-gradient(to right, #bbb 50%, transparent 50%) repeat-x 0 289.5mm / 3mm 0.2mm;
   pointer-events: none;
   z-index: 10;
 }
@@ -711,15 +719,14 @@ header {
   background: #fff;
 }
 
-/* FIX 3: Styling for the back card only */
+/* FIX 3: Back of card setup - padding reset, no thick left margin needed */
 .recipe-card.back {
   background: #faf6f0;
   border: none;
-  /* Removes the thick left margin since the spine is gone from the back */
   padding: 4mm 5mm 4mm 5mm; 
 }
 
-/* FIX 3: Completely hides the spine graphic and text on the back of the card */
+/* FIX 3: Hide the spine graphic completely on the back card */
 .recipe-card.back .card-spine-svg {
   display: none !important;
 }
@@ -738,9 +745,10 @@ header {
   margin-bottom: .5mm;
 }
 
+/* FIX 1: Increased the recipe name font size on the face of the card for readability */
 .card-title {
   font-family: Georgia, serif;
-  font-size: 11pt;
+  font-size: 13pt;
   font-weight: bold;
   line-height: 1.2;
   color: #1a1208;
