@@ -1,52 +1,43 @@
 const CACHE = 'erecipe-v2';
-
 const ASSETS = [
-  '/recipe-manager/index.html',
-  '/recipe-manager/manifest.json',
-  '/recipe-manager/icon-192.png',
-  '/recipe-manager/icon-512.png'
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+  'https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js',
 ];
 
-// Install
-self.addEventListener('install', event => {
-  event.waitUntil(
+self.addEventListener('install', e => {
+  e.waitUntil(
     caches.open(CACHE)
-      .then(cache => cache.addAll(ASSETS))
+      .then(c => c.addAll(ASSETS))
       .then(() => self.skipWaiting())
   );
 });
 
-// Activate
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE)
-          .map(key => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch
-self.addEventListener('fetch', event => {
-
-  const url = event.request.url;
-
-  // Never cache API/auth requests
-  if (
-    url.includes('googleapis.com') ||
-    url.includes('dropboxapi.com') ||
-    url.includes('dropbox.com') ||
-    url.includes('accounts.google.com')
-  ) {
+self.addEventListener('fetch', e => {
+  const url = e.request.url;
+  // Never intercept API calls
+  if (url.includes('googleapis.com') ||
+      url.includes('dropboxapi.com') ||
+      url.includes('dropbox.com/oauth') ||
+      url.includes('accounts.google.com')) {
     return;
   }
-
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
+  e.respondWith(
+    caches.match(e.request)
+      .then(cached => cached || fetch(e.request))
+      .catch(() => caches.match('./index.html'))
   );
 });
