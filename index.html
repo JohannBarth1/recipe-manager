@@ -138,6 +138,23 @@ header {
 .chapter-heading:hover { background: var(--light-brown); }
 .chapter-heading .ch-arrow { font-size: 0.6rem; color: var(--muted); transition: transform 0.2s; }
 .chapter-heading.open .ch-arrow { transform: rotate(90deg); }
+.chapter-controls {
+  display: none;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.chapter-heading:hover .chapter-controls { display: flex; }
+.ch-ctrl {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.65rem;
+  color: var(--muted);
+  border-radius: 2px;
+  line-height: 1;
+}
+.ch-ctrl:hover { background: rgba(0,0,0,0.08); color: var(--ink); }
 .recipe-list { display: none; }
 .recipe-list.open { display: block; }
 .recipe-item {
@@ -642,7 +659,7 @@ header {
 .recipe-card {
   border: 1px solid #c8952a;
   border-radius: 3mm;
-  padding: 4mm 5mm 4mm 11mm; /* left padding = spine width (8mm) + 3mm gap */
+  padding: 4mm 5mm 4mm 16mm; /* left padding = spine (13mm) + 3mm gap */
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
@@ -655,6 +672,7 @@ header {
 }
 .recipe-card.back {
   background: #faf6f0;
+  border: none; /* no border on back — alignment doesn't matter */
 }
 .card-header {
   border-bottom: 0.5mm solid #c8952a;
@@ -706,25 +724,18 @@ header {
   padding-top: 1.5mm;
   margin-top: auto;
 }
-.card-number {
-  position: absolute;
-  bottom: 2.5mm;
-  right: 3mm;
-  font-size: 5.5pt;
-  color: #bbb;
-}
-/* Spine label — sits on the left edge, readable when card stored landscape */
+/* Spine — big enough to read as title */
 .card-spine {
   position: absolute;
   top: 0;
   left: 0;
-  width: 8mm;
+  width: 13mm;
   height: 144mm;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: space-between;
-  padding: 3mm 1.5mm;
+  padding: 4mm 2mm;
   background: #c8952a;
   color: #fff;
   overflow: hidden;
@@ -733,15 +744,16 @@ header {
   transform: rotate(180deg);
 }
 .card-spine .spine-title {
-  font-size: 7pt;
+  font-size: 11pt;
   font-weight: 700;
-  letter-spacing: .06em;
+  font-family: Georgia, serif;
+  letter-spacing: .04em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .card-spine .spine-meta {
-  font-size: 5.5pt;
+  font-size: 6pt;
   font-weight: 400;
   opacity: 0.85;
   letter-spacing: .04em;
@@ -749,6 +761,23 @@ header {
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: end;
+}
+/* Cut lines — subtle dashes outside the card border */
+.card-cut {
+  position: relative;
+}
+.card-cut::before, .card-cut::after {
+  content: '';
+  position: absolute;
+  background: transparent;
+  border: 0.2mm dashed #bbb;
+  border-radius: 4mm;
+  pointer-events: none;
+}
+/* Cut line around front cards only (inset by 1mm outside card) */
+.recipe-card:not(.back) {
+  outline: 0.2mm dashed #ccc;
+  outline-offset: 1.5mm;
 }
 
 /* ── DESKTOP SETTINGS POPOVER ──────────────────── */
@@ -1449,7 +1478,6 @@ function buildCard(recipe, side, cardNum, totalCards, bookName) {
       ${spine}
       <div class="card-header">
         <div class="card-book-name">${esc(bookName)}${ch ? ' · ' + esc(ch.name) : ''}</div>
-        <div class="card-title">${esc(recipe.title)}</div>
         ${recipe.desc ? `<div class="card-desc">${esc(recipe.desc)}</div>` : ''}
       </div>
       <div class="card-section">Ingredients</div>
@@ -1459,8 +1487,7 @@ function buildCard(recipe, side, cardNum, totalCards, bookName) {
     return `<div class="recipe-card back">
       ${spine}
       <div class="card-header">
-        <div class="card-book-name">${esc(bookName)}</div>
-        <div class="card-title">${esc(recipe.title)}</div>
+        <div class="card-book-name">${esc(bookName)}${ch ? ' · ' + esc(ch.name) : ''}</div>
       </div>
       <div class="card-section">Instructions</div>
       ${cardSectionedList(recipe.steps, 'ol')}
@@ -1598,12 +1625,22 @@ function showPanel(id) {
 // ══════════════════════════════════════════════════
 function renderDesktopSidebar() {
   const list = document.getElementById('deskChapterList');
-  list.innerHTML = data.chapters.map(ch => {
+  list.innerHTML = data.chapters.map((ch, idx) => {
     const recipes = data.recipes.filter(r => r.chapterId === ch.id);
     const isOpen = openChapters.has(ch.id);
+    const isFirst = idx === 0;
+    const isLast = idx === data.chapters.length - 1;
     return `<div class="chapter-group">
       <div class="chapter-heading ${isOpen?'open':''}" onclick="toggleChapter('${ch.id}')">
-        <span>${esc(ch.name)}</span><span class="ch-arrow">▶</span>
+        <span>${esc(ch.name)}</span>
+        <div style="display:flex;align-items:center;gap:2px">
+          <div class="chapter-controls" onclick="event.stopPropagation()">
+            ${!isFirst ? `<button class="ch-ctrl" title="Move up" onclick="moveChapter('${ch.id}',-1)">▲</button>` : ''}
+            ${!isLast  ? `<button class="ch-ctrl" title="Move down" onclick="moveChapter('${ch.id}',1)">▼</button>` : ''}
+            <button class="ch-ctrl" title="Delete chapter" onclick="deleteChapter('${ch.id}')" style="color:var(--danger)">✕</button>
+          </div>
+          <span class="ch-arrow">▶</span>
+        </div>
       </div>
       <div class="recipe-list ${isOpen?'open':''}">
         ${recipes.map(r => `<div class="recipe-item ${r.id===deskCurrentId?'active':''}" onclick="desk_showRecipe('${r.id}')">${esc(r.title)}</div>`).join('')}
@@ -1615,6 +1652,33 @@ function renderDesktopSidebar() {
 function toggleChapter(id) {
   openChapters.has(id) ? openChapters.delete(id) : openChapters.add(id);
   renderDesktopSidebar();
+}
+
+function moveChapter(id, dir) {
+  const idx = data.chapters.findIndex(c => c.id === id);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= data.chapters.length) return;
+  const tmp = data.chapters[idx];
+  data.chapters[idx] = data.chapters[newIdx];
+  data.chapters[newIdx] = tmp;
+  persistToStorage();
+  renderAll();
+}
+
+function deleteChapter(id) {
+  const ch = data.chapters.find(c => c.id === id);
+  const recipeCount = data.recipes.filter(r => r.chapterId === id).length;
+  const warn = recipeCount > 0 ? ` It contains ${recipeCount} recipe${recipeCount>1?'s':''} which will also be deleted.` : '';
+  if (!confirm(`Delete chapter "${ch.name}"?${warn}`)) return;
+  data.chapters = data.chapters.filter(c => c.id !== id);
+  data.recipes = data.recipes.filter(r => r.chapterId !== id);
+  if (deskCurrentId && data.recipes.findIndex(r => r.id === deskCurrentId) === -1) {
+    deskCurrentId = null;
+    showPanel('deskWelcome');
+  }
+  persistToStorage();
+  renderAll();
+  showToast(`"${ch.name}" deleted`);
 }
 
 function desk_showRecipe(id) {
@@ -1703,12 +1767,19 @@ function desk_deleteCurrentRecipe() {
 // ══════════════════════════════════════════════════
 function renderMobileList() {
   const list = document.getElementById('mobChapterList');
-  list.innerHTML = data.chapters.map(ch => {
+  list.innerHTML = data.chapters.map((ch, idx) => {
     const recipes = data.recipes.filter(r => r.chapterId === ch.id);
     const isOpen = openChapters.has(ch.id);
+    const isFirst = idx === 0;
+    const isLast = idx === data.chapters.length - 1;
     return `<div>
       <div class="mob-chapter-heading ${isOpen?'open':''}" onclick="mob_toggleChapter('${ch.id}')">
-        <span>${esc(ch.name)}</span><span class="ch-arrow">▶</span>
+        <span>${esc(ch.name)}</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span onclick="event.stopPropagation();mob_chapterMenu('${ch.id}')"
+            style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
+          <span class="ch-arrow">▶</span>
+        </div>
       </div>
       <div class="mob-recipe-list ${isOpen?'open':''}">
         ${recipes.map(r => `<div class="mob-recipe-row" onclick="mob_showRecipe('${r.id}')">
@@ -1717,6 +1788,30 @@ function renderMobileList() {
       </div>
     </div>`;
   }).join('');
+}
+
+function mob_chapterMenu(id) {
+  const ch = data.chapters.find(c => c.id === id);
+  const idx = data.chapters.findIndex(c => c.id === id);
+  const isFirst = idx === 0;
+  const isLast = idx === data.chapters.length - 1;
+
+  // Remove existing menu
+  document.getElementById('mobChapterMenuEl')?.remove();
+
+  const menu = document.createElement('div');
+  menu.id = 'mobChapterMenuEl';
+  menu.style.cssText = `position:fixed;inset:0;background:rgba(26,18,8,0.5);z-index:120;display:flex;align-items:flex-end`;
+  menu.innerHTML = `
+    <div style="width:100%;background:var(--warm-white);border-top:2px solid var(--gold);padding-bottom:env(safe-area-inset-bottom)">
+      <div style="padding:.8rem 1.2rem;font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown);border-bottom:1px solid var(--border)">${esc(ch.name)}</div>
+      ${!isFirst ? `<div onclick="moveChapter('${id}',-1);document.getElementById('mobChapterMenuEl').remove();renderMobileList()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▲ Move Up</div>` : ''}
+      ${!isLast  ? `<div onclick="moveChapter('${id}',1);document.getElementById('mobChapterMenuEl').remove();renderMobileList()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▼ Move Down</div>` : ''}
+      <div onclick="document.getElementById('mobChapterMenuEl').remove();deleteChapter('${id}')" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--danger);border-bottom:1px solid var(--border)">✕ Delete Chapter</div>
+      <div onclick="document.getElementById('mobChapterMenuEl').remove()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--muted)">Cancel</div>
+    </div>`;
+  menu.addEventListener('click', e => { if (e.target === menu) menu.remove(); });
+  document.body.appendChild(menu);
 }
 
 function mob_toggleChapter(id) {
