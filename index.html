@@ -642,7 +642,7 @@ header {
 .recipe-card {
   border: 1px solid #c8952a;
   border-radius: 3mm;
-  padding: 4mm 5mm;
+  padding: 4mm 5mm 4mm 11mm; /* left padding = spine width (8mm) + 3mm gap */
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
@@ -718,32 +718,34 @@ header {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 144mm;   /* card height becomes width when rotated */
-  height: 6mm;
+  width: 144mm;        /* card height, becomes the spine length when rotated */
+  height: 8mm;         /* wider to fit title + chapter + book name */
   display: flex;
-  align-items: center;
-  padding-left: 4mm;
-  gap: 3mm;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 4mm;
+  gap: 0.5mm;
   transform: rotate(-90deg) translateX(-144mm);
   transform-origin: bottom left;
   background: #c8952a;
   color: #fff;
-  font-size: 6pt;
-  font-weight: 700;
-  letter-spacing: .08em;
   white-space: nowrap;
   overflow: hidden;
 }
 .card-spine .spine-title {
-  flex: 1;
+  font-size: 7pt;
+  font-weight: 700;
+  letter-spacing: .06em;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.card-spine .spine-book {
-  font-weight: 400;
-  opacity: 0.75;
+.card-spine .spine-meta {
   font-size: 5.5pt;
-  flex-shrink: 0;
+  font-weight: 400;
+  opacity: 0.8;
+  letter-spacing: .05em;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── DESKTOP SETTINGS POPOVER ──────────────────── */
@@ -1437,7 +1439,7 @@ function buildCard(recipe, side, cardNum, totalCards, bookName) {
   const ch = data.chapters.find(c => c.id === recipe.chapterId);
   const spine = `<div class="card-spine">
     <span class="spine-title">${esc(recipe.title)}</span>
-    <span class="spine-book">${esc(bookName)}</span>
+    <span class="spine-meta">${ch ? esc(ch.name) + ' · ' : ''}${esc(bookName)}</span>
   </div>`;
   if (side === 'front') {
     return `<div class="recipe-card">
