@@ -725,61 +725,8 @@ header {
   padding-top: 1.5mm;
   margin-top: auto;
 }
-/* Spine — absolutely positioned, rotated strip on left edge */
-.card-spine {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 13mm;
-  height: 144mm;
-  background: #a87820;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
-  overflow: hidden;
-}
-.card-spine-inner {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 144mm;
-  height: 13mm;
-  transform-origin: bottom left;
-  transform: rotate(-90deg) translateX(-144mm);
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 0 4mm;
-  gap: 2mm;
-  overflow: hidden;
-  white-space: nowrap;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
-}
-.card-spine-inner .spine-title {
-  font-size: 11pt;
-  font-weight: 700;
-  font-family: Georgia, serif;
-  color: #1a1208;
-  letter-spacing: .03em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 1;
-  min-width: 0;
-}
-.card-spine-inner .spine-sep {
-  color: #1a1208;
-  font-size: 9pt;
-  opacity: 0.4;
-  flex-shrink: 0;
-}
-.card-spine-inner .spine-meta {
-  font-size: 6.5pt;
-  color: #1a1208;
-  opacity: 0.6;
-  font-family: Lato, sans-serif;
-  letter-spacing: .04em;
-  flex-shrink: 0;
-}
+/* Spine — rendered as inline SVG for reliable print output */
+.card-spine-svg { position: absolute; top: 0; left: 0; display: block; }
 /* Cut lines — subtle dashes outside the card border */
 .card-cut {
   position: relative;
@@ -1487,13 +1434,27 @@ function cardSectionedList(lines, tag) {
 
 function buildCard(recipe, side, cardNum, totalCards, bookName) {
   const ch = data.chapters.find(c => c.id === recipe.chapterId);
-  const spine = `<div class="card-spine">
-    <div class="card-spine-inner">
-      <span class="spine-title">${esc(recipe.title)}</span>
-      <span class="spine-sep">·</span>
-      <span class="spine-meta">${ch ? esc(ch.name) + ' · ' : ''}${esc(bookName)}</span>
-    </div>
-  </div>`;
+
+  // SVG spine — guaranteed to print correctly, no CSS transform issues
+  // Card is 99mm x 144mm. Spine is 13mm wide, full height.
+  // At 96dpi: 99mm=374px, 144mm=544px, 13mm=49px
+  // We draw the spine as SVG with text rotated along the left edge.
+  const titleText = recipe.title;
+  const metaText = (ch ? ch.name + ' · ' : '') + bookName;
+  const spine = `<svg class="card-spine-svg" xmlns="http://www.w3.org/2000/svg"
+      width="13mm" height="144mm" viewBox="0 0 49 544"
+      style="position:absolute;top:0;left:0;display:block">
+    <rect width="49" height="544" fill="#a87820"/>
+    <!-- Title: large, starts from bottom, reads upward -->
+    <text x="24" y="530" font-family="Georgia,serif" font-size="16" font-weight="bold"
+          fill="#1a1208" text-anchor="start"
+          transform="rotate(-90,24,530)">${esc(titleText)}</text>
+    <!-- Meta: small, at the top end -->
+    <text x="24" y="14" font-family="Georgia,serif" font-size="9"
+          fill="#1a1208" opacity="0.6" text-anchor="start"
+          transform="rotate(-90,24,14)">${esc(metaText)}</text>
+  </svg>`;
+
   if (side === 'front') {
     return `<div class="recipe-card">
       ${spine}
