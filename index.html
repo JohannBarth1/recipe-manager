@@ -736,7 +736,7 @@ header {
   align-items: stretch;
   justify-content: space-between;
   padding: 4mm 2mm;
-  background: #c8952a;
+  background: #a87820;
   color: #fff;
   overflow: hidden;
   writing-mode: vertical-rl;
@@ -1476,19 +1476,14 @@ function buildCard(recipe, side, cardNum, totalCards, bookName) {
   if (side === 'front') {
     return `<div class="recipe-card">
       ${spine}
-      <div class="card-header">
-        <div class="card-book-name">${esc(bookName)}${ch ? ' · ' + esc(ch.name) : ''}</div>
-        ${recipe.desc ? `<div class="card-desc">${esc(recipe.desc)}</div>` : ''}
-      </div>
+      ${recipe.desc ? `<p class="card-desc" style="margin-bottom:2mm;padding-bottom:1.5mm;border-bottom:0.5mm solid #c8952a">${esc(recipe.desc)}</p>` : '<div style="border-bottom:0.5mm solid #c8952a;margin-bottom:2mm;padding-bottom:0"></div>'}
       <div class="card-section">Ingredients</div>
       <div class="card-ing-box">${cardSectionedList(recipe.ingredients, 'ul')}</div>
     </div>`;
   } else {
     return `<div class="recipe-card back">
       ${spine}
-      <div class="card-header">
-        <div class="card-book-name">${esc(bookName)}${ch ? ' · ' + esc(ch.name) : ''}</div>
-      </div>
+      <div style="border-bottom:0.5mm solid #c8952a;margin-bottom:2mm"></div>
       <div class="card-section">Instructions</div>
       ${cardSectionedList(recipe.steps, 'ol')}
       ${recipe.tip ? `<div class="card-tip"><strong>Tip:</strong> ${esc(recipe.tip)}</div>` : ''}
