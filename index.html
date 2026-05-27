@@ -640,11 +640,8 @@ header {
 @media print {
   body > *:not(#printArea) { display: none !important; }
   #printArea { display: block !important; }
-  
-  /* FIX: Force zero page margins so the browser can't shift our canvas left or right */
   @page { size: A4; margin: 0; }
   body { margin: 0; padding: 0; }
-  
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 
@@ -654,22 +651,19 @@ header {
 }
 
 .card-page {
-  /* FIX: Lock container to exact A4 dimensions */
   width: 210mm;
   height: 297mm;
   display: grid;
-  
-  /* FIX: Use exact millimeter dimensions instead of fluid 1fr to stop overflow */
   grid-template-columns: 99mm 99mm;
   grid-template-rows: 144mm 144mm;
   gap: 4mm;
   
-  /* FIX: Perfect mathematical padding to center the 202mm wide grid on the 210mm page */
-  /* This leaves a 4mm safety zone on the left/right edges so outlines aren't cut off */
-  padding-left: 4mm;
-  padding-right: 4mm;
-  padding-top: 2.5mm;
-  padding-bottom: 2.5mm;
+  /* FIX: Shifted layout to the right. Left padding increased to 7mm, */
+  /* right padding reduced to 1mm to keep the total A4 width at 210mm. */
+  padding-left: 7mm;
+  padding-right: 1mm;
+  padding-top: 4mm;
+  padding-bottom: 1mm;
   
   page-break-after: always;
   box-sizing: border-box;
@@ -679,10 +673,10 @@ header {
   border: 1px solid #c8952a;
   border-radius: 3mm;
   
-  /* FIX: Changed left padding to 12mm so text clears your new narrow spine */
-  padding: 4mm 5mm 4mm 12mm; 
+  /* FIX: Left padding reduced to 9mm (5mm spine + 4mm text gap) */
+  padding: 4mm 5mm 4mm 9mm; 
   
-  overflow: hidden; /* Slices the SVG spine to match the card's rounded corners */
+  overflow: hidden;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -756,12 +750,12 @@ header {
   margin-top: auto;
 }
 
-/* FIX: Spine setup — width handled here, height set to 100% to fill the card top-to-bottom */
+/* FIX: Reduced physical width constraint to 5mm */
 .card-spine-svg { 
   position: absolute; 
   top: 0; 
   left: 0; 
-  width: 8mm; 
+  width: 5mm; 
   height: 100%; 
   display: block; 
 }
@@ -1474,25 +1468,21 @@ function cardSectionedList(lines, tag) {
 
 function buildCard(recipe, side, cardNum, totalCards, bookName) {
   const ch = data.chapters.find(c => c.id === recipe.chapterId);
-
-// SVG spine — guaranteed to print correctly, no CSS transform issues
-// Card is 99mm x 144mm. 
-// Narrowed Spine: 5mm wide (~30px at 96dpi). Full height: 144mm (=544px).
 const titleText = recipe.title;
 const metaText = (ch ? ch.name + ' · ' : '') + bookName;
 
 const spine = `<svg class="card-spine-svg" xmlns="http://www.w3.org/2000/svg"
-    width="5mm" height="144mm" viewBox="0 0 30 544"
+    width="100%" height="100%" viewBox="0 0 20 544"
     style="position:absolute;top:0;left:0;display:block">
-  <rect width="30" height="544" fill="#a87820"/>
+  <rect width="20" height="544" fill="#a87820"/>
   
-  <text x="15" y="525" font-family="Georgia,serif" font-size="14" font-weight="bold"
+  <text x="10" y="525" font-family="Georgia,serif" font-size="11" font-weight="bold"
         fill="#1a1208" text-anchor="start"
-        transform="rotate(-90,15,525)">${esc(titleText)}</text>
+        transform="rotate(-90,10,525)">${esc(titleText)}</text>
         
-  <text x="15" y="20" font-family="Georgia,serif" font-size="9"
+  <text x="10" y="20" font-family="Georgia,serif" font-size="7.5"
         fill="#1a1208" opacity="0.6" text-anchor="end"
-        transform="rotate(-90,15,20)">${esc(metaText)}</text>
+        transform="rotate(-90,10,20)">${esc(metaText)}</text>
 </svg>`;
 
   if (side === 'front') {
