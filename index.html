@@ -660,7 +660,7 @@ header {
 .recipe-card {
   border: 1px solid #c8952a;
   border-radius: 3mm;
-  padding: 4mm 5mm 4mm 8mm; /* left padding = spine (10mm) + 3mm gap */
+  padding: 4mm 5mm 4mm 5mm; /* left padding = spine (10mm) + 3mm gap */
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
@@ -1437,12 +1437,12 @@ function buildCard(recipe, side, cardNum, totalCards, bookName) {
 
 // SVG spine — guaranteed to print correctly, no CSS transform issues
 // Card is 99mm x 144mm. 
-// Narrowed Spine: 8mm wide (~30px at 96dpi). Full height: 144mm (=544px).
+// Narrowed Spine: 5mm wide (~30px at 96dpi). Full height: 144mm (=544px).
 const titleText = recipe.title;
 const metaText = (ch ? ch.name + ' · ' : '') + bookName;
 
 const spine = `<svg class="card-spine-svg" xmlns="http://www.w3.org/2000/svg"
-    width="8mm" height="144mm" viewBox="0 0 30 544"
+    width="5mm" height="144mm" viewBox="0 0 30 544"
     style="position:absolute;top:0;left:0;display:block">
   <rect width="30" height="544" fill="#a87820"/>
   
