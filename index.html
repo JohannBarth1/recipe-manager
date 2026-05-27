@@ -654,16 +654,18 @@ header {
   width: 210mm;
   height: 297mm;
   display: grid;
-  grid-template-columns: 99mm 99mm;
-  grid-template-rows: 144mm 144mm;
+  
+  /* FIX: Sliced 4mm off the cards to make room for a bigger outer page margin */
+  grid-template-columns: 95mm 95mm;
+  grid-template-rows: 140mm 140mm;
   gap: 4mm;
   
-  /* FIX: Shifted layout to the right. Left padding increased to 7mm, */
-  /* right padding reduced to 1mm to keep the total A4 width at 210mm. */
-  padding-left: 7mm;
-  padding-right: 1mm;
-  padding-top: 4mm;
-  padding-bottom: 1mm;
+  /* FIX: Generous, perfectly balanced margins around the outside edges of the page */
+  /* This centers the grid completely and prevents bottom/side printer clipping. */
+  padding-top: 6.5mm;
+  padding-bottom: 6.5mm;
+  padding-left: 8mm;
+  padding-right: 8mm;
   
   page-break-after: always;
   box-sizing: border-box;
@@ -672,16 +674,16 @@ header {
 .recipe-card {
   border: 1px solid #c8952a;
   border-radius: 3mm;
-  
-  /* FIX: Left padding reduced to 9mm (5mm spine + 4mm text gap) */
-  padding: 4mm 5mm 4mm 9mm; 
-  
+  padding: 4mm 5mm 4mm 9mm; /* Left padding stays at 9mm (5mm spine + 4mm text gap) */
   overflow: hidden;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  width: 99mm;
-  height: 144mm;
+  
+  /* FIX: Matched the new scaled dimensions */
+  width: 95mm;
+  height: 140mm;
+  
   font-size: 7.5pt;
   line-height: 1.35;
   position: relative;
@@ -750,7 +752,6 @@ header {
   margin-top: auto;
 }
 
-/* FIX: Reduced physical width constraint to 5mm */
 .card-spine-svg { 
   position: absolute; 
   top: 0; 
@@ -778,7 +779,6 @@ header {
   outline: 0.2mm dashed #ccc;
   outline-offset: 1.5mm;
 }
-
 /* ── DESKTOP SETTINGS POPOVER ──────────────────── */
 .desk-settings {
   display: none;
