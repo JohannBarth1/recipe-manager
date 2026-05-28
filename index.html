@@ -2375,7 +2375,7 @@ async function exportEpub() {
   });
 }
 
-// Upload to Google Drive
+// Upload to Google Drive (Self-Contained Multipart Upload)
 async function gdriveSaveEpub() {
   showNameModal({
     title: 'Save EPUB to Drive',
@@ -2386,42 +2386,101 @@ async function gdriveSaveEpub() {
     callback: async (bookName) => {
       setBookName(bookName);
       
-      const currentFolder = getGdriveFolder() || 'Recipes';
-      const folderName = prompt("Enter the Google Drive folder to save this EPUB into (it will be created if it doesn't exist):", currentFolder);
-      if (folderName === null) return; // User cancelled
+      // Automatically pull the folder name from your app's settings configuration
+      const folderName = (getGdriveFolder() || '').trim();
       
       const doSaveEpub = async (token) => {
         showToast('Building EPUB…');
         const blob = await generateEpubBlob(bookName);
         
-        showToast(`Checking Drive folder "${folderName}"…`);
-        const folderId = await gdriveFindFolder(token, folderName);
-        if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doSaveEpub); return; }
+        let folderId = null;
+        
+        // Step 1: Handle Folder Resolution (Find or Create if specified)
+        if (folderName) {
+          showToast(`Locating cloud folder "${folderName}"…`);
+          try {
+            const q = encodeURIComponent(`name = '${folderName.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`);
+            const folderSearch = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (folderSearch.status === 401) { gdriveAuth(doSaveEpub); return; }
+            const searchData = await folderSearch.json();
+            
+            if (searchData.files && searchData.files.length > 0) {
+              folderId = searchData.files[0].id;
+            } else {
+              showToast(`Creating new folder "${folderName}"…`);
+              const createFolder = await fetch('https://www.googleapis.com/drive/v3/files', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  name: folderName,
+                  mimeType: 'application/vnd.google-apps.folder'
+                })
+              });
+              const createData = await createFolder.json();
+              folderId = createData.id;
+            }
+          } catch (err) {
+            console.error('Folder resolution error:', err);
+            showToast('Could not resolve Drive folder. Saving to root.');
+          }
+        }
         
         const fileName = bookName.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') + '.epub';
         showToast(`Uploading ${fileName}…`);
         
+        // Step 2: Binary Multipart Upload
         try {
-          // Step 1: Request resumable upload session
-          const metaResp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', {
+          const metadata = {
+            name: fileName,
+            mimeType: 'application/epub+zip'
+          };
+          if (folderId) {
+            metadata.parents = [folderId];
+          }
+          
+          const boundary = 'eRecipe_Multipart_Boundary';
+          
+          // Assemble parts using Blobs to protect binary asset integrity
+          const metadataPart = new Blob([
+            `--${boundary}\r\n`,
+            'Content-Type: application/json; charset=UTF-8\r\n\r\n',
+            JSON.stringify(metadata),
+            '\r\n'
+          ], { type: 'application/json' });
+          
+          const mediaPartHeader = new Blob([
+            `--${boundary}\r\n`,
+            'Content-Type: application/epub+zip\r\n\r\n'
+          ], { type: 'text/plain' });
+          
+          const mediaPartFooter = new Blob([
+            `\r\n--${boundary}--`
+          ], { type: 'text/plain' });
+          
+          const multipartBlob = new Blob([
+            metadataPart, 
+            mediaPartHeader, 
+            blob, 
+            mediaPartFooter
+          ], { type: `multipart/related; boundary=${boundary}` });
+          
+          const uploadResp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              'Content-Type': `multipart/related; boundary=${boundary}`
             },
-            body: JSON.stringify({ 
-              name: fileName, 
-              parents: folderId !== 'NO_FOLDER' ? [folderId] : undefined 
-            })
+            body: multipartBlob
           });
           
-          if (metaResp.status === 401) { gdriveAuth(doSaveEpub); return; }
-          const location = metaResp.headers.get('Location');
-          if (!location) throw new Error('Failed to get upload location URL');
-          
-          // Step 2: Upload the binary blob
-          const uploadResp = await fetch(location, { method: 'PUT', body: blob });
-          if (!uploadResp.ok) throw new Error('Upload failed');
+          if (uploadResp.status === 401) { gdriveAuth(doSaveEpub); return; }
+          if (!uploadResp.ok) throw new Error('Upload failed response code');
           
           showToast(`Saved EPUB to Drive ✓`);
         } catch(e) {
