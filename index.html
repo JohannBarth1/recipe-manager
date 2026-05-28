@@ -852,25 +852,31 @@ header {
 <!-- HEADER -->
 <header>
   <div style="display:flex;align-items:center;gap:.8rem">
-<svg width="36" height="36" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="110" fill="#1a1208"/>
-  <circle cx="256" cy="256" r="160" stroke="#c8952a" stroke-width="16" stroke-dasharray="80 20 10 20"/>
-  <path d="M256 120 C220 120 220 230 256 230 C292 230 292 120 256 120 Z" fill="#faf6f0"/>
-  <path d="M251 230 H261 V380 C261 385 251 385 251 380 Z" fill="#faf6f0"/>
-  <circle cx="256" cy="256" r="22" fill="#c0571a" stroke="#1a1208" stroke-width="6"/>
-</svg>
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Book base -->
+      <rect x="4" y="6" width="28" height="24" rx="3" fill="#c8952a"/>
+      <rect x="6" y="8" width="24" height="20" rx="2" fill="#1a1208"/>
+      <!-- Spine -->
+      <rect x="4" y="6" width="4" height="20" rx="2" fill="#a87820"/>
+      <!-- Pages -->
+      <rect x="10" y="12" width="14" height="1.5" rx=".75" fill="#c8952a"/>
+      <rect x="10" y="15.5" width="14" height="1.5" rx=".75" fill="#c8952a"/>
+      <rect x="10" y="19" width="10" height="1.5" rx=".75" fill="#c8952a"/>
+      <!-- Fork & knife icon on cover -->
+      <path d="M21 10v4M21 14c0 1.1.9 2 2 2v4" stroke="#c8952a" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M24 10v2.5a1.5 1.5 0 0 1-3 0V10" stroke="#c8952a" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
     <div>
       <div class="brand-title">eRecipe</div>
       <div class="brand-sub">All your favourite recipes</div>
     </div>
   </div>
   <div class="header-actions">
-    <button class="hbtn hbtn-load" onclick="gdriveLoad()" title="Load from Cloud"> ☁ Load</button>
-    <button class="hbtn hbtn-save" onclick="gdriveSave()" title="Save JSON to Cloud"> ☁ Save</button>
-    <button class="hbtn hbtn-epub" onclick="exportEpub()" title="Download EPUB"> 📖 EPUB</button>
-    <button class="hbtn" onclick="gdriveSaveEpub()" style="background:#4285F4; color:#fff;" title="Save EPUB to Cloud"> ☁ EPUB</button>
-    <button class="hbtn hbtn-save" onclick="printCards()" title="Print Recipe Cards"> 🖨 Cards</button>
-    <button class="hbtn hbtn-load" onclick="toggleDeskSettings()" title="Settings"> ⚙ </button>
+    <button class="hbtn hbtn-load" onclick="gdriveLoad()" title="Load from Cloud">☁ Load</button>
+    <button class="hbtn hbtn-save" onclick="gdriveSave()" title="Save to Cloud">☁ Save</button>
+    <button class="hbtn hbtn-epub" onclick="exportEpub()">📖 EPUB</button>
+    <button class="hbtn hbtn-save" onclick="printCards()" title="Print Recipe Cards">🖨 Cards</button>
+    <button class="hbtn hbtn-load" onclick="toggleDeskSettings()" title="Settings">⚙</button>
   </div>
 </header>
 
@@ -1001,7 +1007,7 @@ header {
             <span class="s-icon">☁</span>
             <div><div>Load from Cloud</div><div class="settings-note">Fetch the latest recipes from Google Drive</div></div>
           </button>
-          <p class="settings-note" style="margin-top:.4rem">Enter a folder name (e.g., Recipes). If it doesn't exist yet, it will be created automatically. Leave blank to save to your main Drive.</p>
+          <p class="settings-note">Sign in with Google when prompted. The app remembers the file between saves.</p>
           <div style="margin-top:1rem">
             <div class="settings-group-label" style="margin-bottom:.5rem">Google Drive Folder</div>
             <div style="display:flex;gap:.5rem;align-items:center">
@@ -1057,14 +1063,6 @@ header {
             <span class="s-icon">📖</span>
             <div><div>Export EPUB</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Download for Kobo or other e-readers</div></div>
           </button>
-          <button class="settings-btn epub" onclick="exportEpub()">
-  <span class="s-icon"> 📖 </span>
-  <div><div>Export EPUB</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Download for Kobo or other e-readers</div></div>
-</button>
-<button class="settings-btn" onclick="gdriveSaveEpub()" style="background:#4285F4; color:#fff; border-color:#4285F4;">
-  <span class="s-icon"> ☁ </span>
-  <div><div>Save EPUB to Drive</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">Upload EPUB directly to Google Drive</div></div>
-</button>
           <button class="settings-btn" style="background:var(--brown);color:#fff;border-color:var(--brown)" onclick="printCards()">
             <span class="s-icon">🖨</span>
             <div><div>Print Recipe Cards</div><div class="settings-note" style="color:rgba(255,255,255,0.8);font-style:normal">A6 cards, 4 per A4 sheet</div></div>
@@ -1085,7 +1083,7 @@ header {
       onkeydown="if(event.key==='Enter') setGdriveFolder(this.value)"/>
     <button onclick="setGdriveFolder(this.previousElementSibling.value)">Set</button>
   </div>
-  <p class="ds-note">Enter a folder name (e.g., Recipes). If it doesn't exist yet, it will be created automatically. Leave blank to save to your main Drive.</p>
+  <p class="ds-note">Folder name in your Drive, e.g. Kitchen. Leave blank for root.</p>
   <hr class="ds-divider"/>
   <details>
     <summary style="cursor:pointer;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);font-weight:700;list-style:none;display:flex;justify-content:space-between">Dropbox <span>▶</span></summary>
@@ -2264,96 +2262,9 @@ async function gdriveLoad() {
   else gdriveAuth(doLoad);
 }
 
-//  ══════════════════════════════════════════════════
-// EPUB EXPORT & UPLOAD
-//  ══════════════════════════════════════════════════
-
-// Generates the binary Blob for the EPUB (Shared between download and upload)
-async function generateEpubBlob(bookName) {
-  const zip = new JSZip();
-  zip.file('mimetype', 'application/epub+zip', {compression:'STORE'});
-  zip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:schemas:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
-  const css = `
-  body  { font-family: Georgia, serif; margin: 1em 1.2em; line-height: 1.4; font-size: 1em; }
-  h1    { font-size: 1.5em; border-bottom: 2px solid #333; padding-bottom: .2em; margin-top: .8em; margin-bottom: .2em; }
-  h2    { font-size: 1.1em; border-bottom: 1px solid #bbb; padding-bottom: .15em; margin-top: .9em; margin-bottom: .3em; }
-  p.intro { font-style: italic; color: #555; margin: .2em 0 .6em; font-size: .9em; }
-  p.sec-head { font-weight: bold; margin: .6em 0 .1em; font-size: .95em; }
-  .ing  { border-left: 2px solid #c8952a; padding: .3em .6em; margin: .3em 0 .6em; }
-  ul, ol { margin: .2em 0 .2em 1.3em; padding: 0; }
-  li    { margin: .2em 0; font-size: .95em; }
-  .tip  { font-style: italic; color: #666; padding: .4em .7em; border: 1px dashed #bbb; margin-top: .8em; font-size: .88em; }
-  .chapter-title { page-break-before: always; }
-  .cover-date { color: #888; font-size: .85em; margin-top: 2em; }
-  `;
-  zip.file('OEBPS/style/main.css', css);
-  const x = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const wrap = (title, body) =>
-  `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${x(title)}</title><link rel="stylesheet" type="text/css" href="style/main.css"/></head><body>${body}</body></html>`;
-  
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
-  
-  zip.file('OEBPS/cover.xhtml', wrap(bookName,
-  `<h1>${x(bookName)}</h1><p class="intro">All your favourite recipes in an epub file.</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul><p class="cover-date">Last updated: ${dateStr}</p>`));
-  
-  const mf = [
-    `<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>`,
-    `<item id="css"   href="style/main.css" media-type="text/css"/>`,
-    `<item id="ncx"   href="toc.ncx" media-type="application/x-dtbncx+xml"/>`,
-    `<item id="nav"   href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>`,
-  ];
-  const sp = [`<itemref idref="cover"/>`];
-  const ncxPoints = [`<navPoint id="cover" playOrder="1"><navLabel><text>Title Page</text></navLabel><content src="cover.xhtml"/></navPoint>`];
-  const navItems = [`<li><a href="cover.xhtml">Title Page</a></li>`];
-  
-  let po = 2;
-  for (const ch of data.chapters) {
-    const rs = data.recipes.filter(r => r.chapterId === ch.id);
-    if (!rs.length) continue;
-    
-    const chIntroFname = `ch_${ch.id}.xhtml`;
-    const chIntroBody = `<h1 class="chapter-title">${x(ch.name)}</h1><ul>${rs.map(r=>`<li>${x(r.title)}</li>`).join('')}</ul>`;
-    zip.file(`OEBPS/${chIntroFname}`, wrap(ch.name, chIntroBody));
-    mf.push(`<item id="ch_${ch.id}" href="${chIntroFname}" media-type="application/xhtml+xml"/>`);
-    sp.push(`<itemref idref="ch_${ch.id}"/>`);
-    
-    const chNavPoints = [];
-    const chNavLiItems = [];
-    chNavPoints.push(`<navPoint id="chi_${ch.id}" playOrder="${po}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chIntroFname}"/></navPoint>`);
-    po++;
-    
-    for (const r of rs) {
-      const rid = r.id.replace(/[^a-z0-9_]/gi, '_');
-      const fname = `recipe_${rid}.xhtml`;
-      let body = `<h1>${x(r.title)}</h1>`;
-      if (r.desc) body += `<p class="intro">${x(r.desc)}</p>`;
-      body += `<h2>Ingredients</h2><div class="ing">${epubSectionedList(r.ingredients, 'ul')}</div>`;
-      body += `<h2>Instructions</h2>${epubSectionedList(r.steps, 'ol')}`;
-      if (r.tip) body += `<div class="tip"><strong>Tip:</strong> ${x(r.tip)}</div>`;
-      zip.file(`OEBPS/${fname}`, wrap(r.title, body));
-      mf.push(`<item id="${rid}" href="${fname}" media-type="application/xhtml+xml"/>`);
-      sp.push(`<itemref idref="${rid}"/>`);
-      chNavPoints.push(`<navPoint id="r_${rid}" playOrder="${po}"><navLabel><text>${x(r.title)}</text></navLabel><content src="${fname}"/></navPoint>`);
-      chNavLiItems.push(`<li><a href="${fname}">${x(r.title)}</a></li>`);
-      po++;
-    }
-    ncxPoints.push(`<navPoint id="chg_${ch.id}" playOrder="${po-rs.length-1}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chIntroFname}"/>${chNavPoints.slice(1).join('')}</navPoint>`);
-    navItems.push(`<li><a href="${chIntroFname}">${x(ch.name)}</a><ol>${chNavLiItems.join('')}</ol></li>`);
-  }
-  
-  const safeId = bookName.replace(/[^a-z0-9]/gi,'-').toLowerCase();
-  zip.file('OEBPS/content.opf',
-  `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">${safeId}</dc:identifier><dc:title>${x(bookName)}</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
-  zip.file('OEBPS/toc.ncx',
-  `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="${safeId}"/></head><docTitle><text>${x(bookName)}</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
-  zip.file('OEBPS/nav.xhtml',
-  `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><h1>Contents</h1><ol>${navItems.join('')}</ol></nav></body></html>`);
-  
-  return await zip.generateAsync({type:'blob', mimeType:'application/epub+zip'});
-}
-
-// Download Locally
+// ══════════════════════════════════════════════════
+// EPUB EXPORT
+// ══════════════════════════════════════════════════
 async function exportEpub() {
   showNameModal({
     title: 'Export EPUB',
@@ -2363,138 +2274,124 @@ async function exportEpub() {
     hint: 'Saved as: [name].epub',
     callback: async (name) => {
       setBookName(name);
-      showToast('Building EPUB…');
-      const blob = await generateEpubBlob(name);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const fname = name.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') || 'recipes';
-      a.href = url; a.download = `${fname}.epub`; a.click();
-      URL.revokeObjectURL(url);
-      showToast('EPUB downloaded!');
+      await buildEpub(name);
     }
   });
 }
 
-// Upload to Google Drive (Self-Contained Multipart Upload)
-async function gdriveSaveEpub() {
-  showNameModal({
-    title: 'Save EPUB to Drive',
-    desc: 'This name will be used as the book title and filename.',
-    placeholder: 'e.g. Italian Favourites',
-    defaultVal: getBookName(),
-    hint: 'Saved as: [name].epub',
-    callback: async (bookName) => {
-      setBookName(bookName);
-      
-      // Automatically pull the folder name from your app's settings configuration
-      const folderName = (getGdriveFolder() || '').trim();
-      
-      const doSaveEpub = async (token) => {
-        showToast('Building EPUB…');
-        const blob = await generateEpubBlob(bookName);
-        
-        let folderId = null;
-        
-        // Step 1: Handle Folder Resolution (Find or Create if specified)
-        if (folderName) {
-          showToast(`Locating cloud folder "${folderName}"…`);
-          try {
-            const q = encodeURIComponent(`name = '${folderName.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`);
-            const folderSearch = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            
-            if (folderSearch.status === 401) { gdriveAuth(doSaveEpub); return; }
-            const searchData = await folderSearch.json();
-            
-            if (searchData.files && searchData.files.length > 0) {
-              folderId = searchData.files[0].id;
-            } else {
-              showToast(`Creating new folder "${folderName}"…`);
-              const createFolder = await fetch('https://www.googleapis.com/drive/v3/files', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  name: folderName,
-                  mimeType: 'application/vnd.google-apps.folder'
-                })
-              });
-              const createData = await createFolder.json();
-              folderId = createData.id;
-            }
-          } catch (err) {
-            console.error('Folder resolution error:', err);
-            showToast('Could not resolve Drive folder. Saving to root.');
-          }
-        }
-        
-        const fileName = bookName.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') + '.epub';
-        showToast(`Uploading ${fileName}…`);
-        
-        // Step 2: Binary Multipart Upload
-        try {
-          const metadata = {
-            name: fileName,
-            mimeType: 'application/epub+zip'
-          };
-          if (folderId) {
-            metadata.parents = [folderId];
-          }
-          
-          const boundary = 'eRecipe_Multipart_Boundary';
-          
-          // Assemble parts using Blobs to protect binary asset integrity
-          const metadataPart = new Blob([
-            `--${boundary}\r\n`,
-            'Content-Type: application/json; charset=UTF-8\r\n\r\n',
-            JSON.stringify(metadata),
-            '\r\n'
-          ], { type: 'application/json' });
-          
-          const mediaPartHeader = new Blob([
-            `--${boundary}\r\n`,
-            'Content-Type: application/epub+zip\r\n\r\n'
-          ], { type: 'text/plain' });
-          
-          const mediaPartFooter = new Blob([
-            `\r\n--${boundary}--`
-          ], { type: 'text/plain' });
-          
-          const multipartBlob = new Blob([
-            metadataPart, 
-            mediaPartHeader, 
-            blob, 
-            mediaPartFooter
-          ], { type: `multipart/related; boundary=${boundary}` });
-          
-          const uploadResp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': `multipart/related; boundary=${boundary}`
-            },
-            body: multipartBlob
-          });
-          
-          if (uploadResp.status === 401) { gdriveAuth(doSaveEpub); return; }
-          if (!uploadResp.ok) throw new Error('Upload failed response code');
-          
-          showToast(`Saved EPUB to Drive ✓`);
-        } catch(e) {
-          showToast('EPUB Drive upload failed');
-          console.error(e);
-        }
-      };
-      
-      const token = getGdriveToken();
-      if (token) doSaveEpub(token);
-      else gdriveAuth(doSaveEpub);
+async function buildEpub(bookName) {
+  showToast('Building EPUB…');
+  const zip = new JSZip();
+  zip.file('mimetype', 'application/epub+zip', {compression:'STORE'});
+  zip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:schemas:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
+
+  const css = `
+body  { font-family: Georgia, serif; margin: 1em 1.2em; line-height: 1.4; font-size: 1em; }
+h1    { font-size: 1.5em; border-bottom: 2px solid #333; padding-bottom: .2em; margin-top: .8em; margin-bottom: .2em; }
+h2    { font-size: 1.1em; border-bottom: 1px solid #bbb; padding-bottom: .15em; margin-top: .9em; margin-bottom: .3em; }
+p.intro { font-style: italic; color: #555; margin: .2em 0 .6em; font-size: .9em; }
+p.sec-head { font-weight: bold; margin: .6em 0 .1em; font-size: .95em; }
+.ing  { border-left: 2px solid #c8952a; padding: .3em .6em; margin: .3em 0 .6em; }
+ul, ol { margin: .2em 0 .2em 1.3em; padding: 0; }
+li    { margin: .2em 0; font-size: .95em; }
+.tip  { font-style: italic; color: #666; padding: .4em .7em; border: 1px dashed #bbb; margin-top: .8em; font-size: .88em; }
+.chapter-title { page-break-before: always; }
+.cover-date { color: #888; font-size: .85em; margin-top: 2em; }
+`;
+  zip.file('OEBPS/style/main.css', css);
+
+  const x = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const wrap = (title, body) =>
+    `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${x(title)}</title><link rel="stylesheet" type="text/css" href="style/main.css"/></head><body>${body}</body></html>`;
+
+  // Date for cover
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
+  // Cover page
+  zip.file('OEBPS/cover.xhtml', wrap(bookName,
+    `<h1>${x(bookName)}</h1><p class="intro">All your favourite recipes in an epub file.</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul><p class="cover-date">Last updated: ${dateStr}</p>`));
+
+  const mf = [
+    `<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>`,
+    `<item id="css"   href="style/main.css" media-type="text/css"/>`,
+    `<item id="ncx"   href="toc.ncx" media-type="application/x-dtbncx+xml"/>`,
+    `<item id="nav"   href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>`,
+  ];
+  const sp = [`<itemref idref="cover"/>`];
+  const ncxPoints = [`<navPoint id="cover" playOrder="1"><navLabel><text>Title Page</text></navLabel><content src="cover.xhtml"/></navPoint>`];
+  const navItems = [`<li><a href="cover.xhtml">Title Page</a></li>`];
+
+  let po = 2;
+
+  for (const ch of data.chapters) {
+    const rs = data.recipes.filter(r => r.chapterId === ch.id);
+    if (!rs.length) continue;
+
+    const chIntroFname = `ch_${ch.id}.xhtml`;
+    const chIntroBody = `<h1 class="chapter-title">${x(ch.name)}</h1><ul>${rs.map(r=>`<li>${x(r.title)}</li>`).join('')}</ul>`;
+    zip.file(`OEBPS/${chIntroFname}`, wrap(ch.name, chIntroBody));
+    mf.push(`<item id="ch_${ch.id}" href="${chIntroFname}" media-type="application/xhtml+xml"/>`);
+    sp.push(`<itemref idref="ch_${ch.id}"/>`);
+
+    const chNavPoints = [];
+    const chNavLiItems = [];
+    chNavPoints.push(`<navPoint id="chi_${ch.id}" playOrder="${po}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chIntroFname}"/></navPoint>`);
+    po++;
+
+    for (const r of rs) {
+      const rid = r.id.replace(/[^a-z0-9_]/gi, '_');
+      const fname = `recipe_${rid}.xhtml`;
+
+      let body = `<h1>${x(r.title)}</h1>`;
+      if (r.desc) body += `<p class="intro">${x(r.desc)}</p>`;
+      body += `<h2>Ingredients</h2><div class="ing">${epubSectionedList(r.ingredients, 'ul')}</div>`;
+      body += `<h2>Instructions</h2>${epubSectionedList(r.steps, 'ol')}`;
+      if (r.tip) body += `<div class="tip"><strong>Tip:</strong> ${x(r.tip)}</div>`;
+
+      zip.file(`OEBPS/${fname}`, wrap(r.title, body));
+      mf.push(`<item id="${rid}" href="${fname}" media-type="application/xhtml+xml"/>`);
+      sp.push(`<itemref idref="${rid}"/>`);
+      chNavPoints.push(`<navPoint id="r_${rid}" playOrder="${po}"><navLabel><text>${x(r.title)}</text></navLabel><content src="${fname}"/></navPoint>`);
+      chNavLiItems.push(`<li><a href="${fname}">${x(r.title)}</a></li>`);
+      po++;
     }
-  });
+
+    ncxPoints.push(`<navPoint id="chg_${ch.id}" playOrder="${po-rs.length-1}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chIntroFname}"/>${chNavPoints.slice(1).join('')}</navPoint>`);
+    navItems.push(`<li><a href="${chIntroFname}">${x(ch.name)}</a><ol>${chNavLiItems.join('')}</ol></li>`);
+  }
+
+  const safeId = bookName.replace(/[^a-z0-9]/gi,'-').toLowerCase();
+  zip.file('OEBPS/content.opf',
+    `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">${safeId}</dc:identifier><dc:title>${x(bookName)}</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
+
+  zip.file('OEBPS/toc.ncx',
+    `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="${safeId}"/></head><docTitle><text>${x(bookName)}</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
+
+  zip.file('OEBPS/nav.xhtml',
+    `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><h1>Contents</h1><ol>${navItems.join('')}</ol></nav></body></html>`);
+
+  const blob = await zip.generateAsync({type:'blob', mimeType:'application/epub+zip'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fname = bookName.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') || 'recipes';
+  a.href = url; a.download = `${fname}.epub`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('EPUB downloaded!');
 }
+
+function toggleDeskSettings() {
+  document.getElementById('deskSettings').classList.toggle('open');
+}
+// Close popover if clicking outside it
+document.addEventListener('click', e => {
+  const s = document.getElementById('deskSettings');
+  if (s.classList.contains('open') &&
+      !s.contains(e.target) &&
+      !e.target.closest('[onclick="toggleDeskSettings()"]')) {
+    s.classList.remove('open');
+  }
+});
 
 // ══════════════════════════════════════════════════
 // INIT
