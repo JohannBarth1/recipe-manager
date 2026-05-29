@@ -2295,6 +2295,31 @@ function generateEpubUUID() {
   });
 }
 
+function getEpubFolder() {
+  return localStorage.getItem('hk_epub_folder') || '';
+}
+
+function setEpubFolder(val) {
+  localStorage.setItem('hk_epub_folder', val);
+}
+
+function getBookName() {
+  return localStorage.getItem('hk_book_name') || 'My Recipe Book';
+}
+
+function setBookName(val) {
+  localStorage.setItem('hk_book_name', val);
+}
+
+// Ensure the inputs actually save the data when you type a folder name in Settings
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.epub-folder-input').forEach(el => {
+    el.addEventListener('input', (e) => {
+      setEpubFolder(e.target.value);
+    });
+  });
+});
+  
 async function buildEpub(bookName) {
   const zip = new JSZip();
   
