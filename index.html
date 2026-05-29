@@ -863,6 +863,7 @@ header {
   <div class="header-actions">
     <button class="hbtn hbtn-load" onclick="gdriveLoad()" title="Load from Cloud">☁ Load</button>
     <button class="hbtn hbtn-save" onclick="gdriveSave()" title="Save to Cloud">☁ Save</button>
+    <button class="hbtn hbtn-epub" onclick="exportEpub()">📖 EPUB</button>
     <button class="hbtn hbtn-save" onclick="printCards()" title="Print Recipe Cards">🖨 Cards</button>
     <button class="hbtn hbtn-load" onclick="toggleDeskSettings()" title="Settings">⚙</button>
   </div>
@@ -2271,277 +2272,241 @@ async function gdriveLoad() {
   else gdriveAuth(doLoad);
 }
 
-// ==========================================
-// FOOLPROOF ENGINE & DIAGNOSTIC UTILITIES
-// ==========================================
-
-function escapeEpubXml(unsafe) {
-  if (!unsafe) return '';
-  return unsafe.toString().replace(/[<>&'"]/g, (c) => {
-    switch (c) {
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '&': return '&amp;';
-      case '\'': return '&apos;';
-      case '"': return '&quot;';
-    }
-  });
-}
-
-function generateEpubUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
+// ══════════════════════════════════════════════════
+// EPUB EXPORT
+// ══════════════════════════════════════════════════
 async function buildEpub(bookName) {
+  showToast('Building EPUB…');
   const zip = new JSZip();
-  
-  // 1. Structural Mimetype file (Must be first, uncompressed)
-  zip.file("mimetype", "application/epub+zip", { compression: "STORE" });
-  
-  // 2. Structural container descriptor
-  const containerContent = `<?xml version="1.0" encoding="UTF-8"?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-  <rootfiles>
-    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
-  </rootfiles>
-</container>`;
-  zip.folder("META-INF").file("container.xml", containerContent);
-  
-  // 3. Resilient Data Discovery: Auto-detect correct recipe state array variable
-  let itemsToExport = [];
-  if (typeof recipes !== 'undefined' && Array.isArray(recipes)) {
-    itemsToExport = recipes;
-  } else if (typeof allRecipes !== 'undefined' && Array.isArray(allRecipes)) {
-    itemsToExport = allRecipes;
-  } else {
-    const backupData = localStorage.getItem('hk_recipes') || localStorage.getItem('recipes');
-    if (backupData) {
-      try { itemsToExport = JSON.parse(backupData); } catch(e) {}
+  zip.file('mimetype', 'application/epub+zip', {compression:'STORE'});
+  zip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:schemas:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
+
+  const css = `
+body  { font-family: Georgia, serif; margin: 1em 1.2em; line-height: 1.4; font-size: 1em; }
+h1    { font-size: 1.5em; border-bottom: 2px solid #333; padding-bottom: .2em; margin-top: .8em; margin-bottom: .2em; }
+h2    { font-size: 1.1em; border-bottom: 1px solid #bbb; padding-bottom: .15em; margin-top: .9em; margin-bottom: .3em; }
+p.intro { font-style: italic; color: #555; margin: .2em 0 .6em; font-size: .9em; }
+p.sec-head { font-weight: bold; margin: .6em 0 .1em; font-size: .95em; }
+.ing  { border-left: 2px solid #c8952a; padding: .3em .6em; margin: .3em 0 .6em; }
+ul, ol { margin: .2em 0 .2em 1.3em; padding: 0; }
+li    { margin: .2em 0; font-size: .95em; }
+.tip  { font-style: italic; color: #666; padding: .4em .7em; border: 1px dashed #bbb; margin-top: .8em; font-size: .88em; }
+.chapter-title { page-break-before: always; }
+.cover-date { color: #888; font-size: .85em; margin-top: 2em; }
+`;
+  zip.file('OEBPS/style/main.css', css);
+
+  const x = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const wrap = (title, body) =>
+    `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${x(title)}</title><link rel="stylesheet" type="text/css" href="style/main.css"/></head><body>${body}</body></html>`;
+
+  // Date for cover
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
+  // Cover page
+  zip.file('OEBPS/cover.xhtml', wrap(bookName,
+    `<h1>${x(bookName)}</h1><p class="intro">All your favourite recipes in an epub file.</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul><p class="cover-date">Last updated: ${dateStr}</p>`));
+
+  const mf = [
+    `<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>`,
+    `<item id="css"   href="style/main.css" media-type="text/css"/>`,
+    `<item id="ncx"   href="toc.ncx" media-type="application/x-dtbncx+xml"/>`,
+    `<item id="nav"   href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>`,
+  ];
+  const sp = [`<itemref idref="cover"/>`];
+  const ncxPoints = [`<navPoint id="cover" playOrder="1"><navLabel><text>Title Page</text></navLabel><content src="cover.xhtml"/></navPoint>`];
+  const navItems = [`<li><a href="cover.xhtml">Title Page</a></li>`];
+
+  let po = 2;
+
+  for (const ch of data.chapters) {
+    const rs = data.recipes.filter(r => r.chapterId === ch.id);
+    if (!rs.length) continue;
+
+    const chIntroFname = `ch_${ch.id}.xhtml`;
+    const chIntroBody = `<h1 class="chapter-title">${x(ch.name)}</h1><ul>${rs.map(r=>`<li>${x(r.title)}</li>`).join('')}</ul>`;
+    zip.file(`OEBPS/${chIntroFname}`, wrap(ch.name, chIntroBody));
+    mf.push(`<item id="ch_${ch.id}" href="${chIntroFname}" media-type="application/xhtml+xml"/>`);
+    sp.push(`<itemref idref="ch_${ch.id}"/>`);
+
+    const chNavPoints = [];
+    const chNavLiItems = [];
+    chNavPoints.push(`<navPoint id="chi_${ch.id}" playOrder="${po}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chIntroFname}"/></navPoint>`);
+    po++;
+
+    for (const r of rs) {
+      const rid = r.id.replace(/[^a-z0-9_]/gi, '_');
+      const fname = `recipe_${rid}.xhtml`;
+
+      let body = `<h1>${x(r.title)}</h1>`;
+      if (r.desc) body += `<p class="intro">${x(r.desc)}</p>`;
+      body += `<h2>Ingredients</h2><div class="ing">${epubSectionedList(r.ingredients, 'ul')}</div>`;
+      body += `<h2>Instructions</h2>${epubSectionedList(r.steps, 'ol')}`;
+      if (r.tip) body += `<div class="tip"><strong>Tip:</strong> ${x(r.tip)}</div>`;
+
+      zip.file(`OEBPS/${fname}`, wrap(r.title, body));
+      mf.push(`<item id="${rid}" href="${fname}" media-type="application/xhtml+xml"/>`);
+      sp.push(`<itemref idref="${rid}"/>`);
+      chNavPoints.push(`<navPoint id="r_${rid}" playOrder="${po}"><navLabel><text>${x(r.title)}</text></navLabel><content src="${fname}"/></navPoint>`);
+      chNavLiItems.push(`<li><a href="${fname}">${x(r.title)}</a></li>`);
+      po++;
     }
+
+    ncxPoints.push(`<navPoint id="chg_${ch.id}" playOrder="${po-rs.length-1}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chIntroFname}"/>${chNavPoints.slice(1).join('')}</navPoint>`);
+    navItems.push(`<li><a href="${chIntroFname}">${x(ch.name)}</a><ol>${chNavLiItems.join('')}</ol></li>`);
   }
-  
-  let manifestItems = '';
-  let spineItems = '';
-  let tocNavPoints = '';
-  
-  if (!itemsToExport || itemsToExport.length === 0) {
-    const emptyHtml = `<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>Empty Collection</title></head>
-<body><h1>My Recipe Book</h1><p>No recipes found in application memory state.</p></body>
-</html>`;
-    zip.folder("OEBPS").file("recipe_0.xhtml", emptyHtml);
-    manifestItems += `    <item id="recipe_0" href="recipe_0.xhtml" media-type="application/xhtml+xml"/>\n`;
-    spineItems += `    <itemref idref="recipe_0"/>\n`;
-    tocNavPoints += `    <navPoint id="nav0" playOrder="1"><navLabel><text>Empty Book</text></navLabel><content src="recipe_0.xhtml"/></navPoint>\n`;
-  } else {
-    itemsToExport.forEach((recipe, idx) => {
-      const id = `recipe_${idx}`;
-      manifestItems += `    <item id="${id}" href="${id}.xhtml" media-type="application/xhtml+xml"/>\n`;
-      spineItems += `    <itemref idref="${id}"/>\n`;
-      tocNavPoints += `    <navPoint id="nav${idx}" playOrder="${idx + 1}"><navLabel><text>${escapeEpubXml(recipe.title || 'Untitled Recipe')}</text></navLabel><content src="${id}.xhtml"/></navPoint>\n`;
-      
-      const xhtml = `<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <title>${escapeEpubXml(recipe.title || 'Untitled Recipe')}</title>
-  <style>
-    body { font-family: sans-serif; margin: 1em; color: #1a1208; background-color: #fffdf9; }
-    h1 { color: #6b4c2a; border-bottom: 2px solid #6b4c2a; padding-bottom: 0.3em; }
-    h3 { color: #8c5a3c; margin-top: 1.5em; border-bottom: 1px dashed #8c5a3c; padding-bottom: 0.2em; }
-    p { margin: 0.5em 0; line-height: 1.6; white-space: pre-wrap; }
-    .meta { font-style: italic; color: #666; margin-bottom: 1em; }
-  </style>
-</head>
-<body>
-  <h1>${escapeEpubXml(recipe.title || 'Untitled Recipe')}</h1>
-  <div class="meta">Chapter: ${escapeEpubXml(recipe.chapter || 'General')}</div>
-  <h3>Ingredients</h3>
-  <p>${escapeEpubXml(recipe.ingredients || 'No ingredients listed.')}</p>
-  <h3>Instructions</h3>
-  <p>${escapeEpubXml(recipe.instructions || 'No instructions listed.')}</p>
-</body>
-</html>`;
-      zip.folder("OEBPS").file(`${id}.xhtml`, xhtml);
-    });
-  }
-  
-  const opf = `<?xml version="1.0" encoding="utf-8"?>
-<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="bookid" version="2.0">
-  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-    <dc:title>${escapeEpubXml(bookName || 'eRecipe Collection')}</dc:title>
-    <dc:language>en</dc:language>
-    <dc:identifier id="bookid">urn:uuid:${generateEpubUUID()}</dc:identifier>
-  </metadata>
-  <manifest>
-    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
-${manifestItems}  </manifest>
-  <spine toc="ncx">
-${spineItems}  </spine>
-</package>`;
-  
-  const ncx = `<?xml version="1.0" encoding="utf-8"?>
-<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
-  <docTitle><text>${escapeEpubXml(bookName || 'eRecipe Collection')}</text></docTitle>
-  <navMap>
-${tocNavPoints}  </navMap>
-</ncx>`;
-  
-  zip.folder("OEBPS").file("content.opf", opf);
-  zip.folder("OEBPS").file("toc.ncx", ncx);
-  
-  const blob = await zip.generateAsync({ type: "blob", mimeType: "application/epub+zip" });
-  const fname = (bookName || 'eRecipe_Collection').replace(/[^a-z0-9_-]/gi, '_');
+
+  const safeId = bookName.replace(/[^a-z0-9]/gi,'-').toLowerCase();
+  zip.file('OEBPS/content.opf',
+    `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">${safeId}</dc:identifier><dc:title>${x(bookName)}</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
+
+  zip.file('OEBPS/toc.ncx',
+    `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="${safeId}"/></head><docTitle><text>${x(bookName)}</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
+
+  zip.file('OEBPS/nav.xhtml',
+    `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><h1>Contents</h1><ol>${navItems.join('')}</ol></nav></body></html>`);
+
+  const blob = await zip.generateAsync({type:'blob', mimeType:'application/epub+zip'});
+  const fname = bookName.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') || 'recipes';
   return { blob, fname };
 }
 
+// ── EPUB FOLDER (for Drive export) ─────────────────
+const EPUB_FOLDER_KEY = 'hk_epub_folder';
+const EPUB_FILE_ID_KEY = 'hk_epub_file_id';
+
+function getEpubFolder() { return localStorage.getItem(EPUB_FOLDER_KEY) || ''; }
+function setEpubFolder(val) {
+  const f = val.trim();
+  if (!f) { showToast('Please enter a folder name'); return; }
+  localStorage.setItem(EPUB_FOLDER_KEY, f);
+  localStorage.removeItem(EPUB_FILE_ID_KEY);
+  document.querySelectorAll('.epub-folder-input').forEach(el => el.value = f);
+  showToast(`EPUB folder set to "${f}"`);
+}
+
 async function exportEpub() {
-  try {
-    const defaultName = (typeof getBookName === 'function' ? getBookName() : 'My Recipe Book');
-    
-    const executeDownload = async (chosenName) => {
-      if (!chosenName) return;
-      if (typeof setBookName === 'function') setBookName(chosenName);
-      
-      if (typeof showToast === 'function') showToast('Generating download file...');
-      const { blob, fname } = await buildEpub(chosenName);
-      
+  showNameModal({
+    title: 'Download EPUB',
+    desc: 'This name will be used as the book title and filename.',
+    placeholder: 'e.g. Italian Favourites',
+    defaultVal: getBookName(),
+    hint: 'Saved as: [name].epub',
+    callback: async (name) => {
+      setBookName(name);
+      const { blob, fname } = await buildEpub(name);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; 
-      a.download = `${fname}.epub`; 
-      
-      document.body.appendChild(a); 
-      a.click();
-      
-      setTimeout(() => {
-        document.body.removeChild(a); 
-        URL.revokeObjectURL(url);
-      }, 150);
-      
-      if (typeof showToast === 'function') showToast('EPUB downloaded!');
-    };
-
-    // Use native prompt if custom modal framework is failing or missing
-    if (typeof showNameModal === 'function') {
-      showNameModal({
-        title: 'Download EPUB',
-        desc: 'This name will be used as the book title and filename.',
-        placeholder: 'e.g. Favourites',
-        defaultVal: defaultName,
-        hint: 'Saved as: [name].epub',
-        callback: executeDownload
-      });
-    } else {
-      const name = prompt("Enter EPUB Book Title:", defaultName);
-      if (name) await executeDownload(name);
+      a.href = url; a.download = `${fname}.epub`; a.click();
+      URL.revokeObjectURL(url);
+      showToast('EPUB downloaded!');
     }
-  } catch (err) {
-    alert("CRITICAL DIAGNOSTIC: Local download failed execution.\nReason: " + err.message + "\n\nStack Trace:\n" + err.stack);
-  }
+  });
 }
 
 async function exportEpubToDrive() {
-  try {
-    const epubFolder = (typeof getEpubFolder === 'function' ? getEpubFolder() : '');
-    if (!epubFolder) { 
-      if (typeof showToast === 'function') showToast('Please set an EPUB Drive folder in Settings first');
-      else alert('Please set an EPUB Drive folder in Settings first');
-      return; 
-    }
+  const epubFolder = getEpubFolder();
+  if (!epubFolder) { showToast('Please set an EPUB Drive folder in Settings first'); return; }
 
-    const defaultName = (typeof getBookName === 'function' ? getBookName() : 'My Recipe Book');
-
-    const executeDriveUpload = async (chosenName) => {
-      if (!chosenName) return;
-      if (typeof setBookName === 'function') setBookName(chosenName);
-      
-      const { blob, fname } = await buildEpub(chosenName);
+  showNameModal({
+    title: 'Save EPUB to Drive',
+    desc: `EPUB will be saved to your "${epubFolder}" folder in Google Drive.`,
+    placeholder: 'e.g. Italian Favourites',
+    defaultVal: getBookName(),
+    hint: `Destination: ${epubFolder}/[name].epub`,
+    callback: async (name) => {
+      setBookName(name);
+      const { blob, fname } = await buildEpub(name);
       const fileName = `${fname}.epub`;
 
       const doUpload = async (token) => {
-        if (typeof showToast === 'function') showToast('Uploading EPUB to Drive…');
+        showToast('Uploading EPUB to Drive…');
         try {
           const folderId = await gdriveFindFolder(token, epubFolder);
           if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doUpload); return; }
-          if (folderId === 'NO_FOLDER') { if (typeof showToast === 'function') showToast('Please set an EPUB folder in Settings'); return; }
+          if (folderId === 'NO_FOLDER') { showToast('Please set an EPUB folder in Settings'); return; }
 
+          // Check for existing file to overwrite
           const q = encodeURIComponent(`name='${fileName}' and '${folderId}' in parents and trashed=false`);
-          const listResp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
+          const listResp = await gdriveApiCall(token,
+            `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
           const listJson = listResp ? await listResp.json() : { files: [] };
           const existingId = listJson.files?.[0]?.id;
 
+          // Convert blob to ArrayBuffer for upload
+          const arrayBuf = await blob.arrayBuffer();
           let resp;
+
           if (existingId) {
-            resp = await gdriveApiCall(token, `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
+            resp = await gdriveApiCall(token,
+              `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/epub+zip' },
-              body: blob
+              body: arrayBuf
             });
           } else {
+            // Multipart create
             const boundary = 'epub_boundary_hk';
             const metaJson = JSON.stringify({
               name: fileName,
               mimeType: 'application/epub+zip',
               parents: [folderId]
             });
-            
-            const partHeader = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaJson}\r\n--${boundary}\r\nContent-Type: application/epub+zip\r\n\r\n`;
-            const partFooter = `\r\n--${boundary}--`;
-            
-            const multipartBlob = new Blob(
-              [partHeader, blob, partFooter],
-              { type: `multipart/related; boundary=${boundary}` }
+            // Build multipart manually using Uint8Array
+            const enc = new TextEncoder();
+            const partHeader = enc.encode(
+              `--${boundary}\r\nContent-Type: application/json\r\n\r\n${metaJson}\r\n` +
+              `--${boundary}\r\nContent-Type: application/epub+zip\r\n\r\n`
             );
+            const partFooter = enc.encode(`\r\n--${boundary}--`);
+            const epubBytes = new Uint8Array(arrayBuf);
+            const combined = new Uint8Array(partHeader.length + epubBytes.length + partFooter.length);
+            combined.set(partHeader, 0);
+            combined.set(epubBytes, partHeader.length);
+            combined.set(partFooter, partHeader.length + epubBytes.length);
 
-            resp = await gdriveApiCall(token, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            resp = await gdriveApiCall(token,
+              'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
               method: 'POST',
               headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-              body: multipartBlob
+              body: combined
             });
           }
 
           if (!resp) { gdriveAuth(doUpload); return; }
           const result = await resp.json();
           if (result.id) {
-            if (typeof showToast === 'function') showToast(`EPUB saved to Drive: ${epubFolder}/${fileName} ✓`);
+            showToast(`EPUB saved to Drive: ${epubFolder}/${fileName} ✓`);
           } else {
             throw new Error(JSON.stringify(result));
           }
         } catch(e) {
-          if (typeof showToast === 'function') showToast('EPUB Drive upload failed');
+          showToast('EPUB Drive upload failed');
           console.error(e);
         }
       };
-      
-      const token = (typeof getGdriveToken === 'function' ? getGdriveToken() : null);
-      if (token) doUpload(token);
-      else if (typeof gdriveAuth === 'function') gdriveAuth(doUpload);
-      else alert("Google Drive Auth function (gdriveAuth) is not defined in this file context.");
-    };
 
-    if (typeof showNameModal === 'function') {
-      showNameModal({
-        title: 'Save EPUB to Drive',
-        desc: `EPUB will be saved to your "${epubFolder}" folder in Google Drive.`,
-        placeholder: 'e.g. Favourites',
-        defaultVal: defaultName,
-        hint: `Destination: ${epubFolder}/[name].epub`,
-        callback: executeDriveUpload
-      });
-    } else {
-      const name = prompt(`Save EPUB to Drive folder "${epubFolder}" as:`, defaultName);
-      if (name) await executeDriveUpload(name);
+      const token = getGdriveToken();
+      if (token) doUpload(token);
+      else gdriveAuth(doUpload);
     }
-  } catch (err) {
-    alert("CRITICAL DIAGNOSTIC: Google Drive export failed execution.\nReason: " + err.message + "\n\nStack Trace:\n" + err.stack);
-  }
+  });
 }
+
+function toggleDeskSettings() {
+  document.getElementById('deskSettings').classList.toggle('open');
+}
+// Close popover if clicking outside it
+document.addEventListener('click', e => {
+  const s = document.getElementById('deskSettings');
+  if (s.classList.contains('open') &&
+      !s.contains(e.target) &&
+      !e.target.closest('[onclick="toggleDeskSettings()"]')) {
+    s.classList.remove('open');
+  }
+});
+
 // ══════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════
