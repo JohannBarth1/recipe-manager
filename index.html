@@ -2272,7 +2272,7 @@ async function gdriveLoad() {
 }
 
 // ==========================================
-// FIX: SELF-CONTAINED COMPREHENSIVE EPUB ENGINE
+// FOOLPROOF ENGINE & DIAGNOSTIC UTILITIES
 // ==========================================
 
 function escapeEpubXml(unsafe) {
@@ -2295,31 +2295,6 @@ function generateEpubUUID() {
   });
 }
 
-function getEpubFolder() {
-  return localStorage.getItem('hk_epub_folder') || '';
-}
-
-function setEpubFolder(val) {
-  localStorage.setItem('hk_epub_folder', val);
-}
-
-function getBookName() {
-  return localStorage.getItem('hk_book_name') || 'My Recipe Book';
-}
-
-function setBookName(val) {
-  localStorage.setItem('hk_book_name', val);
-}
-
-// Ensure the inputs actually save the data when you type a folder name in Settings
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.epub-folder-input').forEach(el => {
-    el.addEventListener('input', (e) => {
-      setEpubFolder(e.target.value);
-    });
-  });
-});
-  
 async function buildEpub(bookName) {
   const zip = new JSZip();
   
@@ -2335,24 +2310,34 @@ async function buildEpub(bookName) {
 </container>`;
   zip.folder("META-INF").file("container.xml", containerContent);
   
-  // 3. Compile layout elements from application state
+  // 3. Resilient Data Discovery: Auto-detect correct recipe state array variable
+  let itemsToExport = [];
+  if (typeof recipes !== 'undefined' && Array.isArray(recipes)) {
+    itemsToExport = recipes;
+  } else if (typeof allRecipes !== 'undefined' && Array.isArray(allRecipes)) {
+    itemsToExport = allRecipes;
+  } else {
+    const backupData = localStorage.getItem('hk_recipes') || localStorage.getItem('recipes');
+    if (backupData) {
+      try { itemsToExport = JSON.parse(backupData); } catch(e) {}
+    }
+  }
+  
   let manifestItems = '';
   let spineItems = '';
   let tocNavPoints = '';
   
-  const itemsToExport = (typeof recipes !== 'undefined' && Array.isArray(recipes)) ? recipes : [];
-  
-  if (itemsToExport.length === 0) {
+  if (!itemsToExport || itemsToExport.length === 0) {
     const emptyHtml = `<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>Empty Collection</title></head>
-<body><h1>My Recipe Book</h1><p>No recipes have been added to this collection yet.</p></body>
+<body><h1>My Recipe Book</h1><p>No recipes found in application memory state.</p></body>
 </html>`;
     zip.folder("OEBPS").file("recipe_0.xhtml", emptyHtml);
     manifestItems += `    <item id="recipe_0" href="recipe_0.xhtml" media-type="application/xhtml+xml"/>\n`;
     spineItems += `    <itemref idref="recipe_0"/>\n`;
-    tocNavPoints += `    <navPoint id="nav0" playOrder="1"><navLabel><text>Empty Collection</text></navLabel><content src="recipe_0.xhtml"/></navPoint>\n`;
+    tocNavPoints += `    <navPoint id="nav0" playOrder="1"><navLabel><text>Empty Book</text></navLabel><content src="recipe_0.xhtml"/></navPoint>\n`;
   } else {
     itemsToExport.forEach((recipe, idx) => {
       const id = `recipe_${idx}`;
@@ -2367,7 +2352,7 @@ async function buildEpub(bookName) {
   <title>${escapeEpubXml(recipe.title || 'Untitled Recipe')}</title>
   <style>
     body { font-family: sans-serif; margin: 1em; color: #1a1208; background-color: #fffdf9; }
-    h1 { color: #6b4c2a; border-bottom: 2px solid #6b4c2a; padding-bottom: 0.3em; font-family: serif; }
+    h1 { color: #6b4c2a; border-bottom: 2px solid #6b4c2a; padding-bottom: 0.3em; }
     h3 { color: #8c5a3c; margin-top: 1.5em; border-bottom: 1px dashed #8c5a3c; padding-bottom: 0.2em; }
     p { margin: 0.5em 0; line-height: 1.6; white-space: pre-wrap; }
     .meta { font-style: italic; color: #666; margin-bottom: 1em; }
@@ -2416,131 +2401,147 @@ ${tocNavPoints}  </navMap>
 }
 
 async function exportEpub() {
-  showNameModal({
-    title: 'Download EPUB',
-    desc: 'This name will be used as the book title and filename.',
-    placeholder: 'e.g. Italian Favourites',
-    defaultVal: getBookName(),
-    hint: 'Saved as: [name].epub',
-    callback: async (name) => {
-      try {
-        setBookName(name);
-        const { blob, fname } = await buildEpub(name);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; 
-        a.download = `${fname}.epub`; 
-        
-        // Fix: Force browser focus assignment to satisfy local sandbox permission engines
-        document.body.appendChild(a); 
-        a.click();
+  try {
+    const defaultName = (typeof getBookName === 'function' ? getBookName() : 'My Recipe Book');
+    
+    const executeDownload = async (chosenName) => {
+      if (!chosenName) return;
+      if (typeof setBookName === 'function') setBookName(chosenName);
+      
+      if (typeof showToast === 'function') showToast('Generating download file...');
+      const { blob, fname } = await buildEpub(chosenName);
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; 
+      a.download = `${fname}.epub`; 
+      
+      document.body.appendChild(a); 
+      a.click();
+      
+      setTimeout(() => {
         document.body.removeChild(a); 
-        
         URL.revokeObjectURL(url);
-        showToast('EPUB downloaded successfully!');
-      } catch (err) {
-        console.error("Local EPUB export error:", err);
-        showToast('Local save failed: ' + err.message);
-      }
+      }, 150);
+      
+      if (typeof showToast === 'function') showToast('EPUB downloaded!');
+    };
+
+    // Use native prompt if custom modal framework is failing or missing
+    if (typeof showNameModal === 'function') {
+      showNameModal({
+        title: 'Download EPUB',
+        desc: 'This name will be used as the book title and filename.',
+        placeholder: 'e.g. Favourites',
+        defaultVal: defaultName,
+        hint: 'Saved as: [name].epub',
+        callback: executeDownload
+      });
+    } else {
+      const name = prompt("Enter EPUB Book Title:", defaultName);
+      if (name) await executeDownload(name);
     }
-  });
+  } catch (err) {
+    alert("CRITICAL DIAGNOSTIC: Local download failed execution.\nReason: " + err.message + "\n\nStack Trace:\n" + err.stack);
+  }
 }
 
 async function exportEpubToDrive() {
-  const epubFolder = getEpubFolder();
-  if (!epubFolder) { showToast('Please set an EPUB Drive folder in Settings first'); return; }
-
-  showNameModal({
-    title: 'Save EPUB to Drive',
-    desc: `EPUB will be saved to your "${epubFolder}" folder in Google Drive.`,
-    placeholder: 'e.g. Italian Favourites',
-    defaultVal: getBookName(),
-    hint: `Destination: ${epubFolder}/[name].epub`,
-    callback: async (name) => {
-      setBookName(name);
-      try {
-        const { blob, fname } = await buildEpub(name);
-        const fileName = `${fname}.epub`;
-
-        const doUpload = async (token) => {
-          showToast('Uploading EPUB to Drive…');
-          try {
-            const folderId = await gdriveFindFolder(token, epubFolder);
-            if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doUpload); return; }
-            if (folderId === 'NO_FOLDER') { showToast('Please set an EPUB folder in Settings'); return; }
-
-            const q = encodeURIComponent(`name='${fileName}' and '${folderId}' in parents and trashed=false`);
-            const listResp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
-            const listJson = listResp ? await listResp.json() : { files: [] };
-            const existingId = listJson.files?.[0]?.id;
-
-            let resp;
-            if (existingId) {
-              resp = await gdriveApiCall(token, `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/epub+zip' },
-                body: blob
-              });
-            } else {
-              const boundary = 'epub_boundary_hk';
-              const metaJson = JSON.stringify({
-                name: fileName,
-                mimeType: 'application/epub+zip',
-                parents: [folderId]
-              });
-              
-              const partHeader = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaJson}\r\n--${boundary}\r\nContent-Type: application/epub+zip\r\n\r\n`;
-              const partFooter = `\r\n--${boundary}--`;
-              
-              const multipartBlob = new Blob(
-                [partHeader, blob, partFooter],
-                { type: `multipart/related; boundary=${boundary}` }
-              );
-
-              resp = await gdriveApiCall(token, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST',
-                headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-                body: multipartBlob
-              });
-            }
-
-            if (!resp) { gdriveAuth(doUpload); return; }
-            const result = await resp.json();
-            if (result.id) {
-              showToast(`EPUB saved to Drive: ${epubFolder}/${fileName} ✓`);
-            } else {
-              throw new Error(JSON.stringify(result));
-            }
-          } catch(e) {
-            showToast('EPUB Drive upload failed');
-            console.error(e);
-          }
-        };
-        
-        const token = getGdriveToken();
-        if (token) doUpload(token);
-        else gdriveAuth(doUpload);
-      } catch (err) {
-        console.error("Drive packaging error:", err);
-        showToast('Packaging failed: ' + err.message);
-      }
+  try {
+    const epubFolder = (typeof getEpubFolder === 'function' ? getEpubFolder() : '');
+    if (!epubFolder) { 
+      if (typeof showToast === 'function') showToast('Please set an EPUB Drive folder in Settings first');
+      else alert('Please set an EPUB Drive folder in Settings first');
+      return; 
     }
-  });
-}
 
-function toggleDeskSettings() {
-  document.getElementById('deskSettings').classList.toggle('open');
-}
-// Close popover if clicking outside it
-document.addEventListener('click', e => {
-  const s = document.getElementById('deskSettings');
-  if (s.classList.contains('open') &&
-      !s.contains(e.target) &&
-      !e.target.closest('[onclick="toggleDeskSettings()"]')) {
-    s.classList.remove('open');
+    const defaultName = (typeof getBookName === 'function' ? getBookName() : 'My Recipe Book');
+
+    const executeDriveUpload = async (chosenName) => {
+      if (!chosenName) return;
+      if (typeof setBookName === 'function') setBookName(chosenName);
+      
+      const { blob, fname } = await buildEpub(chosenName);
+      const fileName = `${fname}.epub`;
+
+      const doUpload = async (token) => {
+        if (typeof showToast === 'function') showToast('Uploading EPUB to Drive…');
+        try {
+          const folderId = await gdriveFindFolder(token, epubFolder);
+          if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doUpload); return; }
+          if (folderId === 'NO_FOLDER') { if (typeof showToast === 'function') showToast('Please set an EPUB folder in Settings'); return; }
+
+          const q = encodeURIComponent(`name='${fileName}' and '${folderId}' in parents and trashed=false`);
+          const listResp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
+          const listJson = listResp ? await listResp.json() : { files: [] };
+          const existingId = listJson.files?.[0]?.id;
+
+          let resp;
+          if (existingId) {
+            resp = await gdriveApiCall(token, `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/epub+zip' },
+              body: blob
+            });
+          } else {
+            const boundary = 'epub_boundary_hk';
+            const metaJson = JSON.stringify({
+              name: fileName,
+              mimeType: 'application/epub+zip',
+              parents: [folderId]
+            });
+            
+            const partHeader = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaJson}\r\n--${boundary}\r\nContent-Type: application/epub+zip\r\n\r\n`;
+            const partFooter = `\r\n--${boundary}--`;
+            
+            const multipartBlob = new Blob(
+              [partHeader, blob, partFooter],
+              { type: `multipart/related; boundary=${boundary}` }
+            );
+
+            resp = await gdriveApiCall(token, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+              method: 'POST',
+              headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+              body: multipartBlob
+            });
+          }
+
+          if (!resp) { gdriveAuth(doUpload); return; }
+          const result = await resp.json();
+          if (result.id) {
+            if (typeof showToast === 'function') showToast(`EPUB saved to Drive: ${epubFolder}/${fileName} ✓`);
+          } else {
+            throw new Error(JSON.stringify(result));
+          }
+        } catch(e) {
+          if (typeof showToast === 'function') showToast('EPUB Drive upload failed');
+          console.error(e);
+        }
+      };
+      
+      const token = (typeof getGdriveToken === 'function' ? getGdriveToken() : null);
+      if (token) doUpload(token);
+      else if (typeof gdriveAuth === 'function') gdriveAuth(doUpload);
+      else alert("Google Drive Auth function (gdriveAuth) is not defined in this file context.");
+    };
+
+    if (typeof showNameModal === 'function') {
+      showNameModal({
+        title: 'Save EPUB to Drive',
+        desc: `EPUB will be saved to your "${epubFolder}" folder in Google Drive.`,
+        placeholder: 'e.g. Favourites',
+        defaultVal: defaultName,
+        hint: `Destination: ${epubFolder}/[name].epub`,
+        callback: executeDriveUpload
+      });
+    } else {
+      const name = prompt(`Save EPUB to Drive folder "${epubFolder}" as:`, defaultName);
+      if (name) await executeDriveUpload(name);
+    }
+  } catch (err) {
+    alert("CRITICAL DIAGNOSTIC: Google Drive export failed execution.\nReason: " + err.message + "\n\nStack Trace:\n" + err.stack);
   }
-});
-
+}
 // ══════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════
