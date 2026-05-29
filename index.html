@@ -640,7 +640,8 @@ header {
 @media print {
   body > *:not(#printArea) { display: none !important; }
   #printArea { display: block !important; }
-  @page { size: A4; margin: 8mm; }
+  @page { size: A4; margin: 0; }
+  body { margin: 0; padding: 0; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 #printArea {
@@ -740,23 +741,13 @@ header {
   margin-top: auto;
 }
 /* Spine — rendered as inline SVG for reliable print output */
-.card-spine-svg { position: absolute; top: 0; left: 0; display: block; }
-/* Cut lines — subtle dashes outside the card border */
-.card-cut {
-  position: relative;
-}
-.card-cut::before, .card-cut::after {
-  content: '';
-  position: absolute;
-  background: transparent;
-  border: 0.2mm dashed #bbb;
-  border-radius: 4mm;
-  pointer-events: none;
-}
-/* Cut line around front cards only (inset by 1mm outside card) */
-.recipe-card:not(.back) {
-  outline: 0.2mm dashed #ccc;
-  outline-offset: 1.5mm;
+.card-spine-svg { 
+  position: absolute; 
+  top: 0; 
+  left: 0; 
+  width: 5mm; 
+  height: 100%; 
+  display: block; 
 }
 
 /* ── DESKTOP SETTINGS POPOVER ──────────────────── */
