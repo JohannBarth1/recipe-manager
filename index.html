@@ -2398,7 +2398,14 @@ async function exportEpub() {
       const { blob, fname } = await buildEpub(name);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = `${fname}.epub`; a.click();
+      a.href = url; 
+      a.download = `${fname}.epub`; 
+      
+      // FIX: The link must be appended to the document body for the click to register
+      document.body.appendChild(a); 
+      a.click();
+      document.body.removeChild(a); 
+      
       URL.revokeObjectURL(url);
       showToast('EPUB downloaded!');
     }
@@ -2429,48 +2436,40 @@ async function exportEpubToDrive() {
 
           // Check for existing file to overwrite
           const q = encodeURIComponent(`name='${fileName}' and '${folderId}' in parents and trashed=false`);
-          const listResp = await gdriveApiCall(token,
-            `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
+          const listResp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
           const listJson = listResp ? await listResp.json() : { files: [] };
           const existingId = listJson.files?.[0]?.id;
 
-          // Convert blob to ArrayBuffer for upload
-          const arrayBuf = await blob.arrayBuffer();
           let resp;
-
           if (existingId) {
-            resp = await gdriveApiCall(token,
-              `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
+            // FIX: Pass the Blob directly to the body for a clean PATCH update
+            resp = await gdriveApiCall(token, `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/epub+zip' },
-              body: arrayBuf
+              body: blob
             });
           } else {
-            // Multipart create
+            // FIX: Use the native Blob array compiler to build the multipart payload safely
             const boundary = 'epub_boundary_hk';
             const metaJson = JSON.stringify({
               name: fileName,
               mimeType: 'application/epub+zip',
               parents: [folderId]
             });
-            // Build multipart manually using Uint8Array
-            const enc = new TextEncoder();
-            const partHeader = enc.encode(
-              `--${boundary}\r\nContent-Type: application/json\r\n\r\n${metaJson}\r\n` +
-              `--${boundary}\r\nContent-Type: application/epub+zip\r\n\r\n`
+            
+            // Note the required charset=UTF-8 header
+            const partHeader = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaJson}\r\n--${boundary}\r\nContent-Type: application/epub+zip\r\n\r\n`;
+            const partFooter = `\r\n--${boundary}--`;
+            
+            const multipartBlob = new Blob(
+              [partHeader, blob, partFooter],
+              { type: `multipart/related; boundary=${boundary}` }
             );
-            const partFooter = enc.encode(`\r\n--${boundary}--`);
-            const epubBytes = new Uint8Array(arrayBuf);
-            const combined = new Uint8Array(partHeader.length + epubBytes.length + partFooter.length);
-            combined.set(partHeader, 0);
-            combined.set(epubBytes, partHeader.length);
-            combined.set(partFooter, partHeader.length + epubBytes.length);
 
-            resp = await gdriveApiCall(token,
-              'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            resp = await gdriveApiCall(token, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
               method: 'POST',
               headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-              body: combined
+              body: multipartBlob
             });
           }
 
@@ -2486,7 +2485,7 @@ async function exportEpubToDrive() {
           console.error(e);
         }
       };
-
+      
       const token = getGdriveToken();
       if (token) doUpload(token);
       else gdriveAuth(doUpload);
