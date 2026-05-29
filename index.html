@@ -1382,8 +1382,9 @@ function closeNameModal() {
 function confirmNameModal() {
   const val = document.getElementById('nameModalInput').value.trim();
   if (!val) { document.getElementById('nameModalInput').focus(); return; }
+  const cb = nameModalCallback;
   closeNameModal();
-  if (nameModalCallback) nameModalCallback(val);
+  if (cb) cb(val);
 }
 document.getElementById('nameModalInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') confirmNameModal();
