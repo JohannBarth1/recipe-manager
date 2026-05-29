@@ -2276,7 +2276,6 @@ async function gdriveLoad() {
 // EPUB EXPORT
 // ══════════════════════════════════════════════════
 async function buildEpub(bookName) {
-  showToast('Building EPUB…');
   const zip = new JSZip();
   zip.file('mimetype', 'application/epub+zip', {compression:'STORE'});
   zip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:schemas:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
@@ -2394,13 +2393,23 @@ async function exportEpub() {
     defaultVal: getBookName(),
     hint: 'Saved as: [name].epub',
     callback: async (name) => {
-      setBookName(name);
-      const { blob, fname } = await buildEpub(name);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `${fname}.epub`; a.click();
-      URL.revokeObjectURL(url);
-      showToast('EPUB downloaded!');
+      try {
+        setBookName(name);
+        showToast('Building EPUB…');
+        const { blob, fname } = await buildEpub(name);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fname}.epub`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('EPUB downloaded!');
+      } catch(e) {
+        showToast('EPUB build failed — check console');
+        console.error('exportEpub error:', e);
+      }
     }
   });
 }
