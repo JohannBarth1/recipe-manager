@@ -990,14 +990,14 @@ header {
             <button class="action-btn dark" onclick="printCards()">
               <span class="ab-icon">🖨</span>Cards
             </button>
-          </div>
-          <p class="settings-note" style="margin-top:.5rem">EPUB folder for Drive export:</p>
-          <div style="display:flex;gap:.4rem;margin-top:.4rem;align-items:center">
+                      <p class="settings-note" style="margin-top:.5rem">EPUB folder for Drive export:</p>
+                      <div style="display:flex;gap:.4rem;margin-top:.4rem;align-items:center">
             <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
               style="flex:1;padding:.55rem .7rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
               onchange="setEpubFolder(this.value)"/>
             <button onclick="setEpubFolder(this.previousElementSibling.value)"
               style="padding:.55rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">Set</button>
+          </div>
           </div>
                   <!-- Local backup -->
         <div class="action-group">
@@ -1565,7 +1565,6 @@ function renderMobileList() {
         <div style="display:flex;align-items:center;gap:4px">
           <span onclick="event.stopPropagation();mob_chapterMenu('${ch.id}')"
             style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
-          //<span class="ch-arrow">▶</span>
         </div>
       </div>
       <div class="mob-recipe-list ${isOpen?'open':''}">
