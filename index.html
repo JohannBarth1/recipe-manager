@@ -1447,8 +1447,8 @@ function renderDesktopSidebar() {
       <div class="chapter-heading ${isOpen?'open':''}" onclick="toggleChapter('${ch.id}')">
         <span>${esc(ch.name)}</span>
         <div style="display:flex;align-items:center;gap:2px">
-          <span onclick="event.stopPropagation();chapterMenu('${ch.id}')"
-          style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
+        <span onclick="event.stopPropagation();chapterMenu('${ch.id}', this)"
+        style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
         </div>
       </div>
       <div class="recipe-list ${isOpen?'open':''}">
@@ -1561,8 +1561,8 @@ function renderMobileList() {
       <div class="mob-chapter-heading ${isOpen?'open':''}" onclick="mob_toggleChapter('${ch.id}')">
         <span>${esc(ch.name)}</span>
         <div style="display:flex;align-items:center;gap:4px">
-          <span onclick="event.stopPropagation();chapterMenu('${ch.id}')"
-            style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
+          <span onclick="event.stopPropagation();chapterMenu('${ch.id}', this)"
+  style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
         </div>
       </div>
       <div class="mob-recipe-list ${isOpen?'open':''}">
