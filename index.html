@@ -1155,6 +1155,8 @@ const PRIVATE_FOLDER_NAME = 'Recipes';
 function getMode() { return localStorage.getItem(MODE_KEY) || 'private'; }
 function setMode(m) {
   localStorage.setItem(MODE_KEY, m);
+  localStorage.removeItem(GD_TOKEN_KEY);
+  localStorage.removeItem(GD_FILE_ID_KEY);
   updateModeUI(m);
   showToast(m === 'public' ? '🌐 Public mode — shared recipe book' : '🔒 Private mode — your Drive');
 }
