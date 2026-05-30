@@ -990,14 +990,14 @@ header {
             <button class="action-btn dark" onclick="printCards()">
               <span class="ab-icon">🖨</span>Cards
             </button>
-                      <p class="settings-note" style="margin-top:.5rem">EPUB folder for Drive export:</p>
+          </div>
+          <p class="settings-note" style="margin-top:.5rem">EPUB folder for Drive export:</p>
           <div style="display:flex;gap:.4rem;margin-top:.4rem;align-items:center">
             <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
               style="flex:1;padding:.55rem .7rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
               onchange="setEpubFolder(this.value)"/>
             <button onclick="setEpubFolder(this.previousElementSibling.value)"
               style="padding:.55rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">Set</button>
-          </div>
           </div>
                   <!-- Local backup -->
         <div class="action-group">
