@@ -967,27 +967,14 @@ header {
         <div class="action-group">
           <div class="action-group-label">Cloud sync</div>
           <div class="action-row">
-            <button class="action-btn primary" onclick="gdriveSave()">
-              <span class="ab-icon">☁</span>Save
-            </button>
             <button class="action-btn" onclick="gdriveLoad()">
               <span class="ab-icon">☁</span>Load
             </button>
+            <button class="action-btn primary" onclick="gdriveSave()">
+              <span class="ab-icon">☁</span>Save
+            </button>
           </div>
           <p class="settings-note" style="margin-top:.5rem">Sign in with Google when prompted.</p>
-        </div>
-
-        <!-- Local backup -->
-        <div class="action-group">
-          <div class="action-group-label">Local backup</div>
-          <div class="action-row">
-            <button class="action-btn" onclick="saveLocalFile()">
-              <span class="ab-icon">⬇</span>Download
-            </button>
-            <button class="action-btn" onclick="loadLocalFile()">
-              <span class="ab-icon">⬆</span>Load file
-            </button>
-          </div>
         </div>
 
         <!-- Export -->
@@ -1003,8 +990,7 @@ header {
             <button class="action-btn dark" onclick="printCards()">
               <span class="ab-icon">🖨</span>Cards
             </button>
-          </div>
-          <p class="settings-note" style="margin-top:.5rem">EPUB folder for Drive export:</p>
+                      <p class="settings-note" style="margin-top:.5rem">EPUB folder for Drive export:</p>
           <div style="display:flex;gap:.4rem;margin-top:.4rem;align-items:center">
             <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
               style="flex:1;padding:.55rem .7rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
@@ -1012,6 +998,19 @@ header {
             <button onclick="setEpubFolder(this.previousElementSibling.value)"
               style="padding:.55rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">Set</button>
           </div>
+          </div>
+                  <!-- Local backup -->
+        <div class="action-group">
+          <div class="action-group-label">Local backup</div>
+          <div class="action-row">
+            <button class="action-btn" onclick="saveLocalFile()">
+              <span class="ab-icon">⬇</span>Download
+            </button>
+            <button class="action-btn" onclick="loadLocalFile()">
+              <span class="ab-icon">⬆</span>Load file
+            </button>
+          </div>
+        </div>
         </div>
 
       </div>
@@ -1491,6 +1490,7 @@ function desk_showRecipe(id) {
   deskCurrentId = id; deskEditingId = null;
   renderRecipeInto(r, { chapter:'deskViewChapter', title:'deskViewTitle', desc:'deskViewDesc', ingredients:'deskViewIngredients', steps:'deskViewSteps', tip:'deskViewTip' });
   showPanel('deskRecipeView'); renderDesktopSidebar();
+  document.getElementById('deskMain').scrollTop = 0;
 }
 function desk_showAddRecipe() {
   deskEditingId = null;
@@ -1565,7 +1565,7 @@ function renderMobileList() {
         <div style="display:flex;align-items:center;gap:4px">
           <span onclick="event.stopPropagation();mob_chapterMenu('${ch.id}')"
             style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
-          <span class="ch-arrow">▶</span>
+          //<span class="ch-arrow">▶</span>
         </div>
       </div>
       <div class="mob-recipe-list ${isOpen?'open':''}">
