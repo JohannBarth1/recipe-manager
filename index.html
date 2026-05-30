@@ -1426,11 +1426,11 @@ function populateChapterSelects() {
 function showPanel(id) {
   ['deskWelcome','deskRecipeView','deskEditor'].forEach(p => {
     const el = document.getElementById(p);
-    el.classList.remove('active'); el.style.display = '';
+    el.classList.remove('active');
+    el.style.display = p === id ? '' : 'none';
   });
   const target = document.getElementById(id);
-  if (id === 'deskWelcome') target.style.display = '';
-  else target.classList.add('active');
+  if (id !== 'deskWelcome') target.classList.add('active');
 }
 
 // ══════════════════════════════════════════════════
