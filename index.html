@@ -1941,7 +1941,10 @@ function dPickerConfirm(mode) {
 }
 
 async function gdriveSave() {
-  if (getMode() === 'public') { await firestoreSave(); return; }
+  if (getMode() === 'public') {
+    if (!window.firestoreSave) { showToast('Still loading — try again'); return; }
+    await window.firestoreSave(); return;
+  }
   const mode = getMode();
   const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
 
@@ -2001,7 +2004,10 @@ async function gdriveSave() {
 }
 
 async function gdriveLoad() {
-  if (getMode() === 'public') { await firestoreLoad(); return; }
+  if (getMode() === 'public') {
+    if (!window.firestoreLoad) { showToast('Still loading — try again'); return; }
+    await window.firestoreLoad(); return;
+  }
   const mode = getMode();
   const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
 
