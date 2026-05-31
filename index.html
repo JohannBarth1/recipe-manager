@@ -797,29 +797,34 @@ header {
 .desk-settings .ds-row button.green:hover { background: #1f5c37; }
 
 /* ── TIMERS ────────────────────────────────────── */
-.timer-tray { position:fixed; bottom:var(--mob-nav-h); left:0; right:0; background:var(--ink); border-top:2px solid var(--gold); z-index:60; transform:translateY(100%); transition:transform 0.3s ease; max-height:70vh; overflow-y:auto; }
-.timer-tray.open { transform:translateY(0); }
-.timer-tray-header { display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1.1rem 0.5rem; border-bottom:1px solid rgba(255,255,255,0.1); }
-.timer-tray-header span { font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); font-weight:700; }
-.timer-tray-close { background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; padding:2px 6px; -webkit-tap-highlight-color:transparent; }
-.timer-presets { display:flex; gap:0.4rem; padding:0.7rem 1rem; flex-wrap:wrap; border-bottom:1px solid rgba(255,255,255,0.08); }
-.timer-preset-btn { background:rgba(200,149,42,0.2); border:1px solid rgba(200,149,42,0.4); color:var(--light-brown); border-radius:20px; padding:0.35rem 0.8rem; font-family:'Lato',sans-serif; font-size:0.78rem; font-weight:700; cursor:pointer; -webkit-tap-highlight-color:transparent; transition:background 0.15s; }
-.timer-preset-btn:active { background:rgba(200,149,42,0.4); }
-.timer-custom-row { display:flex; gap:0.5rem; align-items:center; padding:0 1rem 0.7rem; }
-.timer-custom-row input { width:70px; padding:0.4rem 0.6rem; font-size:1rem; font-family:'Lato',sans-serif; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:var(--cream); outline:none; text-align:center; }
+/* Timer modal overlay — matches existing modal design language */
+.timer-overlay { display:none; position:fixed; inset:0; background:rgba(26,18,8,0.55); z-index:100; align-items:center; justify-content:center; padding:1rem; }
+.timer-overlay.open { display:flex; }
+.timer-modal { background:var(--warm-white); border:1px solid var(--border); border-radius:6px; padding:1.8rem; width:100%; max-width:380px; max-height:85vh; overflow-y:auto; }
+.timer-modal h3 { font-family:'Playfair Display',serif; font-size:1.2rem; margin-bottom:1rem; color:var(--brown); display:flex; align-items:center; justify-content:space-between; }
+.timer-modal-close { background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; padding:2px 6px; line-height:1; }
+.timer-modal-close:hover { color:var(--ink); }
+.timer-section-label { font-size:0.65rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:0.5rem; }
+.timer-presets { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem; }
+.timer-preset-btn { background:var(--panel); border:1px solid var(--border); color:var(--brown); border-radius:20px; padding:0.35rem 0.85rem; font-family:'Lato',sans-serif; font-size:0.78rem; font-weight:700; cursor:pointer; transition:background 0.15s; -webkit-tap-highlight-color:transparent; }
+.timer-preset-btn:hover { background:var(--light-brown); }
+.timer-preset-btn:active { background:var(--light-brown); }
+.timer-custom-row { display:flex; gap:0.5rem; align-items:center; margin-bottom:1.2rem; padding-bottom:1.2rem; border-bottom:1px solid var(--border); }
+.timer-custom-row input { width:80px; padding:0.5rem 0.6rem; font-size:1rem; font-family:'Lato',sans-serif; background:var(--warm-white); border:1px solid var(--border); border-radius:3px; color:var(--ink); outline:none; text-align:center; }
 .timer-custom-row input:focus { border-color:var(--gold); }
-.timer-custom-row select { padding:0.4rem 0.5rem; font-size:0.85rem; font-family:'Lato',sans-serif; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:var(--cream); outline:none; -webkit-appearance:none; }
-.timer-custom-row button { padding:0.4rem 0.9rem; background:var(--rust); color:#fff; border:none; border-radius:4px; font-family:'Lato',sans-serif; font-size:0.8rem; font-weight:700; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.timer-list { padding:0.5rem 1rem 0.8rem; display:flex; flex-direction:column; gap:0.5rem; }
-.timer-card { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:6px; padding:0.6rem 0.8rem; display:flex; align-items:center; gap:0.7rem; }
-.timer-card.done { border-color:var(--gold); background:rgba(200,149,42,0.15); }
-.timer-card-label { flex:1; font-size:0.8rem; color:var(--light-brown); line-height:1.3; }
-.timer-card-time { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--cream); min-width:4rem; text-align:right; letter-spacing:0.03em; }
+.timer-custom-row select { padding:0.5rem 0.6rem; font-size:0.88rem; font-family:'Lato',sans-serif; background:var(--warm-white); border:1px solid var(--border); border-radius:3px; color:var(--ink); outline:none; -webkit-appearance:none; }
+.timer-custom-row button { padding:0.5rem 1rem; background:var(--rust); color:#fff; border:none; border-radius:2px; font-family:'Lato',sans-serif; font-size:0.78rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; transition:background 0.15s; -webkit-tap-highlight-color:transparent; }
+.timer-custom-row button:hover { background:#a04415; }
+.timer-list { display:flex; flex-direction:column; gap:0.5rem; }
+.timer-card { background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:0.65rem 0.9rem; display:flex; align-items:center; gap:0.7rem; }
+.timer-card.done { border-color:var(--gold); background:rgba(200,149,42,0.08); }
+.timer-card-label { flex:1; font-size:0.85rem; color:var(--brown); line-height:1.3; }
+.timer-card-time { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--ink); min-width:4rem; text-align:right; letter-spacing:0.03em; }
 .timer-card.done .timer-card-time { color:var(--gold); }
-.timer-card-btn { background:none; border:1px solid rgba(255,255,255,0.2); border-radius:4px; color:var(--light-brown); padding:3px 8px; font-size:0.75rem; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.timer-card-btn:active { background:rgba(255,255,255,0.1); }
-.inline-timer-btn { display:inline-flex; align-items:center; gap:3px; background:rgba(192,87,26,0.1); border:1px solid rgba(192,87,26,0.3); color:var(--rust); border-radius:10px; padding:1px 7px; font-size:0.75em; font-family:'Lato',sans-serif; font-weight:700; cursor:pointer; vertical-align:middle; margin-left:3px; -webkit-tap-highlight-color:transparent; transition:background 0.15s; }
-.inline-timer-btn:hover, .inline-timer-btn:active { background:rgba(192,87,26,0.25); }
+.timer-card-btn { background:transparent; border:1px solid var(--border); border-radius:3px; color:var(--muted); padding:3px 8px; font-size:0.75rem; cursor:pointer; transition:background 0.15s; -webkit-tap-highlight-color:transparent; }
+.timer-card-btn:hover { background:var(--light-brown); color:var(--ink); }
+.inline-timer-btn { display:inline-flex; align-items:center; gap:3px; background:rgba(192,87,26,0.08); border:1px solid rgba(192,87,26,0.3); color:var(--rust); border-radius:10px; padding:1px 7px; font-size:0.75em; font-family:'Lato',sans-serif; font-weight:700; cursor:pointer; vertical-align:middle; margin-left:3px; -webkit-tap-highlight-color:transparent; transition:background 0.15s; }
+.inline-timer-btn:hover, .inline-timer-btn:active { background:rgba(192,87,26,0.2); }
 .timer-badge { position:absolute; top:4px; right:10px; background:var(--rust); color:#fff; border-radius:8px; font-size:0.55rem; font-weight:700; padding:1px 4px; min-width:14px; text-align:center; display:none; }
 #tabTimer { position:relative; }
 </style>
@@ -854,6 +859,7 @@ header {
     </div>
   </div>
   <div class="header-actions">
+    <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
     <button class="hbtn hbtn-ghost" onclick="gdriveLoad()" title="Load from Drive">☁ Load</button>
     <button class="hbtn hbtn-primary" onclick="gdriveSave()" title="Save to Drive">☁ Save</button>
     <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()" title="More options">⚙</button>
@@ -1106,29 +1112,30 @@ header {
   </div>
 </nav>
 
-<!-- Timer tray -->
-<div class="timer-tray" id="timerTray">
-  <div class="timer-tray-header">
-    <span>Timers</span>
-    <button class="timer-tray-close" onclick="timerTrayToggle()">✕</button>
+<!-- Timer modal -->
+<div class="timer-overlay" id="timerTray" onclick="if(event.target===this)timerTrayToggle()">
+  <div class="timer-modal">
+    <h3>⏱ Timers <button class="timer-modal-close" onclick="timerTrayToggle()">✕</button></h3>
+    <div class="timer-section-label">Quick start</div>
+    <div class="timer-presets">
+      <button class="timer-preset-btn" onclick="timerAdd(5,'5 min')">5 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(10,'10 min')">10 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(15,'15 min')">15 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(20,'20 min')">20 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(30,'30 min')">30 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(60,'1 hr')">1 hr</button>
+    </div>
+    <div class="timer-custom-row">
+      <input type="number" id="timerCustomVal" min="1" max="999" placeholder="e.g. 25"/>
+      <select id="timerCustomUnit">
+        <option value="min">min</option>
+        <option value="hr">hr</option>
+      </select>
+      <button onclick="timerAddCustom()">+ Start</button>
+    </div>
+    <div class="timer-section-label" id="timerListLabel" style="display:none">Running</div>
+    <div class="timer-list" id="timerList"></div>
   </div>
-  <div class="timer-presets">
-    <button class="timer-preset-btn" onclick="timerAdd(5,'5 min')">5 min</button>
-    <button class="timer-preset-btn" onclick="timerAdd(10,'10 min')">10 min</button>
-    <button class="timer-preset-btn" onclick="timerAdd(15,'15 min')">15 min</button>
-    <button class="timer-preset-btn" onclick="timerAdd(20,'20 min')">20 min</button>
-    <button class="timer-preset-btn" onclick="timerAdd(30,'30 min')">30 min</button>
-    <button class="timer-preset-btn" onclick="timerAdd(60,'1 hour')">1 hr</button>
-  </div>
-  <div class="timer-custom-row">
-    <input type="number" id="timerCustomVal" min="1" max="999" placeholder="e.g. 25"/>
-    <select id="timerCustomUnit">
-      <option value="min">min</option>
-      <option value="hr">hr</option>
-    </select>
-    <button onclick="timerAddCustom()">+ Start</button>
-  </div>
-  <div class="timer-list" id="timerList"></div>
 </div>
 
 <!-- Add Chapter Modal -->
@@ -2235,10 +2242,12 @@ let timerNextId = 1;
 function timerTrayToggle() {
   const tray = document.getElementById('timerTray');
   tray.classList.toggle('open');
-  // Mark timer tab as active when tray is open
+  // Sync mobile tab highlight
+  const isOpen = tray.classList.contains('open');
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
-  if (tray.classList.contains('open')) {
-    document.getElementById('tabTimer').classList.add('active');
+  if (isOpen) {
+    const timerTab = document.getElementById('tabTimer');
+    if (timerTab) timerTab.classList.add('active');
   } else {
     document.getElementById('tabRecipes').classList.add('active');
   }
@@ -2330,6 +2339,9 @@ function timerRender() {
       <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
     </div>`).join('');
 
+  // Show/hide "Running" label
+  const lbl = document.getElementById('timerListLabel');
+  if (lbl) lbl.style.display = timers.length ? '' : 'none';
   // Badge: count of running (non-done) timers
   const badge = document.getElementById('timerBadge');
   if (badge) {
@@ -2359,18 +2371,6 @@ function linkifyTimers(text) {
 // INIT
 // ══════════════════════════════════════════════════
 renderAll();
-
-  // Keep screen awake while app is open
-if ('wakeLock' in navigator) {
-  let wakeLock;
-  const requestWakeLock = async () => {
-    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
-  };
-  requestWakeLock();
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') requestWakeLock();
-  });
-}
 showPanel('deskWelcome');
 updateModeUI(getMode());
 document.querySelectorAll('.epub-folder-input').forEach(el => el.value = getEpubFolder());
