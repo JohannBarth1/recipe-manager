@@ -1811,7 +1811,6 @@ const GD_CLIENT_ID   = '970185316494-1et3pq5g5bqk7ckt59079ra008lgfvq0.apps.googl
 const GD_SCOPE       = 'https://www.googleapis.com/auth/drive.file';
 const GD_FILE_ID_KEY = 'hk_gdrive_file_id';
 const GD_TOKEN_KEY   = 'hk_gdrive_token';
-const GD_FILE_NAME   = 'recipes.json';
 
 function getGdriveToken() { return localStorage.getItem(GD_TOKEN_KEY); }
 
@@ -2038,55 +2037,6 @@ async function gdriveLoad() {
   const token = getGdriveToken();
   if (token) doLoad(token); else gdriveAuth(doLoad);
 }
-
-  <!-- Firebase SDK (add to <head> or just before </body>) -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
-
-// ── paste your firebaseConfig here ──────────────────
-const firebaseConfig = {
-  apiKey: "AIza...",
-  authDomain: "erecipe-xxxxx.firebaseapp.com",
-  projectId: "erecipe-xxxxx",
-  // ...etc
-};
-
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-const REF = doc(db, "recipes", "shared");
-
-window.firestoreLoad = async function() {
-  showToast("Loading shared recipes…");
-  try {
-    const snap = await getDoc(REF);
-    if (!snap.exists()) { showToast("No shared recipes found yet"); return; }
-    const { recipes: r, chapters: c } = snap.data();
-    if (!r || !c) throw new Error("Invalid format");
-    data = { recipes: r, chapters: c };
-    openChapters = new Set([data.chapters[0]?.id]);
-    persistToStorage();
-    deskCurrentId = null; deskEditingId = null;
-    mobCurrentId  = null; mobEditingId  = null;
-    renderAll(); showPanel("deskWelcome"); mob_backToList();
-    showToast("Loaded shared recipes ✓");
-  } catch(e) { showToast("Load failed — check console"); console.error(e); }
-};
-
-window.firestoreSave = async function() {
-  const pin = prompt("Enter PIN to save to shared book:");
-  if (pin === null) return;
-  showToast("Saving…");
-  try {
-    await setDoc(REF, { ...data, pin });   // pin goes in payload for rule check
-    showToast("Saved to shared book ✓");
-  } catch(e) {
-    // Firestore returns PERMISSION_DENIED if the pin was wrong
-    if (e.code === "permission-denied") showToast("Incorrect PIN");
-    else { showToast("Save failed"); console.error(e); }
-  }
-};
-</script>
 
 // ══════════════════════════════════════════════════
 // EPUB FOLDER (Drive export)
@@ -2456,6 +2406,53 @@ if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent
       .catch(e => console.warn('eRecipe: SW registration failed:', e.message));
   });
 }
+</script>
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "erecipe-xxxxx.firebaseapp.com",
+  projectId: "erecipe-xxxxx",
+  storageBucket: "erecipe-xxxxx.appspot.com",
+  messagingSenderId: "...",
+  appId: "..."
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const REF = doc(db, "recipes", "shared");
+
+window.firestoreLoad = async function() {
+  showToast("Loading shared recipes…");
+  try {
+    const snap = await getDoc(REF);
+    if (!snap.exists()) { showToast("No shared recipes found yet"); return; }
+    const { recipes: r, chapters: c } = snap.data();
+    if (!r || !c) throw new Error("Invalid format");
+    data = { recipes: r, chapters: c };
+    openChapters = new Set([data.chapters[0]?.id]);
+    persistToStorage();
+    deskCurrentId = null; deskEditingId = null;
+    mobCurrentId  = null; mobEditingId  = null;
+    renderAll(); showPanel("deskWelcome"); mob_backToList();
+    showToast("Loaded shared recipes ✓");
+  } catch(e) { showToast("Load failed — check console"); console.error(e); }
+};
+
+window.firestoreSave = async function() {
+  const pin = prompt("Enter PIN to save to shared book:");
+  if (pin === null) return;
+  showToast("Saving…");
+  try {
+    await setDoc(REF, { ...data, pin });
+    showToast("Saved to shared book ✓");
+  } catch(e) {
+    if (e.code === "permission-denied") showToast("Incorrect PIN");
+    else { showToast("Save failed"); console.error(e); }
+  }
+};
 </script>
 </body>
 </html>
