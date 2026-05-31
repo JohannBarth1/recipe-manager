@@ -9,9 +9,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="eRecipe"/>
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
@@ -837,7 +834,25 @@ header {
 <!-- HEADER -->
 <header>
   <div style="display:flex;align-items:center;gap:.8rem">
-<img src="icon-64.png" width="38" height="38" style="border-radius:6px">
+    <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="2" width="34" height="34" rx="7" fill="#2c1a0a"/>
+      <rect x="3.5" y="3.5" width="31" height="31" rx="6" stroke="#c8952a" stroke-width="1.2" fill="none"/>
+      <rect x="7" y="6" width="24" height="26" rx="2.5" fill="#faf6f0" stroke="#c8952a" stroke-width=".8"/>
+      <rect x="7" y="6" width="5.5" height="26" rx="2.5" fill="#c8952a"/>
+      <rect x="8.5" y="11" width="2.5" height="1" rx=".5" fill="#fff8ee"/>
+      <rect x="8.5" y="15" width="2.5" height="1" rx=".5" fill="#fff8ee"/>
+      <rect x="8.5" y="19" width="2.5" height="1" rx=".5" fill="#fff8ee"/>
+      <rect x="8.5" y="23" width="2.5" height="1" rx=".5" fill="#fff8ee"/>
+      <rect x="15" y="9" width="13" height="2" rx="1" fill="#6b4c2a"/>
+      <rect x="14" y="13" width="14" height=".6" rx=".3" fill="#c8952a"/>
+      <rect x="14" y="15.5" width="12" height="1.2" rx=".6" fill="#8a7060"/>
+      <rect x="14" y="18.5" width="9" height="1.2" rx=".6" fill="#8a7060"/>
+      <rect x="14" y="21.5" width="12" height="1.2" rx=".6" fill="#8a7060"/>
+      <rect x="14" y="24.5" width="8" height="1.2" rx=".6" fill="#8a7060"/>
+      <path d="M25.5 26v-4.5M24.5 21.5v-2M25.5 21.5v-2M26.5 21.5v-2" stroke="#c8952a" stroke-width=".8" stroke-linecap="round"/>
+      <ellipse cx="28.5" cy="20" rx="1" ry="1.3" fill="#c8952a"/>
+      <line x1="28.5" y1="21.3" x2="28.5" y2="26" stroke="#c8952a" stroke-width=".8" stroke-linecap="round"/>
+    </svg>
     <div>
       <div class="brand-title">eRecipe</div>
       <div class="brand-sub">All your favourite recipes</div>
@@ -995,31 +1010,6 @@ header {
           <p class="settings-note" style="margin-top:.5rem">Sign in with Google when prompted.</p>
         </div>
 
-
-        <!-- Export -->
-        <div class="action-group">
-          <div class="action-group-label">Export</div>
-          <div class="action-row">
-            <button class="action-btn dark" onclick="exportEpub()">
-              <span class="ab-icon">📖</span>EPUB
-            </button>
-            <button class="action-btn green" onclick="exportEpubToDrive()">
-              <span class="ab-icon">☁</span>EPUB → Drive
-            </button>
-            <button class="action-btn dark" onclick="printCards()">
-              <span class="ab-icon">🖨</span>Cards
-            </button>
-          </div>
-          <p class="settings-note" style="margin-top:.5rem">EPUB folder for Drive export:</p>
-          <div style="display:flex;gap:.4rem;margin-top:.4rem;align-items:center">
-            <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
-              style="flex:1;padding:.55rem .7rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
-              onchange="setEpubFolder(this.value)"/>
-            <button onclick="setEpubFolder(this.previousElementSibling.value)"
-              style="padding:.55rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">Set</button>
-          </div>
-        </div>
-        
         <!-- Local backup -->
         <div class="action-group">
           <div class="action-group-label">Local backup</div>
@@ -1032,6 +1022,31 @@ header {
             </button>
           </div>
         </div>
+
+        <!-- Export -->
+        <div class="action-group">
+          <div class="action-group-label">Export</div>
+          <div class="action-row">
+            <button class="action-btn dark" onclick="exportEpub()">
+              <span class="ab-icon">📖</span>EPUB
+            </button>
+            <button class="action-btn green epub-drive-section" onclick="exportEpubToDrive()">
+              <span class="ab-icon">☁</span>EPUB → Drive
+            </button>
+            <button class="action-btn dark" onclick="printCards()">
+              <span class="ab-icon">🖨</span>Cards
+            </button>
+          </div>
+          <p class="settings-note epub-drive-section" style="margin-top:.5rem">EPUB folder for Drive export:</p>
+          <div class="epub-drive-section" style="display:flex;gap:.4rem;margin-top:.4rem;align-items:center">
+            <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
+              style="flex:1;padding:.55rem .7rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
+              onchange="setEpubFolder(this.value)"/>
+            <button onclick="setEpubFolder(this.previousElementSibling.value)"
+              style="padding:.55rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">Set</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1053,6 +1068,7 @@ header {
   <hr class="ds-divider"/>
 
   <!-- EPUB folder (still needed for Drive EPUB export) -->
+  <div class="epub-drive-section">
   <span class="ds-label">EPUB Drive folder</span>
   <div style="display:flex;gap:.5rem;align-items:center;margin-top:.35rem">
     <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
@@ -1062,11 +1078,12 @@ header {
       style="padding:.5rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.75rem;font-weight:700;cursor:pointer">Set</button>
   </div>
   <p class="ds-note">Folder in your Drive for EPUB exports.</p>
+  </div><!-- /epub-drive-section -->
 
   <hr class="ds-divider"/>
 
   <span class="ds-label">Export</span>
-  <div class="ds-row" style="margin-top:.35rem">
+  <div class="ds-row epub-drive-section" style="margin-top:.35rem">
     <button onclick="exportEpubToDrive()" class="green">☁ EPUB → Drive</button>
     <button onclick="exportEpub()">⬇ EPUB</button>
     <button onclick="printCards()">🖨 Cards</button>
@@ -1218,10 +1235,15 @@ function updateModeUI(m) {
   });
 
   const privDesc = '<strong>Private:</strong> Your recipes are saved to a <em>Recipes</em> folder in your own Google Drive.';
-  const pubDesc  = '<strong>Public:</strong> Recipes are shared with everyone — saved to and loaded from a common shared folder.';
+  const pubDesc  = '<strong>Public:</strong> Recipes are saved to and loaded from a shared Gist. PIN required to save.';
   ['deskModeDesc', 'mobModeDesc'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = isPriv ? privDesc : pubDesc;
+  });
+
+  // Hide EPUB Drive folder fields in public mode (not applicable)
+  document.querySelectorAll('.epub-drive-section').forEach(el => {
+    el.style.display = isPriv ? '' : 'none';
   });
 }
 
@@ -1501,8 +1523,12 @@ function renderDesktopSidebar() {
       <div class="chapter-heading ${isOpen?'open':''}" onclick="toggleChapter('${ch.id}')">
         <span>${esc(ch.name)}</span>
         <div style="display:flex;align-items:center;gap:2px">
-<span onclick="event.stopPropagation();chapterMenu('${ch.id}',this)"
-  style="padding:2px 8px;font-size:.85rem;color:var(--muted);cursor:pointer">⋯</span>
+          <div class="chapter-controls" onclick="event.stopPropagation()">
+            ${!isFirst ? `<button class="ch-ctrl" title="Move up" onclick="moveChapter('${ch.id}',-1)">▲</button>` : ''}
+            ${!isLast  ? `<button class="ch-ctrl" title="Move down" onclick="moveChapter('${ch.id}',1)">▼</button>` : ''}
+            <button class="ch-ctrl" title="Delete chapter" onclick="deleteChapter('${ch.id}')" style="color:var(--danger)">✕</button>
+          </div>
+          <span class="ch-arrow">▶</span>
         </div>
       </div>
       <div class="recipe-list ${isOpen?'open':''}">
@@ -1614,8 +1640,9 @@ function renderMobileList() {
       <div class="mob-chapter-heading ${isOpen?'open':''}" onclick="mob_toggleChapter('${ch.id}')">
         <span>${esc(ch.name)}</span>
         <div style="display:flex;align-items:center;gap:4px">
-<span onclick="event.stopPropagation();chapterMenu('${ch.id}',this)"
-  style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
+          <span onclick="event.stopPropagation();mob_chapterMenu('${ch.id}')"
+            style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
+          <span class="ch-arrow">▶</span>
         </div>
       </div>
       <div class="mob-recipe-list ${isOpen?'open':''}">
@@ -1626,39 +1653,23 @@ function renderMobileList() {
     </div>`;
   }).join('');
 }
-function chapterMenu(id, triggerEl) {
+function mob_chapterMenu(id) {
   const ch = data.chapters.find(c => c.id === id);
   const idx = data.chapters.findIndex(c => c.id === id);
   const isFirst = idx === 0, isLast = idx === data.chapters.length - 1;
-  const isMobile = window.innerWidth <= 640;
-
-  document.getElementById('chapterMenuEl')?.remove();
+  document.getElementById('mobChapterMenuEl')?.remove();
   const menu = document.createElement('div');
-  menu.id = 'chapterMenuEl';
-
-  if (isMobile) {
-    menu.style.cssText = `position:fixed;inset:0;background:rgba(26,18,8,0.5);z-index:120;display:flex;align-items:flex-end`;
-    menu.innerHTML = `
-      <div style="width:100%;background:var(--warm-white);border-top:2px solid var(--gold);padding-bottom:env(safe-area-inset-bottom)">
-        <div style="padding:.8rem 1.2rem;font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown);border-bottom:1px solid var(--border)">${esc(ch.name)}</div>
-        ${!isFirst ? `<div onclick="moveChapter('${id}',-1);document.getElementById('chapterMenuEl').remove();renderAll()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▲ Move Up</div>` : ''}
-        ${!isLast  ? `<div onclick="moveChapter('${id}',1);document.getElementById('chapterMenuEl').remove();renderAll()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▼ Move Down</div>` : ''}
-        <div onclick="document.getElementById('chapterMenuEl').remove();deleteChapter('${id}')" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--danger);border-bottom:1px solid var(--border)">✕ Delete Chapter</div>
-        <div onclick="document.getElementById('chapterMenuEl').remove()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--muted)">Cancel</div>
-      </div>`;
-    menu.addEventListener('click', e => { if (e.target === menu) menu.remove(); });
-  } else {
-    const rect = triggerEl.getBoundingClientRect();
-    menu.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;background:var(--warm-white);border:1px solid var(--border);border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:120;min-width:160px;overflow:hidden`;
-    menu.innerHTML = `
-      ${!isFirst ? `<div onclick="moveChapter('${id}',-1);document.getElementById('chapterMenuEl').remove()" style="padding:.6rem 1rem;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--border)">▲ Move Up</div>` : ''}
-      ${!isLast  ? `<div onclick="moveChapter('${id}',1);document.getElementById('chapterMenuEl').remove()" style="padding:.6rem 1rem;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--border)">▼ Move Down</div>` : ''}
-      <div onclick="document.getElementById('chapterMenuEl').remove();deleteChapter('${id}')" style="padding:.6rem 1rem;font-size:.82rem;cursor:pointer;color:var(--danger)">✕ Delete</div>`;
-    setTimeout(() => document.addEventListener('click', function h(e) {
-      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', h); }
-    }), 0);
-  }
-
+  menu.id = 'mobChapterMenuEl';
+  menu.style.cssText = `position:fixed;inset:0;background:rgba(26,18,8,0.5);z-index:120;display:flex;align-items:flex-end`;
+  menu.innerHTML = `
+    <div style="width:100%;background:var(--warm-white);border-top:2px solid var(--gold);padding-bottom:env(safe-area-inset-bottom)">
+      <div style="padding:.8rem 1.2rem;font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown);border-bottom:1px solid var(--border)">${esc(ch.name)}</div>
+      ${!isFirst ? `<div onclick="moveChapter('${id}',-1);document.getElementById('mobChapterMenuEl').remove();renderMobileList()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▲ Move Up</div>` : ''}
+      ${!isLast  ? `<div onclick="moveChapter('${id}',1);document.getElementById('mobChapterMenuEl').remove();renderMobileList()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▼ Move Down</div>` : ''}
+      <div onclick="document.getElementById('mobChapterMenuEl').remove();deleteChapter('${id}')" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--danger);border-bottom:1px solid var(--border)">✕ Delete Chapter</div>
+      <div onclick="document.getElementById('mobChapterMenuEl').remove()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--muted)">Cancel</div>
+    </div>`;
+  menu.addEventListener('click', e => { if (e.target === menu) menu.remove(); });
   document.body.appendChild(menu);
 }
 function mob_toggleChapter(id) {
@@ -1797,6 +1808,10 @@ const GD_SCOPE       = 'https://www.googleapis.com/auth/drive.file';
 const GD_FILE_ID_KEY = 'hk_gdrive_file_id';
 const GD_TOKEN_KEY   = 'hk_gdrive_token';
 const GD_FILE_NAME   = 'recipes.json';
+const GIST_ID        = '429d6963a8e42984fe24c7a9fa210825';
+const GIST_TOKEN     = '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';
+const GIST_FILENAME  = 'recipes.json';
+const GIST_PIN       = '1992';
 
 function getGdriveToken() { return localStorage.getItem(GD_TOKEN_KEY); }
 
@@ -1927,6 +1942,7 @@ function dPickerConfirm(mode) {
 }
 
 async function gdriveSave() {
+  if (getMode() === 'public') { await gistSave(); return; }
   const mode = getMode();
   const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
 
@@ -1986,6 +2002,7 @@ async function gdriveSave() {
 }
 
 async function gdriveLoad() {
+  if (getMode() === 'public') { await gistLoad(); return; }
   const mode = getMode();
   const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
 
@@ -2020,6 +2037,53 @@ async function gdriveLoad() {
 
   const token = getGdriveToken();
   if (token) doLoad(token); else gdriveAuth(doLoad);
+}
+
+
+// ══════════════════════════════════════════════════
+// GIST (public shared mode)
+// ══════════════════════════════════════════════════
+async function gistLoad() {
+  showToast('Loading shared recipes…');
+  try {
+    const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      headers: { 'Authorization': `token ${GIST_TOKEN}` }
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const json = await resp.json();
+    const content = json.files[GIST_FILENAME]?.content;
+    if (!content) throw new Error('File not found in Gist');
+    const parsed = JSON.parse(content);
+    if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+    data = parsed;
+    openChapters = new Set([data.chapters[0]?.id]);
+    persistToStorage();
+    deskCurrentId = null; deskEditingId = null;
+    mobCurrentId = null; mobEditingId = null;
+    renderAll(); showPanel('deskWelcome'); mob_backToList();
+    showToast('Loaded shared recipes ✓');
+  } catch(e) { showToast('Load failed — check console'); console.error(e); }
+}
+
+async function gistSave() {
+  const pin = prompt('Enter PIN to save to shared book:');
+  if (pin === null) return;
+  if (pin !== GIST_PIN) { showToast('Incorrect PIN'); return; }
+  showToast('Saving shared recipes…');
+  try {
+    const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `token ${GIST_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        files: { [GIST_FILENAME]: { content: JSON.stringify(data, null, 2) } }
+      })
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    showToast('Saved to shared book ✓');
+  } catch(e) { showToast('Save failed — check console'); console.error(e); }
 }
 
 // ══════════════════════════════════════════════════
@@ -2253,7 +2317,6 @@ function timerAdd(minutes, label) {
   const secs = minutes * 60;
   const id = timerNextId++;
   const t = { id, label, totalSecs: secs, remaining: secs, interval: null, done: false };
-  t.endTime = Date.now() + secs * 1000;
   timers.push(t);
   t.interval = setInterval(() => timerTick(id), 1000);
   timerRender();
@@ -2274,7 +2337,7 @@ function timerAddCustom() {
 function timerTick(id) {
   const t = timers.find(x => x.id === id);
   if (!t || t.done) return;
-  t.remaining = Math.max(0, Math.round((t.endTime - Date.now()) / 1000));
+  t.remaining--;
   if (t.remaining <= 0) {
     t.remaining = 0;
     t.done = true;
@@ -2285,25 +2348,6 @@ function timerTick(id) {
 }
 
 function timerNotify(label) {
-    // Play a beep using Web Audio API
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const beep = (freq, start, duration) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = freq;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.6, ctx.currentTime + start);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + duration);
-    };
-    beep(880, 0,    0.3);
-    beep(880, 0.35, 0.3);
-    beep(880, 0.7,  0.5);
-  } catch(e) {}
   // Vibrate if supported
   if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]);
   // Web notification if permitted
@@ -2329,7 +2373,6 @@ function timerReset(id) {
   if (!t) return;
   if (t.interval) clearInterval(t.interval);
   t.remaining = t.totalSecs;
-  t.endTime = Date.now() + t.totalSecs * 1000;
   t.done = false;
   t.interval = setInterval(() => timerTick(id), 1000);
   timerRender();
