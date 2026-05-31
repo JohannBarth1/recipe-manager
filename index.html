@@ -1812,10 +1812,6 @@ const GD_SCOPE       = 'https://www.googleapis.com/auth/drive.file';
 const GD_FILE_ID_KEY = 'hk_gdrive_file_id';
 const GD_TOKEN_KEY   = 'hk_gdrive_token';
 const GD_FILE_NAME   = 'recipes.json';
-const GIST_ID        = '429d6963a8e42984fe24c7a9fa210825';
-const GIST_TOKEN     = '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';
-const GIST_FILENAME  = 'recipes.json';
-const GIST_PIN       = '1992';
 
 function getGdriveToken() { return localStorage.getItem(GD_TOKEN_KEY); }
 
@@ -1946,7 +1942,7 @@ function dPickerConfirm(mode) {
 }
 
 async function gdriveSave() {
-  if (getMode() === 'public') { await gistSave(); return; }
+  if (getMode() === 'public') { await firestoreSave(); return; }
   const mode = getMode();
   const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
 
@@ -2006,7 +2002,7 @@ async function gdriveSave() {
 }
 
 async function gdriveLoad() {
-  if (getMode() === 'public') { await gistLoad(); return; }
+  if (getMode() === 'public') { await firestoreLoad(); return; }
   const mode = getMode();
   const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
 
@@ -2043,52 +2039,54 @@ async function gdriveLoad() {
   if (token) doLoad(token); else gdriveAuth(doLoad);
 }
 
+  <!-- Firebase SDK (add to <head> or just before </body>) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
 
-// ══════════════════════════════════════════════════
-// GIST (public shared mode)
-// ══════════════════════════════════════════════════
-async function gistLoad() {
-  showToast('Loading shared recipes…');
+// ── paste your firebaseConfig here ──────────────────
+const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "erecipe-xxxxx.firebaseapp.com",
+  projectId: "erecipe-xxxxx",
+  // ...etc
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const REF = doc(db, "recipes", "shared");
+
+window.firestoreLoad = async function() {
+  showToast("Loading shared recipes…");
   try {
-    const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      headers: { 'Authorization': `token ${GIST_TOKEN}` }
-    });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const json = await resp.json();
-    const content = json.files[GIST_FILENAME]?.content;
-    if (!content) throw new Error('File not found in Gist');
-    const parsed = JSON.parse(content);
-    if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
-    data = parsed;
+    const snap = await getDoc(REF);
+    if (!snap.exists()) { showToast("No shared recipes found yet"); return; }
+    const { recipes: r, chapters: c } = snap.data();
+    if (!r || !c) throw new Error("Invalid format");
+    data = { recipes: r, chapters: c };
     openChapters = new Set([data.chapters[0]?.id]);
     persistToStorage();
     deskCurrentId = null; deskEditingId = null;
-    mobCurrentId = null; mobEditingId = null;
-    renderAll(); showPanel('deskWelcome'); mob_backToList();
-    showToast('Loaded shared recipes ✓');
-  } catch(e) { showToast('Load failed — check console'); console.error(e); }
-}
+    mobCurrentId  = null; mobEditingId  = null;
+    renderAll(); showPanel("deskWelcome"); mob_backToList();
+    showToast("Loaded shared recipes ✓");
+  } catch(e) { showToast("Load failed — check console"); console.error(e); }
+};
 
-async function gistSave() {
-  const pin = prompt('Enter PIN to save to shared book:');
+window.firestoreSave = async function() {
+  const pin = prompt("Enter PIN to save to shared book:");
   if (pin === null) return;
-  if (pin !== GIST_PIN) { showToast('Incorrect PIN'); return; }
-  showToast('Saving shared recipes…');
+  showToast("Saving…");
   try {
-    const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `token ${GIST_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        files: { [GIST_FILENAME]: { content: JSON.stringify(data, null, 2) } }
-      })
-    });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    showToast('Saved to shared book ✓');
-  } catch(e) { showToast('Save failed — check console'); console.error(e); }
-}
+    await setDoc(REF, { ...data, pin });   // pin goes in payload for rule check
+    showToast("Saved to shared book ✓");
+  } catch(e) {
+    // Firestore returns PERMISSION_DENIED if the pin was wrong
+    if (e.code === "permission-denied") showToast("Incorrect PIN");
+    else { showToast("Save failed"); console.error(e); }
+  }
+};
+</script>
 
 // ══════════════════════════════════════════════════
 // EPUB FOLDER (Drive export)
