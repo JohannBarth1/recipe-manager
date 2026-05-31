@@ -1010,18 +1010,7 @@ header {
           <p class="settings-note" style="margin-top:.5rem">Sign in with Google when prompted.</p>
         </div>
 
-        <!-- Local backup -->
-        <div class="action-group">
-          <div class="action-group-label">Local backup</div>
-          <div class="action-row">
-            <button class="action-btn" onclick="saveLocalFile()">
-              <span class="ab-icon">⬇</span>Download
-            </button>
-            <button class="action-btn" onclick="loadLocalFile()">
-              <span class="ab-icon">⬆</span>Load file
-            </button>
-          </div>
-        </div>
+
 
         <!-- Export -->
         <div class="action-group">
@@ -1047,6 +1036,19 @@ header {
           </div>
         </div>
 
+                <!-- Local backup -->
+<details>
+  <summary style="font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem;border-bottom:1px solid var(--border);display:block;margin-bottom:.5rem">Local backup</summary>
+  <div class="action-row" style="margin-top:.5rem">
+    <button class="action-btn" onclick="saveLocalFile()">
+      <span class="ab-icon">⬇</span>Download
+    </button>
+    <button class="action-btn" onclick="loadLocalFile()">
+      <span class="ab-icon">⬆</span>Load file
+    </button>
+  </div>
+</details>
+        
       </div>
     </div>
 
@@ -1085,17 +1087,21 @@ header {
   <span class="ds-label">Export</span>
   <div class="ds-row epub-drive-section" style="margin-top:.35rem">
     <button onclick="exportEpubToDrive()" class="green">☁ EPUB → Drive</button>
+  </div>
+<div class="ds-row" style="margin-top:.35rem">
     <button onclick="exportEpub()">⬇ EPUB</button>
     <button onclick="printCards()">🖨 Cards</button>
-  </div>
-
+</div>
   <hr class="ds-divider"/>
 
   <span class="ds-label">Local backup</span>
-  <div class="ds-row" style="margin-top:.35rem">
+<details>
+  <summary style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem">Local backup</summary>
+  <div class="ds-row" style="margin-top:.5rem">
     <button onclick="saveLocalFile()">⬇ Download</button>
     <button onclick="loadLocalFile()">⬆ Load file</button>
   </div>
+</details>
 </div>
 
 <!-- Mobile bottom nav -->
