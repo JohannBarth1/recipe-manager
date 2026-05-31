@@ -2257,6 +2257,7 @@ function timerAdd(minutes, label) {
   const secs = minutes * 60;
   const id = timerNextId++;
   const t = { id, label, totalSecs: secs, remaining: secs, interval: null, done: false };
+  t.endTime = Date.now() + secs * 1000;
   timers.push(t);
   t.interval = setInterval(() => timerTick(id), 1000);
   timerRender();
@@ -2277,7 +2278,7 @@ function timerAddCustom() {
 function timerTick(id) {
   const t = timers.find(x => x.id === id);
   if (!t || t.done) return;
-  t.remaining--;
+  t.remaining = Math.max(0, Math.round((t.endTime - Date.now()) / 1000));
   if (t.remaining <= 0) {
     t.remaining = 0;
     t.done = true;
@@ -2332,6 +2333,7 @@ function timerReset(id) {
   if (!t) return;
   if (t.interval) clearInterval(t.interval);
   t.remaining = t.totalSecs;
+  t.endTime = Date.now() + t.totalSecs * 1000;
   t.done = false;
   t.interval = setInterval(() => timerTick(id), 1000);
   timerRender();
