@@ -2359,6 +2359,18 @@ function linkifyTimers(text) {
 // INIT
 // ══════════════════════════════════════════════════
 renderAll();
+
+  // Keep screen awake while app is open
+if ('wakeLock' in navigator) {
+  let wakeLock;
+  const requestWakeLock = async () => {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+  };
+  requestWakeLock();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  });
+}
 showPanel('deskWelcome');
 updateModeUI(getMode());
 document.querySelectorAll('.epub-folder-input').forEach(el => el.value = getEpubFolder());
