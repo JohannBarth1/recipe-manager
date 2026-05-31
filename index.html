@@ -1516,12 +1516,8 @@ function renderDesktopSidebar() {
       <div class="chapter-heading ${isOpen?'open':''}" onclick="toggleChapter('${ch.id}')">
         <span>${esc(ch.name)}</span>
         <div style="display:flex;align-items:center;gap:2px">
-          <div class="chapter-controls" onclick="event.stopPropagation()">
-            ${!isFirst ? `<button class="ch-ctrl" title="Move up" onclick="moveChapter('${ch.id}',-1)">▲</button>` : ''}
-            ${!isLast  ? `<button class="ch-ctrl" title="Move down" onclick="moveChapter('${ch.id}',1)">▼</button>` : ''}
-            <button class="ch-ctrl" title="Delete chapter" onclick="deleteChapter('${ch.id}')" style="color:var(--danger)">✕</button>
-          </div>
-          <span class="ch-arrow">▶</span>
+<span onclick="event.stopPropagation();chapterMenu('${ch.id}',this)"
+  style="padding:2px 8px;font-size:.85rem;color:var(--muted);cursor:pointer">⋯</span>
         </div>
       </div>
       <div class="recipe-list ${isOpen?'open':''}">
@@ -1633,9 +1629,8 @@ function renderMobileList() {
       <div class="mob-chapter-heading ${isOpen?'open':''}" onclick="mob_toggleChapter('${ch.id}')">
         <span>${esc(ch.name)}</span>
         <div style="display:flex;align-items:center;gap:4px">
-          <span onclick="event.stopPropagation();mob_chapterMenu('${ch.id}')"
+          <span onclick="event.stopPropagation();chapterMenu('${ch.id}')"
             style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
-          <span class="ch-arrow">▶</span>
         </div>
       </div>
       <div class="mob-recipe-list ${isOpen?'open':''}">
@@ -1646,7 +1641,7 @@ function renderMobileList() {
     </div>`;
   }).join('');
 }
-function mob_chapterMenu(id) {
+function chapterMenu(id) {
   const ch = data.chapters.find(c => c.id === id);
   const idx = data.chapters.findIndex(c => c.id === id);
   const isFirst = idx === 0, isLast = idx === data.chapters.length - 1;
