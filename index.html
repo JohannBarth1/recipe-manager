@@ -1629,8 +1629,8 @@ function renderMobileList() {
       <div class="mob-chapter-heading ${isOpen?'open':''}" onclick="mob_toggleChapter('${ch.id}')">
         <span>${esc(ch.name)}</span>
         <div style="display:flex;align-items:center;gap:4px">
-          <span onclick="event.stopPropagation();chapterMenu('${ch.id}')"
-            style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
+<span onclick="event.stopPropagation();chapterMenu('${ch.id}',this)"
+  style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
         </div>
       </div>
       <div class="mob-recipe-list ${isOpen?'open':''}">
@@ -1641,23 +1641,39 @@ function renderMobileList() {
     </div>`;
   }).join('');
 }
-function chapterMenu(id) {
+function chapterMenu(id, triggerEl) {
   const ch = data.chapters.find(c => c.id === id);
   const idx = data.chapters.findIndex(c => c.id === id);
   const isFirst = idx === 0, isLast = idx === data.chapters.length - 1;
-  document.getElementById('mobChapterMenuEl')?.remove();
+  const isMobile = window.innerWidth <= 640;
+
+  document.getElementById('chapterMenuEl')?.remove();
   const menu = document.createElement('div');
-  menu.id = 'mobChapterMenuEl';
-  menu.style.cssText = `position:fixed;inset:0;background:rgba(26,18,8,0.5);z-index:120;display:flex;align-items:flex-end`;
-  menu.innerHTML = `
-    <div style="width:100%;background:var(--warm-white);border-top:2px solid var(--gold);padding-bottom:env(safe-area-inset-bottom)">
-      <div style="padding:.8rem 1.2rem;font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown);border-bottom:1px solid var(--border)">${esc(ch.name)}</div>
-      ${!isFirst ? `<div onclick="moveChapter('${id}',-1);document.getElementById('mobChapterMenuEl').remove();renderMobileList()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▲ Move Up</div>` : ''}
-      ${!isLast  ? `<div onclick="moveChapter('${id}',1);document.getElementById('mobChapterMenuEl').remove();renderMobileList()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▼ Move Down</div>` : ''}
-      <div onclick="document.getElementById('mobChapterMenuEl').remove();deleteChapter('${id}')" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--danger);border-bottom:1px solid var(--border)">✕ Delete Chapter</div>
-      <div onclick="document.getElementById('mobChapterMenuEl').remove()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--muted)">Cancel</div>
-    </div>`;
-  menu.addEventListener('click', e => { if (e.target === menu) menu.remove(); });
+  menu.id = 'chapterMenuEl';
+
+  if (isMobile) {
+    menu.style.cssText = `position:fixed;inset:0;background:rgba(26,18,8,0.5);z-index:120;display:flex;align-items:flex-end`;
+    menu.innerHTML = `
+      <div style="width:100%;background:var(--warm-white);border-top:2px solid var(--gold);padding-bottom:env(safe-area-inset-bottom)">
+        <div style="padding:.8rem 1.2rem;font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown);border-bottom:1px solid var(--border)">${esc(ch.name)}</div>
+        ${!isFirst ? `<div onclick="moveChapter('${id}',-1);document.getElementById('chapterMenuEl').remove();renderAll()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▲ Move Up</div>` : ''}
+        ${!isLast  ? `<div onclick="moveChapter('${id}',1);document.getElementById('chapterMenuEl').remove();renderAll()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▼ Move Down</div>` : ''}
+        <div onclick="document.getElementById('chapterMenuEl').remove();deleteChapter('${id}')" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--danger);border-bottom:1px solid var(--border)">✕ Delete Chapter</div>
+        <div onclick="document.getElementById('chapterMenuEl').remove()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--muted)">Cancel</div>
+      </div>`;
+    menu.addEventListener('click', e => { if (e.target === menu) menu.remove(); });
+  } else {
+    const rect = triggerEl.getBoundingClientRect();
+    menu.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;background:var(--warm-white);border:1px solid var(--border);border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:120;min-width:160px;overflow:hidden`;
+    menu.innerHTML = `
+      ${!isFirst ? `<div onclick="moveChapter('${id}',-1);document.getElementById('chapterMenuEl').remove()" style="padding:.6rem 1rem;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--border)">▲ Move Up</div>` : ''}
+      ${!isLast  ? `<div onclick="moveChapter('${id}',1);document.getElementById('chapterMenuEl').remove()" style="padding:.6rem 1rem;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--border)">▼ Move Down</div>` : ''}
+      <div onclick="document.getElementById('chapterMenuEl').remove();deleteChapter('${id}')" style="padding:.6rem 1rem;font-size:.82rem;cursor:pointer;color:var(--danger)">✕ Delete</div>`;
+    setTimeout(() => document.addEventListener('click', function h(e) {
+      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', h); }
+    }), 0);
+  }
+
   document.body.appendChild(menu);
 }
 function mob_toggleChapter(id) {
