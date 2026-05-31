@@ -2412,12 +2412,18 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebas
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIza...",
-  authDomain: "erecipe-xxxxx.firebaseapp.com",
-  projectId: "erecipe-xxxxx",
-  storageBucket: "erecipe-xxxxx.appspot.com",
-  messagingSenderId: "...",
-  appId: "..."
+  apiKey: "AIzaSyAhaUyytbY_ynqEgdZJh40SbSJKL8jKbeg",
+  authDomain: "erecipe-ab5e4.firebaseapp.com",
+  projectId: "erecipe-ab5e4",
+  storageBucket: "erecipe-ab5e4.firebasestorage.app",
+  messagingSenderId: "73525633063",
+  appId: "1:73525633063:web:319615f3b1cc0f794c2e02",
+  measurementId: "G-DHBPHJMN9Q"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 };
 
 const app = initializeApp(firebaseConfig);
