@@ -1112,6 +1112,10 @@ header {
 <div class="timer-overlay" id="timerTray" onclick="if(event.target===this)timerTrayToggle()">
   <div class="timer-modal">
     <h3>⏱ Timers <button class="timer-modal-close" onclick="timerTrayToggle()">✕</button></h3>
+    <div id="timerNotifRow" style="margin-bottom:.8rem;font-size:.8rem;color:var(--muted);display:flex;align-items:center;justify-content:space-between">
+  <span id="timerNotifStatus">Alerts: off</span>
+  <button class="timer-preset-btn" onclick="timerRequestPermission()">Enable alerts</button>
+</div>
     <div class="timer-section-label">Quick start</div>
     <div class="timer-presets">
       <button class="timer-preset-btn" onclick="timerAdd(5,'5 min')">5 min</button>
@@ -2255,6 +2259,12 @@ document.addEventListener('click', e => {
 // ══════════════════════════════════════════════════
 // TIMERS
 // ══════════════════════════════════════════════════
+  let audioCtx = null;
+function ensureAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
 let timers = []; // { id, label, totalSecs, remaining, interval, done }
 let timerNextId = 1;
 
@@ -2270,9 +2280,37 @@ function timerTrayToggle() {
   } else {
     document.getElementById('tabRecipes').classList.add('active');
   }
+  timerUpdateNotifRow();
+}
+
+  function timerRequestPermission() {
+  Notification.requestPermission().then(p => {
+    timerUpdateNotifRow();
+    if (p === 'granted') showToast('Alerts enabled ✓');
+    else showToast('Alerts blocked — check browser settings');
+  });
+}
+
+function timerUpdateNotifRow() {
+  const row = document.getElementById('timerNotifRow');
+  const status = document.getElementById('timerNotifStatus');
+  if (!row) return;
+  if (!('Notification' in window)) { row.style.display = 'none'; return; }
+  if (Notification.permission === 'granted') {
+    status.textContent = '🔔 Alerts on';
+    status.style.color = '#2a7a4a';
+    row.querySelector('button').style.display = 'none';
+  } else if (Notification.permission === 'denied') {
+    status.textContent = '🔕 Alerts blocked in browser settings';
+    row.querySelector('button').style.display = 'none';
+  } else {
+    status.textContent = 'Alerts: off';
+    row.querySelector('button').style.display = '';
+  }
 }
 
 function timerAdd(minutes, label) {
+  ensureAudioCtx();  
   const secs = minutes * 60;
   const id = timerNextId++;
   const t = { id, label, totalSecs: secs, remaining: secs, interval: null, done: false };
@@ -2307,6 +2345,7 @@ function timerTick(id) {
 }
 
 function timerNotify(label) {
+  const ctx = ensureAudioCtx();
   // Vibrate if supported
   if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]);
   // Web notification if permitted
@@ -2390,6 +2429,7 @@ function linkifyTimers(text) {
 // INIT
 // ══════════════════════════════════════════════════
 renderAll();
+  timerUpdateNotifRow();
   // Keep screen awake while app is open
 if ('wakeLock' in navigator) {
   let wakeLock;
