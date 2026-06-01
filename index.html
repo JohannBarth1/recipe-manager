@@ -974,8 +974,8 @@ header {
         <div class="action-group">
           <div class="action-group-label">Recipe book mode</div>
           <div style="display:flex;background:rgba(0,0,0,0.06);border-radius:20px;padding:3px;gap:2px;width:fit-content;margin-top:.3rem">
-            <button class="mode-pill-btn active" id="mobBtnPriv" onclick="setMode('private')">🔒 Private</button>
             <button class="mode-pill-btn" id="mobBtnPub" onclick="setMode('public')">🌐 Public</button>
+            <button class="mode-pill-btn active" id="mobBtnPriv" onclick="setMode('private')">🔒 Private</button>
           </div>
           <div class="mode-desc" id="mobModeDesc" style="margin-top:.5rem">
             <strong>Private:</strong> Your recipes saved to a <em>Recipes</em> folder in your own Google Drive.
@@ -994,6 +994,14 @@ header {
             </button>
           </div>
           <p class="settings-note" style="margin-top:.5rem">Sign in with Google when prompted.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
+  <span style="font-size:.82rem;color:var(--brown);font-weight:700">Auto-sync on save</span>
+  <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+    <input type="checkbox" id="mobAutosyncToggle" onchange="setAutosync(this.checked)"
+      style="width:1.1rem;height:1.1rem;cursor:pointer;accent-color:var(--gold)"/>
+  </label>
+</div>
+<p class="settings-note">Automatically saves to cloud whenever you add or edit a recipe.</p>
         </div>
 
 
@@ -1048,8 +1056,8 @@ header {
   <!-- Mode toggle -->
   <span class="ds-label">Recipe book mode</span>
   <div style="display:flex;background:rgba(0,0,0,0.06);border-radius:20px;padding:3px;gap:2px;width:fit-content;margin-top:.4rem">
-    <button class="mode-pill-btn active" id="deskBtnPriv" onclick="setMode('private')">🔒 Private</button>
     <button class="mode-pill-btn" id="deskBtnPub" onclick="setMode('public')">🌐 Public</button>
+    <button class="mode-pill-btn active" id="deskBtnPriv" onclick="setMode('private')">🔒 Private</button>
   </div>
   <p class="ds-note" id="deskModeDesc" style="margin-top:.4rem">Your recipes are saved to a <em>Recipes</em> folder in your own Google Drive.</p>
 
@@ -1211,7 +1219,14 @@ const PUBLIC_FOLDER_ID = '1wxywQiLGkZ18S40rZi3JpXUZg4Ee0TaE';
 // Private always uses "Recipes" subfolder
 const PRIVATE_FOLDER_NAME = 'Recipes';
 
-function getMode() { return localStorage.getItem(MODE_KEY) || 'private'; }
+function getMode() { return localStorage.getItem(MODE_KEY) || 'public'; }
+  const AUTOSYNC_KEY = 'hk_autosync';
+function getAutosync() { return localStorage.getItem(AUTOSYNC_KEY) === 'true'; }
+function setAutosync(val) {
+  localStorage.setItem(AUTOSYNC_KEY, val);
+  document.querySelectorAll('#mobAutosyncToggle, #deskAutosyncToggle').forEach(el => el.checked = val);
+  showToast(val ? 'Auto-sync on' : 'Auto-sync off');
+}
 function setMode(m) {
   localStorage.setItem(MODE_KEY, m);
   updateModeUI(m);
@@ -1243,6 +1258,7 @@ function updateModeUI(m) {
   document.querySelectorAll('.epub-drive-section').forEach(el => {
     el.style.display = isPriv ? '' : 'none';
   });
+  document.querySelectorAll('#mobAutosyncToggle, #deskAutosyncToggle').forEach(el => el.checked = getAutosync());
 }
 
 // ══════════════════════════════════════════════════
@@ -1607,7 +1623,10 @@ function desk_saveRecipe() {
   }
   openChapters.add(chapterId); persistToStorage(); deskEditingId = null;
   renderAll(); desk_showRecipe(deskCurrentId);
+  if (getAutosync()) gdriveSave();
 }
+
+  
 function desk_cancelEdit() {
   if (deskCurrentId) desk_showRecipe(deskCurrentId);
   else showPanel('deskWelcome');
@@ -1749,6 +1768,7 @@ function mob_saveRecipe() {
   }
   openChapters.add(chapterId); persistToStorage(); mobEditingId = null;
   renderAll(); mob_showRecipe(mobCurrentId);
+  if (getAutosync()) gdriveSave();
 }
 function mob_cancelEdit() {
   if (mobCurrentId) mob_showRecipe(mobCurrentId);
@@ -2515,6 +2535,8 @@ window.firestoreLoad = async function() {
   } catch(e) { showToast("Load failed — check console"); console.error(e); }
 };
 
+const CACHED_PIN_KEY = 'hk_gist_pin_cache';
+
 window.firestoreSave = async function() {
   const pin = prompt("Enter PIN to save to shared book:");
   if (pin === null) return;
@@ -2524,6 +2546,30 @@ window.firestoreSave = async function() {
     showToast("Saved to shared book ✓");
   } catch(e) {
     if (e.code === "permission-denied") showToast("Incorrect PIN");
+    else { showToast("Save failed"); console.error(e); }
+  }
+};
+    const CACHED_PIN_KEY = 'hk_pin_cache';
+
+window.firestoreSave = async function(silent = false) {
+  let pin;
+  if (silent) {
+    pin = sessionStorage.getItem(CACHED_PIN_KEY);
+    if (!pin) return; // don't autosync if pin not cached yet
+  } else {
+    pin = prompt("Enter PIN to save to shared book:");
+    if (pin === null) return;
+    sessionStorage.setItem(CACHED_PIN_KEY, pin); // cache for this session
+  }
+  showToast("Saving…");
+  try {
+    await setDoc(REF, { ...data, pin });
+    showToast("Saved to shared book ✓");
+  } catch(e) {
+    if (e.code === "permission-denied") {
+      sessionStorage.removeItem(CACHED_PIN_KEY); // clear bad PIN from cache
+      showToast("Incorrect PIN");
+    }
     else { showToast("Save failed"); console.error(e); }
   }
 };
