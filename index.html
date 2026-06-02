@@ -1829,6 +1829,21 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
+  function waitForFirestore(timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    if (window.firestoreLoad) { resolve(); return; }
+    const start = Date.now();
+    const check = setInterval(() => {
+      if (window.firestoreLoad) { clearInterval(check); resolve(); }
+      else if (Date.now() - start > timeout) {
+        clearInterval(check);
+        showToast('Firebase not ready — check connection');
+        reject();
+      }
+    }, 100);
+  });
+}
+
 // ══════════════════════════════════════════════════
 // GOOGLE DRIVE
 // ══════════════════════════════════════════════════
@@ -1967,7 +1982,7 @@ function dPickerConfirm(mode) {
 
 async function gdriveSave() {
   if (getMode() === 'public') {
-    if (!window.firestoreSave) { showToast('Still loading — try again'); return; }
+    await waitForFirestore();
     await window.firestoreSave(); return;
   }
   const mode = getMode();
@@ -2030,7 +2045,7 @@ async function gdriveSave() {
 
 async function gdriveLoad() {
   if (getMode() === 'public') {
-    if (!window.firestoreLoad) { showToast('Still loading — try again'); return; }
+    await waitForFirestore();
     await window.firestoreLoad(); return;
   }
   const mode = getMode();
