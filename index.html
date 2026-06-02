@@ -2550,21 +2550,7 @@ window.firestoreLoad = async function() {
   } catch(e) { showToast("Load failed — check console"); console.error(e); }
 };
 
-const CACHED_PIN_KEY = 'hk_gist_pin_cache';
-
-window.firestoreSave = async function() {
-  const pin = prompt("Enter PIN to save to shared book:");
-  if (pin === null) return;
-  showToast("Saving…");
-  try {
-    await setDoc(REF, { ...data, pin });
-    showToast("Saved to shared book ✓");
-  } catch(e) {
-    if (e.code === "permission-denied") showToast("Incorrect PIN");
-    else { showToast("Save failed"); console.error(e); }
-  }
-};
-    const CACHED_PIN_KEY = 'hk_pin_cache';
+const CACHED_PIN_KEY = 'hk_pin_cache';
 
 window.firestoreSave = async function(silent = false) {
   let pin;
@@ -2576,6 +2562,7 @@ window.firestoreSave = async function(silent = false) {
     if (pin === null) return;
     sessionStorage.setItem(CACHED_PIN_KEY, pin); // cache for this session
   }
+  
   showToast("Saving…");
   try {
     await setDoc(REF, { ...data, pin });
@@ -2584,8 +2571,10 @@ window.firestoreSave = async function(silent = false) {
     if (e.code === "permission-denied") {
       sessionStorage.removeItem(CACHED_PIN_KEY); // clear bad PIN from cache
       showToast("Incorrect PIN");
+    } else { 
+      showToast("Save failed"); 
+      console.error(e); 
     }
-    else { showToast("Save failed"); console.error(e); }
   }
 };
     console.log("Firebase module loaded, firestoreSave:", typeof window.firestoreSave);
