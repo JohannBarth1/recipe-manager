@@ -2567,6 +2567,7 @@ import {
 import {
   getAuth,
   GoogleAuthProvider,
+  signInWithPopup,
   signInWithRedirect,
   signOut,
   onAuthStateChanged
@@ -2641,11 +2642,26 @@ console.log("Firebase module loaded, firestoreSave:", typeof window.firestoreSav
 // Auth Logic
 let currentUser = null;
 
+// Catch errors if the user is returning from a mobile redirect
+getRedirectResult(auth).catch((err) => {
+  console.error("Redirect error:", err);
+  showToast("Sign-in failed. Please try again.");
+});
+
 document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
+  // Simple check to see if the user is on a mobile device
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
   try {
-    await signInWithRedirect(auth, provider);
+    if (isMobile) {
+      // Mobile: redirect to bypass popup blockers
+      await signInWithRedirect(auth, provider);
+    } else {
+      // Desktop: smooth popup experience
+      await signInWithPopup(auth, provider);
+    }
   } catch (err) {
-    console.error(err);
+    console.error("Sign in error:", err);
     showToast("Google sign-in failed");
   }
 });
