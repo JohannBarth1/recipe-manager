@@ -883,7 +883,6 @@ header {
     </div>
   </div>
   <div class="header-actions">
-    <button onclick="logout()">Sign Out</button>
     <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
     <button class="hbtn hbtn-ghost" onclick="gdriveLoad()" title="Load from Drive">☁ Load</button>
     <button class="hbtn hbtn-primary" onclick="gdriveSave()" title="Save to Drive">☁ Save</button>
@@ -1081,7 +1080,14 @@ header {
     </button>
   </div>
 </details>
-        
+<div class="action-group" style="margin-top: 2rem;">
+      <button onclick="logout()" class="action-btn danger-outline" style="width: 100%; padding: 0.9rem; font-size: 0.85rem; flex-direction: row; gap: 0.6rem;">
+        <span class="ab-icon">🚪</span> Sign Out
+      </button>
+    </div>
+
+  </div>
+</div>        
       </div>
     </div>
 
@@ -1137,6 +1143,10 @@ header {
     <button onclick="loadLocalFile()">⬆ Load file</button>
   </div>
 </details>
+<hr class="ds-divider" style="margin-top: 1rem;" />
+    <button onclick="logout()" class="action-btn danger-outline" style="width: 100%; padding: 0.6rem; margin-top: 0.5rem; flex-direction: row; gap: 0.5rem;">
+      <span class="ab-icon" style="font-size: 1.1rem;">🚪</span> Sign Out
+    </button>  
 </div>
 
 <!-- Mobile bottom nav -->
@@ -2643,10 +2653,19 @@ console.log("Firebase module loaded, firestoreSave:", typeof window.firestoreSav
 // Auth Logic
 let currentUser = null;
 
-// Catch errors if the user is returning from a mobile redirect
-getRedirectResult(auth).catch((err) => {
-  console.error("Redirect error:", err);
-  showToast("Sign-in failed. Please try again.");
+getRedirectResult(auth)
+  .then((result) => {
+    // If successful, the user is signed in. 
+    // onAuthStateChanged will trigger automatically.
+  })
+  .catch((error) => {
+    console.error("Redirect login error:", error);
+    // Optional: showToast("Login failed, please try again.");
+  });
+
+// Now your existing onAuthStateChanged will handle the rest
+onAuthStateChanged(auth, async (user) => {
+    // Your existing code to show/hide the login screen...
 });
 
 document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
