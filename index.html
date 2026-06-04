@@ -2554,10 +2554,26 @@ if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent
 }
 </script>
   <script type="module">
+// ══════════════════════════════════════════════════
+// Firebase config
+// ══════════════════════════════════════════════════
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
+import {
+  getFirestore,
+  doc,
+  setDoc
+}
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyAhaUyytbY_ynqEgdZJh40SbSJKL8jKbeg",
   authDomain: "erecipe-ab5e4.firebaseapp.com",
@@ -2568,7 +2584,6 @@ const firebaseConfig = {
   measurementId: "G-DHBPHJMN9Q"
 };
 
-const analytics = getAnalytics(app);
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const REF = doc(db, "recipes", "shared");
@@ -2618,115 +2633,76 @@ window.firestoreSave = async function(silent = false) {
   }
 };
     console.log("Firebase module loaded, firestoreSave:", typeof window.firestoreSave);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    const provider = new GoogleAuthProvider();
+const provider = new GoogleAuthProvider();
 
-let currentUser    = null;
-let tasks          = [];
-let users          = {};
-let chatUnsubs     = {};    // taskId → unsub fn
-let msgCounts      = {};    // taskId → count
-let msgCache       = {};    // taskId → messages array
-let expandedCards  = new Set();
-let activeFilter   = 'all';
-let assigneeFilter = 'all';
+let currentUser = null;
 
-// ── AUTH ──────────────────────────────────────────────────
-document.getElementById('btnGoogleSignIn').onclick = async () => {
-  try { await signInWithPopup(auth, provider); }
-  catch(e) { showToast('Sign-in failed'); console.error(e); }
-};
-window.signOut = async () => {
-  Object.values(chatUnsubs).forEach(u => u());
-  chatUnsubs = {};
-  await fbSignOut(auth);
-};
-
-onAuthStateChanged(auth, async user => {
-  if (user) {
-    currentUser = user;
-    document.getElementById('loginScreen').classList.add('hidden');
-    setTimeout(() => document.getElementById('loginScreen').style.display = 'none', 420);
-    renderHeaderUser(user);
-    document.getElementById('btnSignOut').style.display = '';
-    await setDoc(doc(db, 'users', user.uid), {
-      displayName: user.displayName || user.email,
-      email: user.email,
-      photoURL: user.photoURL || '',
-      lastSeen: serverTimestamp()
-    }, { merge: true });
-    subscribeToUsers();
-    subscribeToTasks();
-    setSyncState('loading');
-  } else {
-    currentUser = null;
-    const ls = document.getElementById('loginScreen');
-    ls.style.display = ''; ls.classList.remove('hidden');
-    document.getElementById('btnSignOut').style.display = 'none';
-    document.getElementById('userAvatarWrap').innerHTML = '';
-    hideLoading();
+document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (err) {
+    console.error(err);
+    showToast("Google sign-in failed");
   }
 });
 
-function renderHeaderUser(user) {
-  const wrap = document.getElementById('userAvatarWrap');
-  if (user.photoURL) {
-    wrap.innerHTML = `<img class="user-avatar" src="${esc(user.photoURL)}" alt="${esc(user.displayName||'')}" title="${esc(user.displayName||user.email)}"/>`;
-  } else {
-    const i = (user.displayName||user.email||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    wrap.innerHTML = `<div class="user-avatar-initials" title="${esc(user.displayName||user.email)}">${i}</div>`;
+window.logout = async function() {
+  try {
+    await signOut(auth);
+  } catch (err) {
+    console.error(err);
   }
-}
+};
 
-// ── USERS ─────────────────────────────────────────────────
-function subscribeToUsers() {
-  onSnapshot(collection(db, 'users'), snap => {
-    users = {};
-    snap.docs.forEach(d => { users[d.id] = d.data(); });
-    rebuildAssigneeDropdowns();
-    render();
-  });
-}
-function rebuildAssigneeDropdowns() {
-  const list = Object.entries(users)
-    .map(([uid,u]) => ({ uid, name: u.displayName||u.email }))
-    .sort((a,b) => a.name.localeCompare(b.name));
+onAuthStateChanged(auth, async (user) => {
 
-  const fv = document.getElementById('filterAssignee').value;
-  document.getElementById('filterAssignee').innerHTML =
-    `<option value="all">Everyone</option>` +
-    list.map(u=>`<option value="${esc(u.uid)}" ${fv===u.uid?'selected':''}>${esc(u.name)}</option>`).join('') +
-    `<option value="__unassigned__" ${fv==='__unassigned__'?'selected':''}>Unassigned</option>`;
+  if (!user) {
+    currentUser = null;
 
-  const mv = document.getElementById('newTaskAssignee').value;
-  document.getElementById('newTaskAssignee').innerHTML =
-    `<option value="">— Unassigned —</option>` +
-    list.map(u=>`<option value="${esc(u.uid)}" ${mv===u.uid?'selected':''}>${esc(u.name)}</option>`).join('');
-}
-function userName(uid) {
-  if (!uid) return 'Unassigned';
-  return users[uid]?.displayName || users[uid]?.email || uid;
-}
+    const loginScreen = document.getElementById("loginScreen");
+    if (loginScreen) {
+      loginScreen.style.display = "flex";
+      loginScreen.classList.remove("hidden");
+    }
 
-import {
-  doc,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    return;
+  }
+
+  currentUser = user;
+
+  const loginScreen = document.getElementById("loginScreen");
+  if (loginScreen) {
+    loginScreen.classList.add("hidden");
+
+    setTimeout(() => {
+      loginScreen.style.display = "none";
+    }, 300);
+  }
+
+  try {
 
     await setDoc(
-  doc(db, "users", user.uid),
-  {
-    name: user.displayName || "",
-    email: user.email || "",
-    photo: user.photoURL || "",
-    updatedAt: Date.now()
-  },
-  { merge: true }
-);
-    
-async function logout() {
-  await signOut(auth);
-}
+      doc(db, "users", user.uid),
+      {
+        displayName: user.displayName || "",
+        email: user.email || "",
+        photoURL: user.photoURL || "",
+        updatedAt: Date.now()
+      },
+      { merge: true }
+    );
+
+    console.log("Logged in:", user.email);
+
+  } catch (err) {
+    console.error("User profile save failed:", err);
+  }
+});
+
 </script>
 </body>
 </html>
