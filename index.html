@@ -46,7 +46,31 @@ body {
   height: 100%;
   overflow: hidden;
 }
-
+/* ── LOGIN SCREEN ── */
+#loginScreen {
+  position: fixed; inset: 0;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 1.6rem;
+  z-index: 999; transition: opacity .4s;
+}
+#loginScreen.hidden { opacity: 0; pointer-events: none; }
+.login-title { font-family: 'Playfair Display', serif; font-size: 2.8rem; color: var(--light-brown); letter-spacing: -.02em; }
+.login-sub { font-size: .62rem; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
+.login-divider { width: 40px; height: 2px; background: var(--gold); opacity: .4; }
+.login-prompt { font-size: .82rem; color: var(--muted); letter-spacing: .04em; }
+.btn-google {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem 1.4rem; background: var(--warm-white);
+  border: none; border-radius: 3px; cursor: pointer;
+  font-family: 'Lato', sans-serif; font-size: .88rem; font-weight: 700;
+  color: var(--ink); letter-spacing: .04em;
+  box-shadow: 0 2px 10px rgba(0,0,0,.3);
+  transition: background .15s, transform .12s;
+}
+.btn-google:hover { background: #fff; transform: translateY(-1px); }
+.btn-google svg { width: 20px; height: 20px; }
+  
 /* ── HEADER ───────────────────────────────────── */
 header {
   background: var(--ink);
@@ -835,6 +859,20 @@ header {
 </head>
 <body>
 
+  <!-- Login -->
+<div id="loginScreen">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
+    <div class="login-title">eTask</div>
+    <div class="login-sub">Daily Task Tracker</div>
+  </div>
+  <div class="login-divider"></div>
+  <div class="login-prompt">Sign in to continue</div>
+  <button class="btn-google" id="btnGoogleSignIn">
+    <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+    Sign in with Google
+  </button>
+</div>
+  
 <!-- HEADER -->
 <header>
   <div style="display:flex;align-items:center;gap:.8rem">
@@ -845,6 +883,7 @@ header {
     </div>
   </div>
   <div class="header-actions">
+    <button onclick="logout()">Sign Out</button>
     <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
     <button class="hbtn hbtn-ghost" onclick="gdriveLoad()" title="Load from Drive">☁ Load</button>
     <button class="hbtn hbtn-primary" onclick="gdriveSave()" title="Save to Drive">☁ Save</button>
@@ -2515,8 +2554,9 @@ if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent
 }
 </script>
   <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
+
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAhaUyytbY_ynqEgdZJh40SbSJKL8jKbeg",
@@ -2528,7 +2568,7 @@ const firebaseConfig = {
   measurementId: "G-DHBPHJMN9Q"
 };
 
-// Initialize Firebase
+const analytics = getAnalytics(app);
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const REF = doc(db, "recipes", "shared");
@@ -2578,6 +2618,115 @@ window.firestoreSave = async function(silent = false) {
   }
 };
     console.log("Firebase module loaded, firestoreSave:", typeof window.firestoreSave);
+
+    const provider = new GoogleAuthProvider();
+
+let currentUser    = null;
+let tasks          = [];
+let users          = {};
+let chatUnsubs     = {};    // taskId → unsub fn
+let msgCounts      = {};    // taskId → count
+let msgCache       = {};    // taskId → messages array
+let expandedCards  = new Set();
+let activeFilter   = 'all';
+let assigneeFilter = 'all';
+
+// ── AUTH ──────────────────────────────────────────────────
+document.getElementById('btnGoogleSignIn').onclick = async () => {
+  try { await signInWithPopup(auth, provider); }
+  catch(e) { showToast('Sign-in failed'); console.error(e); }
+};
+window.signOut = async () => {
+  Object.values(chatUnsubs).forEach(u => u());
+  chatUnsubs = {};
+  await fbSignOut(auth);
+};
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('loginScreen').classList.add('hidden');
+    setTimeout(() => document.getElementById('loginScreen').style.display = 'none', 420);
+    renderHeaderUser(user);
+    document.getElementById('btnSignOut').style.display = '';
+    await setDoc(doc(db, 'users', user.uid), {
+      displayName: user.displayName || user.email,
+      email: user.email,
+      photoURL: user.photoURL || '',
+      lastSeen: serverTimestamp()
+    }, { merge: true });
+    subscribeToUsers();
+    subscribeToTasks();
+    setSyncState('loading');
+  } else {
+    currentUser = null;
+    const ls = document.getElementById('loginScreen');
+    ls.style.display = ''; ls.classList.remove('hidden');
+    document.getElementById('btnSignOut').style.display = 'none';
+    document.getElementById('userAvatarWrap').innerHTML = '';
+    hideLoading();
+  }
+});
+
+function renderHeaderUser(user) {
+  const wrap = document.getElementById('userAvatarWrap');
+  if (user.photoURL) {
+    wrap.innerHTML = `<img class="user-avatar" src="${esc(user.photoURL)}" alt="${esc(user.displayName||'')}" title="${esc(user.displayName||user.email)}"/>`;
+  } else {
+    const i = (user.displayName||user.email||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    wrap.innerHTML = `<div class="user-avatar-initials" title="${esc(user.displayName||user.email)}">${i}</div>`;
+  }
+}
+
+// ── USERS ─────────────────────────────────────────────────
+function subscribeToUsers() {
+  onSnapshot(collection(db, 'users'), snap => {
+    users = {};
+    snap.docs.forEach(d => { users[d.id] = d.data(); });
+    rebuildAssigneeDropdowns();
+    render();
+  });
+}
+function rebuildAssigneeDropdowns() {
+  const list = Object.entries(users)
+    .map(([uid,u]) => ({ uid, name: u.displayName||u.email }))
+    .sort((a,b) => a.name.localeCompare(b.name));
+
+  const fv = document.getElementById('filterAssignee').value;
+  document.getElementById('filterAssignee').innerHTML =
+    `<option value="all">Everyone</option>` +
+    list.map(u=>`<option value="${esc(u.uid)}" ${fv===u.uid?'selected':''}>${esc(u.name)}</option>`).join('') +
+    `<option value="__unassigned__" ${fv==='__unassigned__'?'selected':''}>Unassigned</option>`;
+
+  const mv = document.getElementById('newTaskAssignee').value;
+  document.getElementById('newTaskAssignee').innerHTML =
+    `<option value="">— Unassigned —</option>` +
+    list.map(u=>`<option value="${esc(u.uid)}" ${mv===u.uid?'selected':''}>${esc(u.name)}</option>`).join('');
+}
+function userName(uid) {
+  if (!uid) return 'Unassigned';
+  return users[uid]?.displayName || users[uid]?.email || uid;
+}
+
+import {
+  doc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+    await setDoc(
+  doc(db, "users", user.uid),
+  {
+    name: user.displayName || "",
+    email: user.email || "",
+    photo: user.photoURL || "",
+    updatedAt: Date.now()
+  },
+  { merge: true }
+);
+    
+async function logout() {
+  await signOut(auth);
+}
 </script>
 </body>
 </html>
