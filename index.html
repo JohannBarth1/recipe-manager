@@ -2643,7 +2643,7 @@ let currentUser = null;
 
 document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
   try {
-    await signInWithPopup(auth, provider);
+    await signInWithRedirect(auth, provider);
   } catch (err) {
     console.error(err);
     showToast("Google sign-in failed");
