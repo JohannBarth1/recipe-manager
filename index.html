@@ -2627,7 +2627,6 @@ window.firestoreSave = async function(silent = false) {
   }
 };
     console.log("Firebase module loaded, firestoreSave:", typeof window.firestoreSave);
-const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
