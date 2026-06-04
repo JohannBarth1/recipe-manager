@@ -2553,20 +2553,24 @@ if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent
   });
 }
 </script>
-  <script type="module">
-// ══════════════════════════════════════════════════
+<script type="module">
+//  ══════════════════════════════════════════════════
 // Firebase config
-// ══════════════════════════════════════════════════
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-
+//  ══════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
   getFirestore,
   doc,
   setDoc,
   getDoc
-}
-from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAhaUyytbY_ynqEgdZJh40SbSJKL8jKbeg",
@@ -2578,8 +2582,13 @@ const firebaseConfig = {
   measurementId: "G-DHBPHJMN9Q"
 };
 
+// Initialize Firebase once
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+// Firestore Shared Logic
 const REF = doc(db, "recipes", "shared");
 
 window.firestoreLoad = async function() {
@@ -2611,7 +2620,7 @@ window.firestoreSave = async function(silent = false) {
     if (pin === null) return;
     sessionStorage.setItem(CACHED_PIN_KEY, pin); // cache for this session
   }
-  
+
   showToast("Saving…");
   try {
     await setDoc(REF, { ...data, pin });
@@ -2620,17 +2629,16 @@ window.firestoreSave = async function(silent = false) {
     if (e.code === "permission-denied") {
       sessionStorage.removeItem(CACHED_PIN_KEY); // clear bad PIN from cache
       showToast("Incorrect PIN");
-    } else { 
-      showToast("Save failed"); 
-      console.error(e); 
+    } else {
+      showToast("Save failed");
+      console.error(e);
     }
   }
 };
-    console.log("Firebase module loaded, firestoreSave:", typeof window.firestoreSave);
-const auth = getAuth(app);
 
-const provider = new GoogleAuthProvider();
+console.log("Firebase module loaded, firestoreSave:", typeof window.firestoreSave);
 
+// Auth Logic
 let currentUser = null;
 
 document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
@@ -2651,32 +2659,26 @@ window.logout = async function() {
 };
 
 onAuthStateChanged(auth, async (user) => {
-
   if (!user) {
     currentUser = null;
-
     const loginScreen = document.getElementById("loginScreen");
     if (loginScreen) {
       loginScreen.style.display = "flex";
       loginScreen.classList.remove("hidden");
     }
-
     return;
   }
-
+  
   currentUser = user;
-
   const loginScreen = document.getElementById("loginScreen");
   if (loginScreen) {
     loginScreen.classList.add("hidden");
-
     setTimeout(() => {
       loginScreen.style.display = "none";
     }, 300);
   }
-
+  
   try {
-
     await setDoc(
       doc(db, "users", user.uid),
       {
@@ -2687,14 +2689,11 @@ onAuthStateChanged(auth, async (user) => {
       },
       { merge: true }
     );
-
     console.log("Logged in:", user.email);
-
   } catch (err) {
     console.error("User profile save failed:", err);
   }
 });
-
 </script>
 </body>
 </html>
