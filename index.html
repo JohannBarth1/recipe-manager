@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>eRecipe</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#1a1208"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="eRecipe"/>
+
+  <!-- Icons -->
+  <link rel="icon" href="favicon.ico" sizes="any"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap"/>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css"/>
+
+  <!-- Third-party scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
+    <div class="login-title">eRecipe</div>
+    <div class="login-sub">All your favourite recipes</div>
+  </div>
+  <div class="login-divider"></div>
+  <div class="login-prompt">Sign in to continue</div>
+  <button class="btn-google" id="btnGoogleSignIn">
+    <!-- Google "G" logo -->
+    <svg viewBox="0 0 24 24">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+    Sign in with Google
+  </button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════════════ -->
+<header>
+  <div style="display:flex;align-items:center;gap:.8rem">
+    <img src="icon-64.png" width="38" height="38" style="border-radius:6px" alt="eRecipe logo"/>
+    <div>
+      <div class="brand-title">eRecipe</div>
+      <div class="brand-sub">All your favourite recipes</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
+    <button class="notif-btn" id="notifBtn" onclick="toggleNotifDropdown()" title="Notifications">
+      🔔<span class="notif-badge" id="notifBadge"></span>
+    </button>
+    <button class="hbtn hbtn-ghost" onclick="gdriveLoad()">☁ Load</button>
+    <button class="hbtn hbtn-primary" onclick="firestoreSaveShared()">☁ Save</button>
+    <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
+  </div>
+</header>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NOTIFICATION DROPDOWN
+════════════════════════════════════════════════════════════════ -->
+<div class="notif-dropdown" id="notifDropdown">
+  <div class="notif-header">
+    <span class="notif-header-label">🔔 Notifications</span>
+    <button class="notif-mark-all" onclick="markAllRead()">Mark all read</button>
+  </div>
+  <div id="notifList"><div class="notif-empty">No notifications yet</div></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     APP BODY
+════════════════════════════════════════════════════════════════ -->
+<div class="app">
+
+  <!-- ── DESKTOP LAYOUT ───────────────────────────────────────── -->
+  <div class="desktop-main">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-hdr">Chapters &amp; Recipes</div>
+      <div class="chapter-list" id="deskChapterList"></div>
+      <div class="sidebar-footer">
+        <button class="btn-add-recipe" onclick="desk_showAddRecipe()">+ Recipe</button>
+        <button class="btn-add-chapter" onclick="showAddChapter()">+ Chapter</button>
+      </div>
+    </aside>
+
+    <!-- Main panel -->
+    <main class="main" id="deskMain">
+
+      <!-- Welcome state -->
+      <div class="welcome" id="deskWelcome" style="display:none">
+        <h2>Welcome to eRecipe</h2>
+        <p>Select a recipe from the sidebar, or add a new one to get started.</p>
+      </div>
+
+      <!-- Recipe view -->
+      <div class="recipe-view" id="deskRecipeView">
+        <div class="recipe-chapter-tag" id="deskViewChapter"></div>
+        <div class="recipe-view-header">
+          <h1 id="deskViewTitle"></h1>
+          <div class="view-actions">
+            <button class="btn-edit"   onclick="desk_editCurrentRecipe()">Edit</button>
+            <button class="btn-delete" onclick="desk_deleteCurrentRecipe()">Delete</button>
+          </div>
+        </div>
+        <hr class="divider"/>
+        <p class="recipe-desc" id="deskViewDesc"></p>
+        <div class="section-label">Ingredients</div>
+        <div class="ingredients-box"><ul id="deskViewIngredients"></ul></div>
+        <div class="section-label">Instructions</div>
+        <ol class="steps-list" id="deskViewSteps"></ol>
+        <div class="recipe-tip" id="deskViewTip" style="display:none"></div>
+        <!-- Comments -->
+        <div class="recipe-chat" id="deskViewChat" style="display:none">
+          <div class="recipe-chat-label">💬 Comments</div>
+          <div class="chat-messages" id="deskChatMsgs"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-textarea" id="deskChatInput"
+                      placeholder="Add a comment… (Enter to send)" rows="1"
+                      onkeydown="recipeChat_keydown(event,'desk')"></textarea>
+            <button class="chat-send-btn" onclick="recipeChat_send('desk')" title="Send">➤</button>
+          </div>
+        </div>
+      </div><!-- /recipe-view -->
+
+      <!-- Editor -->
+      <div class="editor" id="deskEditor">
+        <h2 id="deskEditorTitle">Add Recipe</h2>
+        <div class="form-row">
+          <label>Recipe Name</label>
+          <input id="deskFTitle" type="text" placeholder="e.g. Cowboy Coffee Cake"/>
+        </div>
+        <div class="form-row">
+          <label>Chapter</label>
+          <select id="deskFChapter"></select>
+        </div>
+        <div class="form-row">
+          <label>Description</label>
+          <textarea id="deskFDesc" rows="2" placeholder="A short description..."></textarea>
+        </div>
+        <div class="form-row">
+          <label>Ingredients</label>
+          <textarea id="deskFIngredients" rows="8"
+                    placeholder="One ingredient per line&#10;e.g. 2 cups flour"></textarea>
+          <div class="form-hint">One ingredient per line</div>
+        </div>
+        <div class="form-row">
+          <label>Instructions</label>
+          <textarea id="deskFSteps" rows="9"
+                    placeholder="One step per line&#10;e.g. Preheat oven to 375F."></textarea>
+          <div class="form-hint">One step per line</div>
+        </div>
+        <div class="form-row">
+          <label>Tip (optional)</label>
+          <input id="deskFTip" type="text" placeholder="e.g. No buttermilk? Use milk + 1 tbsp vinegar."/>
+        </div>
+        <div class="editor-actions">
+          <button class="btn-save"   onclick="desk_saveRecipe()">Save Recipe</button>
+          <button class="btn-cancel" onclick="desk_cancelEdit()">Cancel</button>
+        </div>
+      </div><!-- /editor -->
+
+    </main>
+  </div><!-- /desktop-main -->
+
+
+  <!-- ── MOBILE PANELS ─────────────────────────────────────────── -->
+  <div class="mob-panels">
+
+    <!-- Panel: Recipe List -->
+    <div class="mob-panel active" id="mobPanelList">
+      <div class="mob-list-scroll" id="mobChapterList"></div>
+      <div class="mob-add-bar">
+        <button class="mob-btn-recipe"  onclick="mob_showAddRecipe()">+ Add Recipe</button>
+        <button class="mob-btn-chapter" onclick="showAddChapter()">+ Chapter</button>
+      </div>
+    </div>
+
+    <!-- Panel: Recipe View -->
+    <div class="mob-panel" id="mobPanelView">
+      <div class="mob-view-scroll">
+        <div class="mob-back" onclick="mob_backToList()">← Recipes</div>
+        <div class="recipe-chapter-tag" id="mobViewChapter"></div>
+        <h1 style="font-family:'Playfair Display',serif;font-size:1.6rem;line-height:1.2;margin-bottom:.3rem"
+            id="mobViewTitle"></h1>
+        <div class="mob-view-actions">
+          <button class="btn-edit"   onclick="mob_editCurrentRecipe()">Edit</button>
+          <button class="btn-delete" onclick="mob_deleteCurrentRecipe()">Delete</button>
+        </div>
+        <hr class="divider"/>
+        <p class="recipe-desc" id="mobViewDesc"></p>
+        <div class="section-label">Ingredients</div>
+        <div class="ingredients-box"><ul id="mobViewIngredients"></ul></div>
+        <div class="section-label">Instructions</div>
+        <ol class="steps-list" id="mobViewSteps"></ol>
+        <div class="recipe-tip" id="mobViewTip" style="display:none;margin-bottom:1rem"></div>
+        <!-- Comments -->
+        <div class="recipe-chat" id="mobViewChat" style="display:none;margin-bottom:1rem">
+          <div class="recipe-chat-label">💬 Comments</div>
+          <div class="chat-messages" id="mobChatMsgs"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-textarea" id="mobChatInput"
+                      placeholder="Add a comment… (Enter to send)" rows="1"
+                      onkeydown="recipeChat_keydown(event,'mob')"></textarea>
+            <button class="chat-send-btn" onclick="recipeChat_send('mob')" title="Send">➤</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /mobPanelView -->
+
+    <!-- Panel: Editor -->
+    <div class="mob-panel" id="mobPanelEditor">
+      <div class="mob-editor-scroll">
+        <h2 id="mobEditorTitle">Add Recipe</h2>
+        <div class="form-row">
+          <label>Recipe Name</label>
+          <input id="mobFTitle" type="text" autocomplete="off"/>
+        </div>
+        <div class="form-row">
+          <label>Chapter</label>
+          <select id="mobFChapter"></select>
+        </div>
+        <div class="form-row">
+          <label>Description</label>
+          <textarea id="mobFDesc" rows="2"></textarea>
+        </div>
+        <div class="form-row">
+          <label>Ingredients</label>
+          <textarea id="mobFIngredients" rows="7" placeholder="One ingredient per line"></textarea>
+          <div class="form-hint">One ingredient per line</div>
+        </div>
+        <div class="form-row">
+          <label>Instructions</label>
+          <textarea id="mobFSteps" rows="8" placeholder="One step per line"></textarea>
+          <div class="form-hint">One step per line</div>
+        </div>
+        <div class="form-row">
+          <label>Tip (optional)</label>
+          <input id="mobFTip" type="text" autocomplete="off"/>
+        </div>
+      </div>
+      <div class="mob-editor-bar">
+        <button class="btn-save"   onclick="mob_saveRecipe()">Save</button>
+        <button class="btn-cancel" onclick="mob_cancelEdit()">Cancel</button>
+      </div>
+    </div><!-- /mobPanelEditor -->
+
+    <!-- Panel: Settings -->
+    <div class="mob-panel" id="mobPanelSettings">
+      <div class="mob-settings-scroll">
+        <h2>Settings</h2>
+
+        <div class="action-group">
+          <div class="action-group-label">Cloud sync</div>
+          <div class="action-row">
+            <button class="action-btn primary" onclick="firestoreSaveShared()">
+              <span class="ab-icon">☁</span>Save
+            </button>
+            <button class="action-btn" onclick="firestoreLoadShared()">
+              <span class="ab-icon">☁</span>Load
+            </button>
+          </div>
+          <p class="settings-note" style="margin-top:.5rem">
+            Saves only add/update recipes — nothing is deleted from the shared book.
+          </p>
+        </div>
+
+        <div class="action-group">
+          <div class="action-group-label">Export</div>
+          <div class="action-row">
+            <button class="action-btn dark" onclick="exportEpub()">
+              <span class="ab-icon">📖</span>EPUB
+            </button>
+            <button class="action-btn dark" onclick="printCards()">
+              <span class="ab-icon">🖨</span>Cards
+            </button>
+          </div>
+        </div>
+
+        <details>
+          <summary style="font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;
+                          color:var(--muted);font-weight:700;cursor:pointer;
+                          padding-bottom:.4rem;border-bottom:1px solid var(--border);
+                          display:block;margin-bottom:.5rem">
+            Local backup
+          </summary>
+          <div class="action-row" style="margin-top:.5rem">
+            <button class="action-btn" onclick="saveLocalFile()">
+              <span class="ab-icon">⬇</span>Download
+            </button>
+            <button class="action-btn" onclick="loadLocalFile()">
+              <span class="ab-icon">⬆</span>Load file
+            </button>
+          </div>
+        </details>
+
+        <div class="action-group" style="margin-top:2rem">
+          <button onclick="logout()" class="action-btn danger-outline"
+                  style="width:100%;padding:.9rem;flex-direction:row;gap:.6rem;">
+            <span class="ab-icon">🚪</span>Sign Out
+          </button>
+        </div>
+      </div>
+    </div><!-- /mobPanelSettings -->
+
+  </div><!-- /mob-panels -->
+
+</div><!-- /app -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DESKTOP SETTINGS PANEL
+════════════════════════════════════════════════════════════════ -->
+<div class="desk-settings" id="deskSettings">
+  <h3>⚙ Settings</h3>
+  <span class="ds-label">Cloud sync</span>
+  <p class="ds-note">Saves add/update recipes only — nothing is deleted from the shared book.</p>
+  <div class="ds-row" style="margin-top:.4rem">
+    <button onclick="firestoreSaveShared()" class="primary">☁ Save</button>
+    <button onclick="firestoreLoadShared()">☁ Load</button>
+  </div>
+  <hr class="ds-divider"/>
+  <span class="ds-label">Export</span>
+  <div class="ds-row" style="margin-top:.35rem">
+    <button onclick="exportEpub()">⬇ EPUB</button>
+    <button onclick="printCards()">🖨 Cards</button>
+  </div>
+  <hr class="ds-divider"/>
+  <details>
+    <summary style="font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;
+                    color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem">
+      Local backup
+    </summary>
+    <div class="ds-row" style="margin-top:.5rem">
+      <button onclick="saveLocalFile()">⬇ Download</button>
+      <button onclick="loadLocalFile()">⬆ Load file</button>
+    </div>
+  </details>
+  <hr class="ds-divider" style="margin-top:1rem"/>
+  <button onclick="logout()" class="action-btn danger-outline"
+          style="width:100%;padding:.6rem;margin-top:.5rem;flex-direction:row;gap:.5rem;">
+    <span class="ab-icon" style="font-size:1.1rem">🚪</span>Sign Out
+  </button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MOBILE NAVIGATION BAR
+════════════════════════════════════════════════════════════════ -->
+<nav class="mob-nav">
+  <div class="mob-nav-inner">
+    <button class="mob-tab active" id="tabRecipes" onclick="mob_switchTab('recipes')">
+      <span class="tab-icon">📋</span><span>Recipes</span>
+    </button>
+    <button class="mob-tab" id="tabTimer" onclick="timerTrayToggle()">
+      <span class="tab-icon">⏱</span><span>Timers</span>
+      <span class="timer-badge" id="timerBadge"></span>
+    </button>
+    <button class="mob-tab" id="tabNotif" onclick="toggleNotifDropdown()">
+      <span class="tab-icon">🔔</span><span>Alerts</span>
+      <span class="timer-badge" id="mobNotifBadge" style="top:2px;right:8px"></span>
+    </button>
+    <button class="mob-tab" id="tabSettings" onclick="mob_switchTab('settings')">
+      <span class="tab-icon">⚙️</span><span>Settings</span>
+    </button>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TIMER MODAL
+════════════════════════════════════════════════════════════════ -->
+<div class="timer-overlay" id="timerTray" onclick="if(event.target===this)timerTrayToggle()">
+  <div class="timer-modal">
+    <h3>⏱ Timers
+      <button class="timer-modal-close" onclick="timerTrayToggle()">✕</button>
+    </h3>
+    <div id="timerNotifRow"
+         style="margin-bottom:.8rem;font-size:.8rem;color:var(--muted);
+                display:flex;align-items:center;justify-content:space-between">
+      <span id="timerNotifStatus">Alerts: off</span>
+      <button class="timer-preset-btn" onclick="timerRequestPermission()">Enable alerts</button>
+    </div>
+    <div class="timer-section-label">Quick start</div>
+    <div class="timer-presets">
+      <button class="timer-preset-btn" onclick="timerAdd(5,'5 min')">5 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(10,'10 min')">10 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(15,'15 min')">15 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(20,'20 min')">20 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(30,'30 min')">30 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(60,'1 hr')">1 hr</button>
+    </div>
+    <div class="timer-custom-row">
+      <input type="number" id="timerCustomVal" min="1" max="999" placeholder="e.g. 25"/>
+      <select id="timerCustomUnit">
+        <option value="min">min</option>
+        <option value="hr">hr</option>
+      </select>
+      <button onclick="timerAddCustom()">+ Start</button>
+    </div>
+    <div class="timer-section-label" id="timerListLabel" style="display:none">Running</div>
+    <div class="timer-list" id="timerList"></div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CHAPTER MODAL
+════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="chapterModal">
+  <div class="modal">
+    <h3>Add New Chapter</h3>
+    <div class="form-row">
+      <label>Chapter Name</label>
+      <input type="text" id="newChapterName" placeholder="e.g. Soups &amp; Stews" autocomplete="off"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeChapterModal()">Cancel</button>
+      <button class="btn-save"   onclick="addChapter()">Add</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     NAME / FILENAME MODAL
+════════════════════════════════════════════════════════════════ -->
+<div class="name-modal-overlay" id="nameModal">
+  <div class="name-modal">
+    <h3 id="nameModalTitle">Name your file</h3>
+    <p  id="nameModalDesc"></p>
+    <input type="text" id="nameModalInput" autocomplete="off"/>
+    <div class="name-hint" id="nameModalHint"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeNameModal()">Cancel</button>
+      <button class="btn-save"   onclick="confirmNameModal()">Continue</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MISC
+════════════════════════════════════════════════════════════════ -->
+<div id="printArea"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept=".json" style="display:none"
+       onchange="handleFileLoad(event)"/>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     APPLICATION SCRIPTS  (load order matters)
+════════════════════════════════════════════════════════════════ -->
+<script src="js/data.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/timers.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/print.js"></script>
+<script src="js/render.js"></script>
+<script src="js/desktop.js"></script>
+<script src="js/mobile.js"></script>
+
+<!-- Firebase (ES module — must come last so globals above are ready) -->
+<script type="module" src="js/firebase.js"></script>
+
+</body>
+</html>
