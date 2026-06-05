@@ -65,6 +65,8 @@
       <div class="brand-title">eRecipe</div>
       <div class="brand-sub">All your favourite recipes</div>
     </div>
+    <span id="modeIndicator" style="font-size:.7rem;font-weight:700;letter-spacing:.06em;
+      margin-left:.5rem;align-self:center;cursor:default"></span>
   </div>
   <div class="header-actions">
     <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
@@ -273,7 +275,17 @@
     <div class="mob-panel" id="mobPanelSettings">
       <div class="mob-settings-scroll">
         <h2>Settings</h2>
-
+<div class="action-group">
+  <div class="action-group-label">Mode</div>
+  <div style="display:flex;gap:.4rem;background:var(--panel);
+              border-radius:20px;padding:3px;width:fit-content;margin-top:.4rem">
+    <button class="mode-pill-btn" data-mode="private" onclick="setMode('private')">🔒 Private</button>
+    <button class="mode-pill-btn" data-mode="public"  onclick="setMode('public')">🌐 Shared</button>
+  </div>
+  <p class="settings-note" style="margin-top:.5rem">
+    Private: local only. Shared: auto-syncs every change to the shared book.
+  </p>
+</div>
         <div class="action-group">
           <div class="action-group-label">Cloud sync</div>
           <div class="action-row">
