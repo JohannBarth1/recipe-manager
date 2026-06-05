@@ -73,8 +73,6 @@
     <button class="notif-btn" id="notifBtn" onclick="toggleNotifDropdown()" title="Notifications">
       🔔<span class="notif-badge" id="notifBadge"></span>
     </button>
-    <button class="hbtn hbtn-ghost" onclick="gdriveLoad()">☁ Load</button>
-    <button class="hbtn hbtn-primary" onclick="firestoreSaveShared()">☁ Save</button>
     <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
   </div>
 </header>
@@ -269,8 +267,9 @@
         <button class="btn-save"   onclick="mob_saveRecipe()">Save</button>
         <button class="btn-cancel" onclick="mob_cancelEdit()">Cancel</button>
       </div>
-    </div><!-- /mobPanelEditor -->
-
+    </div>
+    
+    <!-- /mobPanelEditor -->
     <!-- Panel: Settings -->
     <div class="mob-panel" id="mobPanelSettings">
       <div class="mob-settings-scroll">
@@ -282,9 +281,18 @@
     <button class="mode-pill-btn" data-mode="private" onclick="setMode('private')">🔒 Private</button>
     <button class="mode-pill-btn" data-mode="public"  onclick="setMode('public')">🌐 Shared</button>
   </div>
-  <p class="settings-note" style="margin-top:.5rem">
-    Private: local only. Shared: auto-syncs every change to the shared book.
-  </p>
+</div>
+<div class="action-group sync-actions">
+  <div class="action-group-label">Backup</div>
+  <div class="action-row">
+    <button class="action-btn primary" onclick="gdriveLoad()">
+      <span class="ab-icon">☁</span>Load
+    </button>
+    <button class="action-btn" onclick="firestoreSaveAll()">
+      <span class="ab-icon">☁</span>Save
+    </button>
+  </div>
+  <p class="settings-note">Load a recipe book from Google Drive, or save your current book.</p>
 </div>
         <div class="action-group">
           <div class="action-group-label">Cloud sync</div>
@@ -349,21 +357,22 @@
 ════════════════════════════════════════════════════════════════ -->
 <div class="desk-settings" id="deskSettings">
   <h3>⚙ Settings</h3>
-  <span class="ds-label">Mode</span>
+<span class="ds-label">Mode</span>
 <div style="display:flex;gap:.4rem;margin-top:.35rem;margin-bottom:.5rem;
             background:var(--panel);border-radius:20px;padding:3px;width:fit-content">
   <button class="mode-pill-btn" data-mode="private" onclick="setMode('private')">🔒 Private</button>
   <button class="mode-pill-btn" data-mode="public"  onclick="setMode('public')">🌐 Shared</button>
 </div>
-<p class="ds-note">Private: local only. Shared: auto-syncs changes to the shared book.</p>
 <hr class="ds-divider"/>
-  <span class="ds-label">Cloud sync</span>
-  <p class="ds-note">Saves add/update recipes only — nothing is deleted from the shared book.</p>
+<div class="sync-actions">
+  <span class="ds-label">Backup</span>
+  <p class="ds-note">Load a recipe book from Google Drive, or save your current book.</p>
   <div class="ds-row" style="margin-top:.4rem">
-    <button onclick="firestoreSaveShared()" class="primary">☁ Save</button>
-    <button onclick="firestoreLoadShared()">☁ Load</button>
+    <button onclick="gdriveLoad()" class="primary">☁ Load</button>
+    <button onclick="firestoreSaveAll()">☁ Save</button>
   </div>
   <hr class="ds-divider"/>
+</div>
   <span class="ds-label">Export</span>
   <div class="ds-row" style="margin-top:.35rem">
     <button onclick="exportEpub()">⬇ EPUB</button>
