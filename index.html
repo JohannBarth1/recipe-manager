@@ -2575,12 +2575,10 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-
+  
 const firebaseConfig = {
   apiKey: "AIzaSyAhaUyytbY_ynqEgdZJh40SbSJKL8jKbeg",
   authDomain: "erecipe-ab5e4.firebaseapp.com",
@@ -2597,38 +2595,11 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const REF = doc(db, "recipes", "shared");
 
-// ── Hide login screen immediately if returning from a redirect ──
-if (sessionStorage.getItem('pendingRedirect')) {
-  const ls = document.getElementById('loginScreen');
-  if (ls) ls.style.opacity = '0';
-}
-
-// ── Handle redirect result (mobile sign-in) ──
-getRedirectResult(auth)
-  .then(() => {
-    sessionStorage.removeItem('pendingRedirect');
-    // onAuthStateChanged below handles the rest
-  })
-  .catch(err => {
-    sessionStorage.removeItem('pendingRedirect');
-    const ls = document.getElementById('loginScreen');
-    if (ls) { ls.style.opacity = '1'; ls.style.display = 'flex'; }
-    console.error("Redirect login error:", err);
-    showToast("Google sign-in failed — please try again");
-  });
-
 // ── Sign-in button ──
 document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   try {
-    if (isMobile) {
-      sessionStorage.setItem('pendingRedirect', '1');
-      await signInWithRedirect(auth, provider);
-    } else {
-      await signInWithPopup(auth, provider);
-    }
+    await signInWithPopup(auth, provider);
   } catch (err) {
-    sessionStorage.removeItem('pendingRedirect');
     console.error("Sign in error:", err);
     showToast("Google sign-in failed");
   }
