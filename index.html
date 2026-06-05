@@ -99,7 +99,6 @@ header {
 }
 .header-actions { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
 
-
 .hbtn {
   border: none;
   padding: 0.45rem 0.9rem;
@@ -117,6 +116,116 @@ header {
 .hbtn-primary:hover { background: #a87820; }
 .hbtn-ghost { background: transparent; color: var(--light-brown); border: 1px solid #555; }
 .hbtn-ghost:hover { background: #2a2010; }
+
+/* ── NOTIFICATION BELL ── */
+.notif-btn {
+  position: relative;
+  background: transparent;
+  border: 1px solid #555;
+  color: var(--light-brown);
+  width: 36px; height: 36px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.notif-btn:hover { background: #2a2010; }
+.notif-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--rust);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.52rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  min-width: 14px;
+  text-align: center;
+  display: none;
+  line-height: 1.4;
+}
+
+/* ── NOTIFICATION PANEL ── */
+.notif-panel {
+  display: none;
+  position: fixed;
+  top: calc(var(--header-h) + 8px);
+  right: 1rem;
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 340px;
+  max-height: 440px;
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  z-index: 90;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+.notif-panel.open { display: flex; }
+.notif-panel-hdr {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.notif-mark-all {
+  font-size: 0.68rem;
+  color: var(--rust);
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.notif-mark-all:hover { text-decoration: underline; }
+.notif-list {
+  flex: 1;
+  overflow-y: auto;
+}
+.notif-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-style: italic;
+}
+.notif-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--panel); }
+.notif-item.unread { background: rgba(192,87,26,0.06); }
+.notif-item.unread:hover { background: rgba(192,87,26,0.12); }
+.notif-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--rust);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.notif-dot.read { background: transparent; }
+.notif-content { flex: 1; min-width: 0; }
+.notif-recipe { font-size: 0.75rem; font-weight: 700; color: var(--brown); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-msg { font-size: 0.8rem; color: var(--ink); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif-meta { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
 
 /* ── APP BODY ─────────────────────────────────── */
 .app {
@@ -422,6 +531,7 @@ header {
   background: none;
   transition: color 0.15s;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
 }
 .mob-tab .tab-icon { font-size: 1.3rem; line-height: 1; }
 .mob-tab.active { color: var(--gold); }
@@ -547,11 +657,8 @@ header {
 .mode-pill-btn.active { background: var(--gold); color: #fff; }
 .mode-pill-btn.active.pub { background: #2a7a4a; }
 
-
 /* Grouped action buttons */
-.action-group {
-  margin-bottom: 1.2rem;
-}
+.action-group { margin-bottom: 1.2rem; }
 .action-group-label {
   font-size: 0.62rem;
   letter-spacing: 0.2em;
@@ -562,11 +669,7 @@ header {
   padding-bottom: 0.35rem;
   border-bottom: 1px solid var(--border);
 }
-.action-row {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
+.action-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 .action-btn {
   flex: 1;
   display: flex;
@@ -658,6 +761,7 @@ header {
   .header-actions .hbtn-primary,
   .header-actions .hbtn-ghost { display: none; }
   header { padding: 0 1rem; }
+  .notif-panel { right: 0.5rem; width: calc(100vw - 1rem); }
 }
 @media (min-width: 641px) {
   .mob-panels { display: none; }
@@ -784,9 +888,6 @@ header {
   padding-bottom: .4rem;
   border-bottom: 1px solid var(--border);
 }
-
-
-
 .desk-settings .ds-label {
   display: block;
   font-size: 0.65rem;
@@ -825,7 +926,6 @@ header {
 .desk-settings .ds-row button.green:hover { background: #1f5c37; }
 
 /* ── TIMERS ────────────────────────────────────── */
-/* Timer modal overlay — matches existing modal design language */
 .timer-overlay { display:none; position:fixed; inset:0; background:rgba(26,18,8,0.55); z-index:100; align-items:center; justify-content:center; padding:1rem; }
 .timer-overlay.open { display:flex; }
 .timer-modal { background:var(--warm-white); border:1px solid var(--border); border-radius:6px; padding:1.8rem; width:100%; max-width:380px; max-height:85vh; overflow-y:auto; }
@@ -856,7 +956,7 @@ header {
 .timer-badge { position:absolute; top:4px; right:10px; background:var(--rust); color:#fff; border-radius:8px; font-size:0.55rem; font-weight:700; padding:1px 4px; min-width:14px; text-align:center; display:none; }
 #tabTimer { position:relative; }
 
-  /* ── RECIPE COMMENTS ── */
+/* ── RECIPE COMMENTS ── */
 .recipe-chat { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem; }
 .recipe-chat-label { font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; color: var(--rust); font-weight: 700; margin-bottom: .7rem; }
 .chat-messages {
@@ -876,21 +976,66 @@ header {
 .msg-avatar-init { width: 22px; height: 22px; border-radius: 50%; background: var(--brown); color: var(--light-brown); font-size: .52rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid var(--border); }
 .msg-bubble-wrap { display: flex; flex-direction: column; max-width: 78%; }
 .msg-row.mine .msg-bubble-wrap { align-items: flex-end; }
-.msg-meta { font-size: .57rem; color: var(--muted); margin-bottom: 2px; }
-.msg-row.mine .msg-meta { text-align: right; }
+.msg-meta { font-size: .57rem; color: var(--muted); margin-bottom: 2px; display: flex; align-items: center; gap: .35rem; }
+.msg-row.mine .msg-meta { flex-direction: row-reverse; }
 .msg-bubble { padding: .38rem .65rem; font-size: .82rem; line-height: 1.45; word-break: break-word; background: #fff; color: var(--ink); border: 1px solid var(--border); border-radius: 10px 10px 10px 2px; }
 .msg-row.mine .msg-bubble { background: var(--ink); color: #f0ebe0; border-color: transparent; border-radius: 10px 10px 2px 10px; }
+.msg-delete-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: .65rem; padding: 0 2px;
+  opacity: 0; transition: opacity .15s;
+  line-height: 1;
+}
+.msg-meta:hover .msg-delete-btn,
+.msg-bubble-wrap:hover .msg-meta .msg-delete-btn { opacity: 1; }
+.msg-delete-btn:hover { color: var(--danger); }
 .chat-input-row { display: flex; gap: .4rem; align-items: flex-end; }
 .chat-textarea { flex: 1; resize: none; min-height: 34px; max-height: 90px; padding: .38rem .6rem; font-family: 'Lato', sans-serif; font-size: .85rem; color: var(--ink); background: var(--warm-white); border: 1px solid var(--border); border-radius: 3px; outline: none; line-height: 1.4; }
 .chat-textarea:focus { border-color: var(--gold); }
 .chat-send-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--rust); color: #fff; border: none; cursor: pointer; font-size: .9rem; display: flex; align-items: center; justify-content: center; transition: background .15s, transform .1s; flex-shrink: 0; }
 .chat-send-btn:hover { background: #a04415; }
 .chat-send-btn:active { transform: scale(.9); }
+
+/* ── MOBILE NOTIFICATIONS PANEL ── */
+.mob-notif-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: rgba(26,18,8,0.55);
+  display: none;
+  align-items: flex-end;
+}
+.mob-notif-panel.open { display: flex; }
+.mob-notif-inner {
+  background: var(--warm-white);
+  border-top: 2px solid var(--gold);
+  width: 100%;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+}
+.mob-notif-hdr {
+  padding: 1rem 1.2rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.mob-notif-hdr-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--brown);
+}
+.mob-notif-hdr-actions { display: flex; align-items: center; gap: 0.8rem; }
+.mob-notif-list { flex: 1; overflow-y: auto; }
 </style>
 </head>
 <body>
 
-  <!-- Login -->
+<!-- Login -->
 <div id="loginScreen">
   <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
     <div class="login-title">eRecipe</div>
@@ -907,7 +1052,7 @@ header {
 <!-- HEADER -->
 <header>
   <div style="display:flex;align-items:center;gap:.8rem">
-<img src="icon-64.png" width="38" height="38" style="border-radius:6px">
+    <img src="icon-64.png" width="38" height="38" style="border-radius:6px">
     <div>
       <div class="brand-title">eRecipe</div>
       <div class="brand-sub">All your favourite recipes</div>
@@ -917,9 +1062,41 @@ header {
     <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
     <button class="hbtn hbtn-ghost" onclick="gdriveLoad()" title="Load from Drive">☁ Load</button>
     <button class="hbtn hbtn-primary" onclick="gdriveSave()" title="Save to Drive">☁ Save</button>
+    <!-- Notification bell -->
+    <button class="notif-btn" id="notifBell" onclick="toggleNotifPanel()" title="Notifications">
+      🔔
+      <span class="notif-badge" id="notifBadge"></span>
+    </button>
     <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()" title="More options">⚙</button>
   </div>
 </header>
+
+<!-- Desktop notification panel -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-panel-hdr">
+    <span>🔔 Notifications</span>
+    <button class="notif-mark-all" onclick="markAllNotifsRead()">Mark all read</button>
+  </div>
+  <div class="notif-list" id="notifList">
+    <div class="notif-empty">No notifications yet</div>
+  </div>
+</div>
+
+<!-- Mobile notification bottom sheet -->
+<div class="mob-notif-panel" id="mobNotifPanel" onclick="if(event.target===this)closeMobNotif()">
+  <div class="mob-notif-inner">
+    <div class="mob-notif-hdr">
+      <span class="mob-notif-hdr-title">🔔 Notifications</span>
+      <div class="mob-notif-hdr-actions">
+        <button class="notif-mark-all" onclick="markAllNotifsRead()">Mark all read</button>
+        <button onclick="closeMobNotif()" style="background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;line-height:1;padding:2px 4px">✕</button>
+      </div>
+    </div>
+    <div class="mob-notif-list" id="mobNotifList">
+      <div class="notif-empty">No notifications yet</div>
+    </div>
+  </div>
+</div>
 
 <div class="app">
 
@@ -953,14 +1130,14 @@ header {
         <ol class="steps-list" id="deskViewSteps"></ol>
         <div class="recipe-tip" id="deskViewTip" style="display:none"></div>
         <div class="recipe-chat" id="deskViewChat" style="display:none">
-  <div class="recipe-chat-label">💬 Comments</div>
-  <div class="chat-messages" id="deskChatMsgs"></div>
-  <div class="chat-input-row">
-    <textarea class="chat-textarea" id="deskChatInput" placeholder="Add a comment… (Enter to send)" rows="1"
-      onkeydown="recipeChat_keydown(event,'desk')"></textarea>
-    <button class="chat-send-btn" onclick="recipeChat_send('desk')" title="Send">➤</button>
-  </div>
-</div>
+          <div class="recipe-chat-label">💬 Comments</div>
+          <div class="chat-messages" id="deskChatMsgs"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-textarea" id="deskChatInput" placeholder="Add a comment… (Enter to send)" rows="1"
+              onkeydown="recipeChat_keydown(event,'desk')"></textarea>
+            <button class="chat-send-btn" onclick="recipeChat_send('desk')" title="Send">➤</button>
+          </div>
+        </div>
       </div>
       <div class="editor" id="deskEditor">
         <h2 id="deskEditorTitle">Add Recipe</h2>
@@ -1016,14 +1193,14 @@ header {
         <ol class="steps-list" id="mobViewSteps"></ol>
         <div class="recipe-tip" id="mobViewTip" style="display:none;margin-bottom:1rem"></div>
         <div class="recipe-chat" id="mobViewChat" style="display:none;margin-bottom:1rem">
-  <div class="recipe-chat-label">💬 Comments</div>
-  <div class="chat-messages" id="mobChatMsgs"></div>
-  <div class="chat-input-row">
-    <textarea class="chat-textarea" id="mobChatInput" placeholder="Add a comment… (Enter to send)" rows="1"
-      onkeydown="recipeChat_keydown(event,'mob')"></textarea>
-    <button class="chat-send-btn" onclick="recipeChat_send('mob')" title="Send">➤</button>
-  </div>
-</div>
+          <div class="recipe-chat-label">💬 Comments</div>
+          <div class="chat-messages" id="mobChatMsgs"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-textarea" id="mobChatInput" placeholder="Add a comment… (Enter to send)" rows="1"
+              onkeydown="recipeChat_keydown(event,'mob')"></textarea>
+            <button class="chat-send-btn" onclick="recipeChat_send('mob')" title="Send">➤</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1057,7 +1234,6 @@ header {
       <div class="mob-settings-scroll">
         <h2>Settings</h2>
 
-        <!-- Mode toggle — pill style -->
         <div class="action-group">
           <div class="action-group-label">Recipe book mode</div>
           <div style="display:flex;background:rgba(0,0,0,0.06);border-radius:20px;padding:3px;gap:2px;width:fit-content;margin-top:.3rem">
@@ -1069,7 +1245,6 @@ header {
           </div>
         </div>
 
-        <!-- Cloud sync -->
         <div class="action-group">
           <div class="action-group-label">Cloud sync</div>
           <div class="action-row">
@@ -1082,18 +1257,15 @@ header {
           </div>
           <p class="settings-note" style="margin-top:.5rem">Sign in with Google when prompted.</p>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
-  <span style="font-size:.82rem;color:var(--brown);font-weight:700">Auto-sync on save</span>
-  <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
-    <input type="checkbox" id="mobAutosyncToggle" onchange="setAutosync(this.checked)"
-      style="width:1.1rem;height:1.1rem;cursor:pointer;accent-color:var(--gold)"/>
-  </label>
-</div>
-<p class="settings-note">Automatically saves to cloud whenever you add or edit a recipe.</p>
+            <span style="font-size:.82rem;color:var(--brown);font-weight:700">Auto-sync on save</span>
+            <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+              <input type="checkbox" id="mobAutosyncToggle" onchange="setAutosync(this.checked)"
+                style="width:1.1rem;height:1.1rem;cursor:pointer;accent-color:var(--gold)"/>
+            </label>
+          </div>
+          <p class="settings-note">Automatically saves to cloud whenever you add or edit a recipe.</p>
         </div>
 
-
-
-        <!-- Export -->
         <div class="action-group">
           <div class="action-group-label">Export</div>
           <div class="action-row">
@@ -1117,26 +1289,23 @@ header {
           </div>
         </div>
 
-                <!-- Local backup -->
-<details>
-  <summary style="font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem;border-bottom:1px solid var(--border);display:block;margin-bottom:.5rem">Local backup</summary>
-  <div class="action-row" style="margin-top:.5rem">
-    <button class="action-btn" onclick="saveLocalFile()">
-      <span class="ab-icon">⬇</span>Download
-    </button>
-    <button class="action-btn" onclick="loadLocalFile()">
-      <span class="ab-icon">⬆</span>Load file
-    </button>
-  </div>
-</details>
-<div class="action-group" style="margin-top: 2rem;">
-      <button onclick="logout()" class="action-btn danger-outline" style="width: 100%; padding: 0.9rem; font-size: 0.85rem; flex-direction: row; gap: 0.6rem;">
-        <span class="ab-icon">🚪</span> Sign Out
-      </button>
-    </div>
+        <details>
+          <summary style="font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem;border-bottom:1px solid var(--border);display:block;margin-bottom:.5rem">Local backup</summary>
+          <div class="action-row" style="margin-top:.5rem">
+            <button class="action-btn" onclick="saveLocalFile()">
+              <span class="ab-icon">⬇</span>Download
+            </button>
+            <button class="action-btn" onclick="loadLocalFile()">
+              <span class="ab-icon">⬆</span>Load file
+            </button>
+          </div>
+        </details>
 
-  </div>
-</div>        
+        <div class="action-group" style="margin-top: 2rem;">
+          <button onclick="logout()" class="action-btn danger-outline" style="width: 100%; padding: 0.9rem; font-size: 0.85rem; flex-direction: row; gap: 0.6rem;">
+            <span class="ab-icon">🚪</span> Sign Out
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1147,7 +1316,6 @@ header {
 <div class="desk-settings" id="deskSettings">
   <h3>⚙ Settings</h3>
 
-  <!-- Mode toggle -->
   <span class="ds-label">Recipe book mode</span>
   <div style="display:flex;background:rgba(0,0,0,0.06);border-radius:20px;padding:3px;gap:2px;width:fit-content;margin-top:.4rem">
     <button class="mode-pill-btn" id="deskBtnPub" onclick="setMode('public')">🌐 Public</button>
@@ -1157,45 +1325,40 @@ header {
 
   <hr class="ds-divider"/>
 
-  <!-- EPUB folder (still needed for Drive EPUB export) -->
   <div class="epub-drive-section">
-  <span class="ds-label">EPUB Drive folder</span>
-  <div style="display:flex;gap:.5rem;align-items:center;margin-top:.35rem">
-    <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
-      style="flex:1;padding:.5rem .7rem;font-size:.88rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--cream);color:var(--ink);outline:none"
-      onkeydown="if(event.key==='Enter') setEpubFolder(this.value)"/>
-    <button onclick="setEpubFolder(this.previousElementSibling.value)"
-      style="padding:.5rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.75rem;font-weight:700;cursor:pointer">Set</button>
+    <span class="ds-label">EPUB Drive folder</span>
+    <div style="display:flex;gap:.5rem;align-items:center;margin-top:.35rem">
+      <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
+        style="flex:1;padding:.5rem .7rem;font-size:.88rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--cream);color:var(--ink);outline:none"
+        onkeydown="if(event.key==='Enter') setEpubFolder(this.value)"/>
+      <button onclick="setEpubFolder(this.previousElementSibling.value)"
+        style="padding:.5rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.75rem;font-weight:700;cursor:pointer">Set</button>
+    </div>
+    <p class="ds-note">Folder in your Drive for EPUB exports.</p>
+    <hr class="ds-divider"/>
   </div>
-  <p class="ds-note">Folder in your Drive for EPUB exports.</p>
-      <hr class="ds-divider"/>
-  </div>
-  
-  <!-- /epub-drive-section -->
-
-
 
   <span class="ds-label">Export</span>
   <div class="ds-row epub-drive-section" style="margin-top:.35rem">
     <button onclick="exportEpubToDrive()" class="green">☁ EPUB → Drive</button>
   </div>
-<div class="ds-row" style="margin-top:.35rem">
+  <div class="ds-row" style="margin-top:.35rem">
     <button onclick="exportEpub()">⬇ EPUB</button>
     <button onclick="printCards()">🖨 Cards</button>
-</div>
+  </div>
   <hr class="ds-divider"/>
 
-<details>
-  <summary style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem">Local backup</summary>
-  <div class="ds-row" style="margin-top:.5rem">
-    <button onclick="saveLocalFile()">⬇ Download</button>
-    <button onclick="loadLocalFile()">⬆ Load file</button>
-  </div>
-</details>
-<hr class="ds-divider" style="margin-top: 1rem;" />
-    <button onclick="logout()" class="action-btn danger-outline" style="width: 100%; padding: 0.6rem; margin-top: 0.5rem; flex-direction: row; gap: 0.5rem;">
-      <span class="ab-icon" style="font-size: 1.1rem;">🚪</span> Sign Out
-    </button>  
+  <details>
+    <summary style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem">Local backup</summary>
+    <div class="ds-row" style="margin-top:.5rem">
+      <button onclick="saveLocalFile()">⬇ Download</button>
+      <button onclick="loadLocalFile()">⬆ Load file</button>
+    </div>
+  </details>
+  <hr class="ds-divider" style="margin-top: 1rem;" />
+  <button onclick="logout()" class="action-btn danger-outline" style="width: 100%; padding: 0.6rem; margin-top: 0.5rem; flex-direction: row; gap: 0.5rem;">
+    <span class="ab-icon" style="font-size: 1.1rem;">🚪</span> Sign Out
+  </button>
 </div>
 
 <!-- Mobile bottom nav -->
@@ -1208,6 +1371,10 @@ header {
       <span class="tab-icon">⏱</span><span>Timers</span>
       <span class="timer-badge" id="timerBadge"></span>
     </button>
+    <button class="mob-tab" id="tabNotif" onclick="openMobNotif()">
+      <span class="tab-icon">🔔</span><span>Alerts</span>
+      <span class="timer-badge" id="mobNotifBadge" style="right:6px"></span>
+    </button>
     <button class="mob-tab" id="tabSettings" onclick="mob_switchTab('settings')">
       <span class="tab-icon">⚙️</span><span>Settings</span>
     </button>
@@ -1219,9 +1386,9 @@ header {
   <div class="timer-modal">
     <h3>⏱ Timers <button class="timer-modal-close" onclick="timerTrayToggle()">✕</button></h3>
     <div id="timerNotifRow" style="margin-bottom:.8rem;font-size:.8rem;color:var(--muted);display:flex;align-items:center;justify-content:space-between">
-  <span id="timerNotifStatus">Alerts: off</span>
-  <button class="timer-preset-btn" onclick="timerRequestPermission()">Enable alerts</button>
-</div>
+      <span id="timerNotifStatus">Alerts: off</span>
+      <button class="timer-preset-btn" onclick="timerRequestPermission()">Enable alerts</button>
+    </div>
     <div class="timer-section-label">Quick start</div>
     <div class="timer-presets">
       <button class="timer-preset-btn" onclick="timerAdd(5,'5 min')">5 min</button>
@@ -1312,13 +1479,11 @@ let mobEditingId  = null;
 // MODE  (private | public)
 // ══════════════════════════════════════════════════
 const MODE_KEY = 'hk_recipe_mode';
-// Public shared folder ID
 const PUBLIC_FOLDER_ID = '1wxywQiLGkZ18S40rZi3JpXUZg4Ee0TaE';
-// Private always uses "Recipes" subfolder
 const PRIVATE_FOLDER_NAME = 'Recipes';
 
 function getMode() { return localStorage.getItem(MODE_KEY) || 'public'; }
-  const AUTOSYNC_KEY = 'hk_autosync';
+const AUTOSYNC_KEY = 'hk_autosync';
 function getAutosync() { return localStorage.getItem(AUTOSYNC_KEY) === 'true'; }
 function setAutosync(val) {
   localStorage.setItem(AUTOSYNC_KEY, val);
@@ -1333,26 +1498,20 @@ function setMode(m) {
 
 function updateModeUI(m) {
   const isPriv = m === 'private';
-
-  // Private buttons (mob + desk)
   ['mobBtnPriv', 'deskBtnPriv'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.className = 'mode-pill-btn' + (isPriv ? ' active' : '');
   });
-  // Public buttons (mob + desk)
   ['mobBtnPub', 'deskBtnPub'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.className = 'mode-pill-btn' + (!isPriv ? ' active pub' : '');
   });
-
   const privDesc = '<strong>Private:</strong> Your recipes are saved to a <em>Recipes</em> folder in your own Google Drive.';
-  const pubDesc  = '<strong>Public:</strong> Recipes are saved to and loaded from a shared Gist. PIN required to save.';
+  const pubDesc  = '<strong>Public:</strong> Recipes are saved to and loaded from the shared recipe collection.';
   ['deskModeDesc', 'mobModeDesc'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = isPriv ? privDesc : pubDesc;
   });
-
-  // Hide EPUB Drive folder fields in public mode (not applicable)
   document.querySelectorAll('.epub-drive-section').forEach(el => {
     el.style.display = isPriv ? '' : 'none';
   });
@@ -1597,7 +1756,6 @@ function renderRecipeInto(recipe, ids) {
     descEl.innerHTML = linkifyTimers(esc(recipe.desc || ''));
   }
   document.getElementById(ids.ingredients).innerHTML = renderSectionedList(recipe.ingredients, 'ul');
-  // Linkify timers in steps
   const stepsHtml = renderSectionedList(recipe.steps, 'ol');
   document.getElementById(ids.steps).innerHTML = linkifyTimers(stepsHtml);
   const tipEl = document.getElementById(ids.tip);
@@ -1629,14 +1787,12 @@ function renderDesktopSidebar() {
   list.innerHTML = data.chapters.map((ch, idx) => {
     const recipes = data.recipes.filter(r => r.chapterId === ch.id);
     const isOpen = openChapters.has(ch.id);
-    const isFirst = idx === 0;
-    const isLast = idx === data.chapters.length - 1;
     return `<div class="chapter-group">
       <div class="chapter-heading ${isOpen?'open':''}" onclick="toggleChapter('${ch.id}')">
         <span>${esc(ch.name)}</span>
         <div style="display:flex;align-items:center;gap:2px">
-<span onclick="event.stopPropagation();chapterMenu('${ch.id}',this)"
-  style="padding:2px 8px;font-size:.85rem;color:var(--muted);cursor:pointer">⋯</span>
+          <span onclick="event.stopPropagation();chapterMenu('${ch.id}',this)"
+            style="padding:2px 8px;font-size:.85rem;color:var(--muted);cursor:pointer">⋯</span>
         </div>
       </div>
       <div class="recipe-list ${isOpen?'open':''}">
@@ -1714,18 +1870,19 @@ function desk_saveRecipe() {
     data.recipes[idx] = {...data.recipes[idx], title, chapterId, desc, ingredients, steps, tip};
     deskCurrentId = deskEditingId;
     showToast('Recipe updated!');
+    if (window.firestoreSaveRecipe) firestoreSaveRecipe(data.recipes[idx]);
   } else {
     const id = 'r_' + Date.now();
-    data.recipes.push({id, chapterId, title, desc, ingredients, steps, tip});
+    const newRecipe = {id, chapterId, title, desc, ingredients, steps, tip};
+    data.recipes.push(newRecipe);
     deskCurrentId = id;
     showToast('Recipe added!');
+    if (window.firestoreSaveRecipe) firestoreSaveRecipe(newRecipe);
   }
   openChapters.add(chapterId); persistToStorage(); deskEditingId = null;
   renderAll(); desk_showRecipe(deskCurrentId);
   if (getAutosync()) gdriveSave();
 }
-
-  
 function desk_cancelEdit() {
   if (deskCurrentId) desk_showRecipe(deskCurrentId);
   else showPanel('deskWelcome');
@@ -1734,6 +1891,7 @@ function desk_deleteCurrentRecipe() {
   if (!deskCurrentId) return;
   const r = data.recipes.find(x => x.id === deskCurrentId);
   if (!confirm(`Delete "${r.title}"? This cannot be undone.`)) return;
+  if (window.firestoreDeleteRecipe) firestoreDeleteRecipe(deskCurrentId);
   data.recipes = data.recipes.filter(x => x.id !== deskCurrentId);
   deskCurrentId = null; persistToStorage(); renderAll(); showPanel('deskWelcome');
   showToast('Recipe deleted');
@@ -1747,7 +1905,6 @@ function renderMobileList() {
   list.innerHTML = data.chapters.map((ch, idx) => {
     const recipes = data.recipes.filter(r => r.chapterId === ch.id);
     const isOpen = openChapters.has(ch.id);
-    const isFirst = idx === 0, isLast = idx === data.chapters.length - 1;
     return `<div>
       <div class="mob-chapter-heading ${isOpen?'open':''}" onclick="mob_toggleChapter('${ch.id}')">
         <span>${esc(ch.name)}</span>
@@ -1860,11 +2017,14 @@ function mob_saveRecipe() {
     data.recipes[idx] = {...data.recipes[idx], title, chapterId, desc, ingredients, steps, tip};
     mobCurrentId = mobEditingId;
     showToast('Recipe updated!');
+    if (window.firestoreSaveRecipe) firestoreSaveRecipe(data.recipes[idx]);
   } else {
     const id = 'r_' + Date.now();
-    data.recipes.push({id, chapterId, title, desc, ingredients, steps, tip});
+    const newRecipe = {id, chapterId, title, desc, ingredients, steps, tip};
+    data.recipes.push(newRecipe);
     mobCurrentId = id;
     showToast('Recipe added!');
+    if (window.firestoreSaveRecipe) firestoreSaveRecipe(newRecipe);
   }
   openChapters.add(chapterId); persistToStorage(); mobEditingId = null;
   renderAll(); mob_showRecipe(mobCurrentId);
@@ -1878,12 +2038,12 @@ function mob_deleteCurrentRecipe() {
   if (!mobCurrentId) return;
   const r = data.recipes.find(x => x.id === mobCurrentId);
   if (!confirm(`Delete "${r.title}"?`)) return;
+  if (window.firestoreDeleteRecipe) firestoreDeleteRecipe(mobCurrentId);
   data.recipes = data.recipes.filter(x => x.id !== mobCurrentId);
   mobCurrentId = null; persistToStorage(); renderAll(); mob_backToList();
   showToast('Recipe deleted');
 }
 function mob_switchTab(tab) {
-  // Close timer tray when switching to another tab
   document.getElementById('timerTray').classList.remove('open');
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
   if (tab === 'recipes') {
@@ -1910,6 +2070,7 @@ function addChapter() {
   const id = 'ch_' + Date.now();
   data.chapters.push({id, name});
   openChapters.add(id); persistToStorage(); renderAll(); closeChapterModal();
+  if (window.firestoreSaveChapter) firestoreSaveChapter({id, name});
   showToast(`"${name}" added`);
 }
 document.getElementById('newChapterName').addEventListener('keydown', e => {
@@ -1929,7 +2090,7 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
-  function waitForFirestore(timeout = 5000) {
+function waitForFirestore(timeout = 5000) {
   return new Promise((resolve, reject) => {
     if (window.firestoreLoad) { resolve(); return; }
     const start = Date.now();
@@ -1978,22 +2139,14 @@ async function gdriveApiCall(token, url, options = {}) {
   return resp;
 }
 
-// Resolve the target folder ID based on current mode
-// private → find/create "Recipes" subfolder in user's Drive
-// public  → use the hardcoded shared folder ID directly
 async function getTargetFolderId(token) {
   const mode = getMode();
-  if (mode === 'public') {
-    // Verify we can access the shared folder by listing it
-    return PUBLIC_FOLDER_ID;
-  }
-  // Private: find or create "Recipes" in user's Drive
+  if (mode === 'public') return PUBLIC_FOLDER_ID;
   const q = encodeURIComponent(`name='${PRIVATE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
   const resp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
   if (!resp) return 'AUTH_EXPIRED';
   const json = await resp.json();
   if (json.files && json.files.length > 0) return json.files[0].id;
-  // Create it
   const createResp = await gdriveApiCall(token, 'https://www.googleapis.com/drive/v3/files', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -2014,7 +2167,6 @@ async function driveListJsonFiles(token, folderId) {
   return json.files || [];
 }
 
-// Drive file picker (same as before)
 function showDriveFilePicker(files, folderLabel, mode, onPick) {
   document.getElementById('drivePickerModal')?.remove();
   const modal = document.createElement('div');
@@ -2083,19 +2235,15 @@ function dPickerConfirm(mode) {
 async function gdriveSave() {
   if (getMode() === 'public') {
     await waitForFirestore();
-    await window.firestoreSave(); return;
+    await window.firestoreSaveAll(); return;
   }
-  const mode = getMode();
-  const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
-
+  const folderLabel = 'Recipes (your Drive)';
   const doSave = async (token) => {
     showToast('Connecting to Drive…');
     const folderId = await getTargetFolderId(token);
     if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
-
     const files = await driveListJsonFiles(token, folderId);
     if (files === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
-
     showDriveFilePicker(files, folderLabel, 'save', async ({ name, fileId }) => {
       setBookName(name);
       const fileName = name.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') + '.json';
@@ -2138,7 +2286,6 @@ async function gdriveSave() {
       } catch(e) { showToast('Save failed — try again'); console.error(e); }
     });
   };
-
   const token = getGdriveToken();
   if (token) doSave(token); else gdriveAuth(doSave);
 }
@@ -2148,18 +2295,14 @@ async function gdriveLoad() {
     await waitForFirestore();
     await window.firestoreLoad(); return;
   }
-  const mode = getMode();
-  const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
-
+  const folderLabel = 'Recipes (your Drive)';
   const doLoad = async (token) => {
     showToast('Connecting to Drive…');
     const folderId = await getTargetFolderId(token);
     if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
-
     const files = await driveListJsonFiles(token, folderId);
     if (files === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
-    if (!files.length) { showToast(mode === 'public' ? 'No recipes in shared folder yet' : 'No files in your Recipes folder yet'); return; }
-
+    if (!files.length) { showToast('No files in your Recipes folder yet'); return; }
     showDriveFilePicker(files, folderLabel, 'load', async ({ name, fileId }) => {
       setBookName(name);
       localStorage.setItem(GD_FILE_ID_KEY, fileId);
@@ -2179,7 +2322,6 @@ async function gdriveLoad() {
       } catch(e) { showToast('Load failed'); console.error(e); }
     });
   };
-
   const token = getGdriveToken();
   if (token) doLoad(token); else gdriveAuth(doLoad);
 }
@@ -2188,7 +2330,6 @@ async function gdriveLoad() {
 // EPUB FOLDER (Drive export)
 // ══════════════════════════════════════════════════
 const EPUB_FOLDER_KEY = 'hk_epub_folder';
-
 function getEpubFolder() { return localStorage.getItem(EPUB_FOLDER_KEY) || ''; }
 function setEpubFolder(val) {
   const f = val.trim();
@@ -2380,6 +2521,7 @@ async function exportEpubToDrive() {
 
 function toggleDeskSettings() {
   document.getElementById('deskSettings').classList.toggle('open');
+  document.getElementById('notifPanel').classList.remove('open');
 }
 document.addEventListener('click', e => {
   const s = document.getElementById('deskSettings');
@@ -2388,13 +2530,139 @@ document.addEventListener('click', e => {
       !e.target.closest('[onclick="toggleDeskSettings()"]')) {
     s.classList.remove('open');
   }
+  const np = document.getElementById('notifPanel');
+  if (np.classList.contains('open') &&
+      !np.contains(e.target) &&
+      !e.target.closest('#notifBell')) {
+    np.classList.remove('open');
+  }
 });
 
+// ══════════════════════════════════════════════════
+// NOTIFICATIONS
+// ══════════════════════════════════════════════════
+let notifItems = []; // { id, recipeId, recipeTitle, text, authorName, createdAt(ms), read }
+const NOTIF_KEY = 'hk_notif_reads'; // stores Set of read message IDs in localStorage
+
+function getReadIds() {
+  try { return new Set(JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]')); } catch(e) { return new Set(); }
+}
+function saveReadIds(set) {
+  try { localStorage.setItem(NOTIF_KEY, JSON.stringify([...set])); } catch(e) {}
+}
+
+function markNotifRead(msgId) {
+  const ids = getReadIds();
+  ids.add(msgId);
+  saveReadIds(ids);
+  // Update in-memory
+  notifItems = notifItems.map(n => n.id === msgId ? {...n, read: true} : n);
+  renderNotifBadge();
+  renderNotifPanels();
+}
+
+function markAllNotifsRead() {
+  const ids = getReadIds();
+  notifItems.forEach(n => { ids.add(n.id); n.read = true; });
+  saveReadIds(ids);
+  renderNotifBadge();
+  renderNotifPanels();
+}
+
+function renderNotifBadge() {
+  const count = notifItems.filter(n => !n.read).length;
+  ['notifBadge', 'mobNotifBadge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = count > 9 ? '9+' : count;
+    el.style.display = count > 0 ? 'block' : 'none';
+  });
+}
+
+function fmtNotifTime(ms) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  return d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+}
+
+function renderNotifPanels() {
+  const items = [...notifItems].sort((a,b) => b.createdAt - a.createdAt).slice(0, 50);
+  const html = items.length
+    ? items.map(n => `
+      <div class="notif-item ${n.read ? '' : 'unread'}" onclick="notifClick('${n.id}','${n.recipeId}')">
+        <div class="notif-dot ${n.read ? 'read' : ''}"></div>
+        <div class="notif-content">
+          <div class="notif-recipe">📖 ${esc(n.recipeTitle)}</div>
+          <div class="notif-msg"><strong>${esc(n.authorName)}:</strong> ${esc(n.text)}</div>
+          <div class="notif-meta">${fmtNotifTime(n.createdAt)}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="notif-empty">No notifications yet</div>';
+  document.getElementById('notifList').innerHTML = html;
+  document.getElementById('mobNotifList').innerHTML = html;
+}
+
+function notifClick(msgId, recipeId) {
+  markNotifRead(msgId);
+  // Close panels
+  document.getElementById('notifPanel').classList.remove('open');
+  closeMobNotif();
+  // Navigate to recipe
+  if (window.innerWidth <= 640) {
+    mob_showRecipe(recipeId);
+    document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tabRecipes').classList.add('active');
+  } else {
+    desk_showRecipe(recipeId);
+  }
+}
+
+function toggleNotifPanel() {
+  document.getElementById('deskSettings').classList.remove('open');
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+function openMobNotif() {
+  document.getElementById('mobNotifPanel').classList.add('open');
+}
+function closeMobNotif() {
+  document.getElementById('mobNotifPanel').classList.remove('open');
+}
+
+// Called from Firebase module when new comments arrive
+window.notif_onNewComments = function(msgs, recipeId, recipeTitle, currentUserId) {
+  const readIds = getReadIds();
+  const existing = new Set(notifItems.map(n => n.id));
+  let changed = false;
+  for (const m of msgs) {
+    if (m.uid === currentUserId) continue; // don't notify on own messages
+    if (!existing.has(m.id)) {
+      notifItems.push({
+        id: m.id,
+        recipeId,
+        recipeTitle,
+        text: m.text,
+        authorName: m.displayName || 'Someone',
+        createdAt: m.createdAt?.toMillis ? m.createdAt.toMillis() : (m.createdAt || Date.now()),
+        read: readIds.has(m.id)
+      });
+      changed = true;
+    }
+  }
+  if (changed) {
+    renderNotifBadge();
+    renderNotifPanels();
+  }
+};
 
 // ══════════════════════════════════════════════════
 // TIMERS
 // ══════════════════════════════════════════════════
-  let audioCtx = null;
+let audioCtx = null;
 function ensureAudioCtx() {
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -2402,13 +2670,12 @@ function ensureAudioCtx() {
   } catch(e) {}
   return audioCtx;
 }
-let timers = []; // { id, label, totalSecs, remaining, interval, done }
+let timers = [];
 let timerNextId = 1;
 
 function timerTrayToggle() {
   const tray = document.getElementById('timerTray');
   tray.classList.toggle('open');
-  // Sync mobile tab highlight
   const isOpen = tray.classList.contains('open');
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
   if (isOpen) {
@@ -2420,7 +2687,7 @@ function timerTrayToggle() {
   timerUpdateNotifRow();
 }
 
-  function timerRequestPermission() {
+function timerRequestPermission() {
   Notification.requestPermission().then(p => {
     timerUpdateNotifRow();
     if (p === 'granted') showToast('Alerts enabled ✓');
@@ -2447,14 +2714,13 @@ function timerUpdateNotifRow() {
 }
 
 function timerAdd(minutes, label) {
-  ensureAudioCtx();  
+  ensureAudioCtx();
   const secs = minutes * 60;
   const id = timerNextId++;
   const t = { id, label, totalSecs: secs, remaining: secs, interval: null, done: false };
   timers.push(t);
   t.interval = setInterval(() => timerTick(id), 1000);
   timerRender();
-  // Open tray if not already open
   if (!document.getElementById('timerTray').classList.contains('open')) timerTrayToggle();
 }
 
@@ -2482,7 +2748,6 @@ function timerTick(id) {
 }
 
 function timerNotify(label) {
-  // Audio beep
   try {
     const ctx = ensureAudioCtx();
     if (ctx && ctx.state === 'running') {
@@ -2498,16 +2763,10 @@ function timerNotify(label) {
         osc.start(ctx.currentTime + start);
         osc.stop(ctx.currentTime + start + duration);
       };
-      beep(880, 0, 0.3);
-      beep(880, 0.35, 0.3);
-      beep(880, 0.7, 0.5);
+      beep(880, 0, 0.3); beep(880, 0.35, 0.3); beep(880, 0.7, 0.5);
     }
   } catch(e) {}
-
-  // Vibrate
   if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]);
-
-  // Browser notification
   if (Notification.permission === 'granted') {
     new Notification('⏱ Timer done!', {
       body: label + ' is up.',
@@ -2515,7 +2774,6 @@ function timerNotify(label) {
       requireInteraction: true
     });
   }
-
   showToast('⏱ ' + label + ' — done!');
 }
 
@@ -2551,16 +2809,11 @@ function timerRender() {
     <div class="timer-card ${t.done ? 'done' : ''}">
       <div class="timer-card-label">${t.label}</div>
       <div class="timer-card-time">${t.done ? 'Done!' : timerFmt(t.remaining)}</div>
-      ${t.done
-        ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>`
-        : ''}
+      ${t.done ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>` : ''}
       <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
     </div>`).join('');
-
-  // Show/hide "Running" label
   const lbl = document.getElementById('timerListLabel');
   if (lbl) lbl.style.display = timers.length ? '' : 'none';
-  // Badge: count of running (non-done) timers
   const badge = document.getElementById('timerBadge');
   if (badge) {
     const running = timers.filter(t => !t.done).length;
@@ -2569,17 +2822,13 @@ function timerRender() {
   }
 }
 
-// ── Inline timer buttons in recipe text ───────────
-// Matches: "5 minutes", "1 hour", "30 min", "2 hrs", "1½ hours" etc.
 const TIME_RE = /(\d+(?:[.,½¼¾]\d*)?)\s*(hours?|hrs?|minutes?|mins?)/gi;
-
 function linkifyTimers(text) {
   return text.replace(TIME_RE, (match, num, unit) => {
-    // Parse number (handle fractions like 1½ loosely)
     let n = parseFloat(num.replace(',', '.').replace('½', '.5').replace('¼', '.25').replace('¾', '.75'));
     const isHour = /^h/i.test(unit);
     const mins = isHour ? Math.round(n * 60) : Math.round(n);
-    if (mins < 1 || mins > 600) return match; // skip unreasonable values
+    if (mins < 1 || mins > 600) return match;
     const label = match.trim();
     return `${match}<button class="inline-timer-btn" onclick="timerAdd(${mins},'${label.replace(/'/g,"\'")}')">⏱ Start</button>`;
   });
@@ -2589,8 +2838,8 @@ function linkifyTimers(text) {
 // INIT
 // ══════════════════════════════════════════════════
 renderAll();
-  timerUpdateNotifRow();
-  // Keep screen awake while app is open
+timerUpdateNotifRow();
+renderNotifPanels();
 if ('wakeLock' in navigator) {
   let wakeLock;
   const requestWakeLock = async () => {
@@ -2614,15 +2863,18 @@ if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent
   });
 }
 </script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc,
-         collection, addDoc, onSnapshot,
-         query, orderBy, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup,
-         signOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, getDoc, deleteDoc,
+  collection, addDoc, getDocs, onSnapshot,
+  query, orderBy, serverTimestamp, writeBatch
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup,
+  signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAhaUyytbY_ynqEgdZJh40SbSJKL8jKbeg",
@@ -2637,19 +2889,26 @@ const app      = initializeApp(firebaseConfig);
 const db       = getFirestore(app);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
-const REF      = doc(db, "recipes", "shared");
 
-let currentUser    = null;
-let chatRecipeId   = null;  // which recipe's comments are loaded
-let chatUnsub      = null;  // unsub for active comment listener
+// Collections
+const RECIPES_COL   = 'shared_recipes';   // each doc = one recipe, id = recipe.id
+const CHAPTERS_COL  = 'shared_chapters';  // each doc = one chapter, id = chapter.id
 
-// ── AUTH ────────────────────────────────────────────────
+let currentUser  = null;
+let chatRecipeId = null;
+let chatUnsub    = null;
+// Track all active comment subscriptions for notifications
+let allCommentUnsubs = [];
+
+// ── AUTH ──────────────────────────────────────────
 document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
   try { await signInWithPopup(auth, provider); }
   catch(e) { showToast("Google sign-in failed"); console.error(e); }
 });
 
 window.logout = async function() {
+  allCommentUnsubs.forEach(u => u());
+  allCommentUnsubs = [];
   if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   try { await signOut(auth); } catch(e) { console.error(e); }
 };
@@ -2658,6 +2917,8 @@ onAuthStateChanged(auth, async user => {
   const loginScreen = document.getElementById("loginScreen");
   if (!user) {
     currentUser = null;
+    allCommentUnsubs.forEach(u => u());
+    allCommentUnsubs = [];
     if (loginScreen) { loginScreen.style.opacity='1'; loginScreen.style.display='flex'; loginScreen.classList.remove('hidden'); }
     return;
   }
@@ -2669,45 +2930,127 @@ onAuthStateChanged(auth, async user => {
       photoURL: user.photoURL||"", updatedAt: Date.now()
     },{ merge:true });
   } catch(e) { console.error("User profile save failed:",e); }
+
+  // Auto-load shared recipes on sign-in if in public mode
+  if (window.getMode && getMode() === 'public') {
+    await window.firestoreLoad();
+    // Subscribe to notifications for all recipes
+    subscribeAllCommentNotifications();
+  }
 });
 
-// ── FIRESTORE RECIPES ───────────────────────────────────
+// ── PER-RECIPE FIRESTORE OPERATIONS ─────────────
+
+// Save a single recipe to Firestore
+window.firestoreSaveRecipe = async function(recipe) {
+  if (!recipe || !recipe.id) return;
+  try {
+    await setDoc(doc(db, RECIPES_COL, recipe.id), { ...recipe, updatedAt: serverTimestamp() }, { merge: true });
+  } catch(e) { console.error('firestoreSaveRecipe error:', e); showToast('Cloud sync failed'); }
+};
+
+// Save a single chapter to Firestore
+window.firestoreSaveChapter = async function(chapter) {
+  if (!chapter || !chapter.id) return;
+  try {
+    await setDoc(doc(db, CHAPTERS_COL, chapter.id), { ...chapter, updatedAt: serverTimestamp() }, { merge: true });
+  } catch(e) { console.error('firestoreSaveChapter error:', e); }
+};
+
+// Delete a recipe from Firestore
+window.firestoreDeleteRecipe = async function(recipeId) {
+  if (!recipeId) return;
+  try { await deleteDoc(doc(db, RECIPES_COL, recipeId)); } catch(e) { console.error('firestoreDeleteRecipe error:', e); }
+};
+
+// Load ALL recipes and chapters from Firestore
 window.firestoreLoad = async function() {
   showToast("Loading shared recipes…");
   try {
-    const snap = await getDoc(REF);
-    if (!snap.exists()) { showToast("No shared recipes found yet"); return; }
-    const { recipes:r, chapters:c } = snap.data();
-    if (!r||!c) throw new Error("Invalid format");
-    data = { recipes:r, chapters:c };
+    const [recipeSnap, chapterSnap] = await Promise.all([
+      getDocs(collection(db, RECIPES_COL)),
+      getDocs(collection(db, CHAPTERS_COL))
+    ]);
+
+    const recipes  = recipeSnap.docs.map(d  => { const r = d.data(); delete r.updatedAt; return r; });
+    const chapters = chapterSnap.docs.map(d => { const c = d.data(); delete c.updatedAt; return c; });
+
+    if (!chapters.length && !recipes.length) {
+      showToast("No shared recipes found yet — add some!");
+      return;
+    }
+
+    // Merge: preserve local chapter ordering if possible, append new ones
+    const localOrder = data.chapters.map(c => c.id);
+    const merged = [
+      ...chapters.filter(c => localOrder.includes(c.id)).sort((a,b) => localOrder.indexOf(a.id) - localOrder.indexOf(b.id)),
+      ...chapters.filter(c => !localOrder.includes(c.id))
+    ];
+
+    data = { recipes, chapters: merged.length ? merged : chapters };
+    if (!data.chapters.length && recipes.length) {
+      // Fallback: reconstruct chapters from recipe data
+      const seen = new Set();
+      data.chapters = [];
+      for (const r of recipes) {
+        if (r.chapterId && !seen.has(r.chapterId)) {
+          seen.add(r.chapterId);
+          data.chapters.push({ id: r.chapterId, name: r.chapterId });
+        }
+      }
+    }
+
     openChapters = new Set([data.chapters[0]?.id]);
     persistToStorage();
-    deskCurrentId=null; deskEditingId=null; mobCurrentId=null; mobEditingId=null;
+    deskCurrentId = null; deskEditingId = null; mobCurrentId = null; mobEditingId = null;
     renderAll(); showPanel("deskWelcome"); mob_backToList();
-    showToast("Loaded shared recipes ✓");
+    showToast(`Loaded ${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} ✓`);
+    subscribeAllCommentNotifications();
   } catch(e) { showToast("Load failed — check console"); console.error(e); }
 };
 
-const CACHED_PIN_KEY = 'hk_pin_cache';
-window.firestoreSave = async function(silent=false) {
-  let pin;
-  if (silent) { pin=sessionStorage.getItem(CACHED_PIN_KEY); if(!pin)return; }
-  else {
-    pin=prompt("Enter PIN to save to shared book:"); if(pin===null)return;
-    sessionStorage.setItem(CACHED_PIN_KEY,pin);
-  }
-  showToast("Saving…");
+// Save ALL local recipes/chapters to Firestore (bulk push)
+window.firestoreSaveAll = async function() {
+  showToast("Saving to shared book…");
   try {
-    await setDoc(REF,{...data,pin});
-    showToast("Saved to shared book ✓");
-  } catch(e) {
-    if(e.code==="permission-denied"){ sessionStorage.removeItem(CACHED_PIN_KEY); showToast("Incorrect PIN"); }
-    else { showToast("Save failed"); console.error(e); }
-  }
+    const batch = writeBatch(db);
+    for (const r of data.recipes) {
+      batch.set(doc(db, RECIPES_COL, r.id), { ...r, updatedAt: serverTimestamp() }, { merge: true });
+    }
+    for (const c of data.chapters) {
+      batch.set(doc(db, CHAPTERS_COL, c.id), { ...c, updatedAt: serverTimestamp() }, { merge: true });
+    }
+    await batch.commit();
+    showToast(`Saved ${data.recipes.length} recipes to shared book ✓`);
+  } catch(e) { showToast("Save failed"); console.error(e); }
 };
 
-// ── COMMENTS ────────────────────────────────────────────
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// ── COMMENT NOTIFICATIONS ──────────────────────
+
+function subscribeAllCommentNotifications() {
+  // Clear old subs
+  allCommentUnsubs.forEach(u => u());
+  allCommentUnsubs = [];
+
+  for (const recipe of data.recipes) {
+    const recipeId    = recipe.id;
+    const recipeTitle = recipe.title;
+    const q = query(
+      collection(db, 'recipe_comments', recipeId, 'messages'),
+      orderBy('createdAt', 'asc')
+    );
+    const unsub = onSnapshot(q, snap => {
+      const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (window.notif_onNewComments) {
+        notif_onNewComments(msgs, recipeId, recipeTitle, currentUser?.uid);
+      }
+    }, err => console.warn('Notif sub error for', recipeId, err));
+    allCommentUnsubs.push(unsub);
+  }
+}
+
+// ── RECIPE COMMENTS (active view) ────────────────
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function fmtTime(ts) {
   if (!ts) return '';
@@ -2720,19 +3063,27 @@ function renderChatMessages(msgs, containerIds) {
     const el = document.getElementById(cid);
     if (!el) return;
     const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
-    if (msgs.length===0) { el.innerHTML=''; return; }
+    if (msgs.length === 0) { el.innerHTML = ''; return; }
     el.innerHTML = msgs.map(m => {
       const mine = m.uid === currentUser?.uid;
       const name = m.displayName || 'Unknown';
       const time = fmtTime(m.createdAt);
       const avatarHTML = m.photoURL
-        ? `<img class="msg-avatar" src="${esc(m.photoURL)}" alt="${esc(name)}"/>`
+        ? `<img class="msg-avatar" src="${escHtml(m.photoURL)}" alt="${escHtml(name)}"/>`
         : `<div class="msg-avatar-init">${name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>`;
+      // Delete button — only for own messages
+      const deleteBtnHTML = mine
+        ? `<button class="msg-delete-btn" onclick="recipeChat_delete('${m.id}')" title="Delete">🗑</button>`
+        : '';
       return `<div class="msg-row ${mine?'mine':''}">
         ${avatarHTML}
         <div class="msg-bubble-wrap">
-          <div class="msg-meta">${mine?'':esc(name)+' · '}${time}</div>
-          <div class="msg-bubble">${esc(m.text)}</div>
+          <div class="msg-meta">
+            ${mine ? '' : escHtml(name) + ' · '}
+            ${time}
+            ${deleteBtnHTML}
+          </div>
+          <div class="msg-bubble">${escHtml(m.text)}</div>
         </div>
       </div>`;
     }).join('');
@@ -2740,35 +3091,42 @@ function renderChatMessages(msgs, containerIds) {
   });
 }
 
-// Called whenever a recipe is shown — loads its comments
 window.recipeChat_load = function(recipeId) {
-  // Unsubscribe from previous recipe's comments
-  if (chatUnsub) { chatUnsub(); chatUnsub=null; }
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   chatRecipeId = recipeId;
 
-  // Show the chat widgets
   ['deskViewChat','mobViewChat'].forEach(id => {
-    const el=document.getElementById(id); if(el) el.style.display='';
+    const el = document.getElementById(id); if (el) el.style.display = '';
   });
-  // Clear inputs
   ['deskChatInput','mobChatInput'].forEach(id => {
-    const el=document.getElementById(id); if(el) el.value='';
+    const el = document.getElementById(id); if (el) el.value = '';
   });
 
   if (!recipeId) return;
 
+  // Mark all existing notifications for this recipe as read
+  if (window.notifItems) {
+    notifItems.filter(n => n.recipeId === recipeId && !n.read).forEach(n => markNotifRead(n.id));
+  }
+
   const q = query(
-    collection(db,'recipe_comments',recipeId,'messages'),
-    orderBy('createdAt','asc')
+    collection(db, 'recipe_comments', recipeId, 'messages'),
+    orderBy('createdAt', 'asc')
   );
   chatUnsub = onSnapshot(q, snap => {
-    const msgs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const msgs = snap.docs.map(d => ({id:d.id,...d.data()}));
     renderChatMessages(msgs, ['deskChatMsgs','mobChatMsgs']);
+    // Mark newly-visible messages as read
+    if (window.markNotifRead) {
+      msgs.forEach(m => {
+        if (m.uid !== currentUser?.uid) markNotifRead(m.id);
+      });
+    }
   }, err => console.error('Chat error:',err));
 };
 
 window.recipeChat_keydown = function(e, prefix) {
-  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); recipeChat_send(prefix); }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); recipeChat_send(prefix); }
 };
 
 window.recipeChat_send = async function(prefix) {
@@ -2779,14 +3137,23 @@ window.recipeChat_send = async function(prefix) {
   if (!text) return;
   input.value = '';
   try {
-    await addDoc(collection(db,'recipe_comments',chatRecipeId,'messages'), {
+    await addDoc(collection(db, 'recipe_comments', chatRecipeId, 'messages'), {
       text,
-      uid:          currentUser.uid,
-      displayName:  currentUser.displayName || currentUser.email,
-      photoURL:     currentUser.photoURL || '',
-      createdAt:    serverTimestamp()
+      uid:         currentUser.uid,
+      displayName: currentUser.displayName || currentUser.email,
+      photoURL:    currentUser.photoURL || '',
+      createdAt:   serverTimestamp()
     });
   } catch(e) { showToast('Failed to send'); console.error(e); }
+};
+
+// Delete a comment (only the author can do this — enforced by uid check + Firestore rules)
+window.recipeChat_delete = async function(msgId) {
+  if (!currentUser || !chatRecipeId) return;
+  if (!confirm('Delete this comment?')) return;
+  try {
+    await deleteDoc(doc(db, 'recipe_comments', chatRecipeId, 'messages', msgId));
+  } catch(e) { showToast('Could not delete comment'); console.error(e); }
 };
 </script>
 </body>
