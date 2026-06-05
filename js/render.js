@@ -277,7 +277,3 @@ document.getElementById('newChapterName').addEventListener('keydown', e => {
   if (e.key === 'Enter')  addChapter();
   if (e.key === 'Escape') closeChapterModal();
 });
-
-// ── Init ─────────────────────────────────────────────────────────
-renderAll();
-showPanel('deskWelcome');
