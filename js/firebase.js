@@ -96,9 +96,12 @@ onAuthStateChanged(auth, async user => {
       updatedAt:   Date.now()
     }, { merge: true });
   } catch (e) { console.error("User profile save failed:", e); }
-
-  // Subscribe to notifications across all recipes
-  _subscribeAllCommentNotifications();
+// In public mode, auto-load shared recipes on every sign-in / page refresh
+ if (getMode() === 'public') {
+    await firestoreLoad();
+  } else {
+    _subscribeAllCommentNotifications();
+  }
 });
 
 
