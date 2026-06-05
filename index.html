@@ -2564,9 +2564,6 @@ if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent
 }
 </script>
 <script type="module">
-//  ══════════════════════════════════════════════════
-// Firebase config
-//  ══════════════════════════════════════════════════
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
   getFirestore,
@@ -2594,15 +2591,96 @@ const firebaseConfig = {
   measurementId: "G-DHBPHJMN9Q"
 };
 
-// Initialize Firebase once
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-
-// Firestore Shared Logic
 const REF = doc(db, "recipes", "shared");
 
+// ── Hide login screen immediately if returning from a redirect ──
+if (sessionStorage.getItem('pendingRedirect')) {
+  const ls = document.getElementById('loginScreen');
+  if (ls) ls.style.opacity = '0';
+}
+
+// ── Handle redirect result (mobile sign-in) ──
+getRedirectResult(auth)
+  .then(() => {
+    sessionStorage.removeItem('pendingRedirect');
+    // onAuthStateChanged below handles the rest
+  })
+  .catch(err => {
+    sessionStorage.removeItem('pendingRedirect');
+    const ls = document.getElementById('loginScreen');
+    if (ls) { ls.style.opacity = '1'; ls.style.display = 'flex'; }
+    console.error("Redirect login error:", err);
+    showToast("Google sign-in failed — please try again");
+  });
+
+// ── Sign-in button ──
+document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  try {
+    if (isMobile) {
+      sessionStorage.setItem('pendingRedirect', '1');
+      await signInWithRedirect(auth, provider);
+    } else {
+      await signInWithPopup(auth, provider);
+    }
+  } catch (err) {
+    sessionStorage.removeItem('pendingRedirect');
+    console.error("Sign in error:", err);
+    showToast("Google sign-in failed");
+  }
+});
+
+// ── Sign-out ──
+window.logout = async function() {
+  try {
+    await signOut(auth);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+// ── Auth state — single handler, runs on every page load ──
+onAuthStateChanged(auth, async (user) => {
+  const loginScreen = document.getElementById("loginScreen");
+
+  if (!user) {
+    // Not signed in — show login screen
+    if (loginScreen) {
+      loginScreen.style.opacity = '1';
+      loginScreen.style.display = 'flex';
+      loginScreen.classList.remove('hidden');
+    }
+    return;
+  }
+
+  // Signed in — hide login screen
+  if (loginScreen) {
+    loginScreen.classList.add('hidden');
+    setTimeout(() => loginScreen.style.display = 'none', 300);
+  }
+
+  // Save user profile to Firestore
+  try {
+    await setDoc(
+      doc(db, "users", user.uid),
+      {
+        displayName: user.displayName || "",
+        email: user.email || "",
+        photoURL: user.photoURL || "",
+        updatedAt: Date.now()
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    console.error("User profile save failed:", err);
+  }
+});
+
+// ── Firestore: load shared recipes ──
 window.firestoreLoad = async function() {
   showToast("Loading shared recipes…");
   try {
@@ -2620,26 +2698,26 @@ window.firestoreLoad = async function() {
   } catch(e) { showToast("Load failed — check console"); console.error(e); }
 };
 
+// ── Firestore: save shared recipes ──
 const CACHED_PIN_KEY = 'hk_pin_cache';
 
 window.firestoreSave = async function(silent = false) {
   let pin;
   if (silent) {
     pin = sessionStorage.getItem(CACHED_PIN_KEY);
-    if (!pin) return; // don't autosync if pin not cached yet
+    if (!pin) return;
   } else {
     pin = prompt("Enter PIN to save to shared book:");
     if (pin === null) return;
-    sessionStorage.setItem(CACHED_PIN_KEY, pin); // cache for this session
+    sessionStorage.setItem(CACHED_PIN_KEY, pin);
   }
-
   showToast("Saving…");
   try {
     await setDoc(REF, { ...data, pin });
     showToast("Saved to shared book ✓");
   } catch(e) {
     if (e.code === "permission-denied") {
-      sessionStorage.removeItem(CACHED_PIN_KEY); // clear bad PIN from cache
+      sessionStorage.removeItem(CACHED_PIN_KEY);
       showToast("Incorrect PIN");
     } else {
       showToast("Save failed");
@@ -2647,89 +2725,6 @@ window.firestoreSave = async function(silent = false) {
     }
   }
 };
-
-console.log("Firebase module loaded, firestoreSave:", typeof window.firestoreSave);
-
-// Auth Logic
-let currentUser = null;
-
-getRedirectResult(auth)
-  .then((result) => {
-    // If successful, the user is signed in. 
-    // onAuthStateChanged will trigger automatically.
-  })
-  .catch((error) => {
-    console.error("Redirect login error:", error);
-    // Optional: showToast("Login failed, please try again.");
-  });
-
-// Now your existing onAuthStateChanged will handle the rest
-onAuthStateChanged(auth, async (user) => {
-    // Your existing code to show/hide the login screen...
-});
-
-document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
-  // Simple check to see if the user is on a mobile device
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  
-  try {
-    if (isMobile) {
-      // Mobile: redirect to bypass popup blockers
-      await signInWithRedirect(auth, provider);
-    } else {
-      // Desktop: smooth popup experience
-      await signInWithPopup(auth, provider);
-    }
-  } catch (err) {
-    console.error("Sign in error:", err);
-    showToast("Google sign-in failed");
-  }
-});
-
-window.logout = async function() {
-  try {
-    await signOut(auth);
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    currentUser = null;
-    const loginScreen = document.getElementById("loginScreen");
-    if (loginScreen) {
-      loginScreen.style.display = "flex";
-      loginScreen.classList.remove("hidden");
-    }
-    return;
-  }
-  
-  currentUser = user;
-  const loginScreen = document.getElementById("loginScreen");
-  if (loginScreen) {
-    loginScreen.classList.add("hidden");
-    setTimeout(() => {
-      loginScreen.style.display = "none";
-    }, 300);
-  }
-  
-  try {
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        displayName: user.displayName || "",
-        email: user.email || "",
-        photoURL: user.photoURL || "",
-        updatedAt: Date.now()
-      },
-      { merge: true }
-    );
-    console.log("Logged in:", user.email);
-  } catch (err) {
-    console.error("User profile save failed:", err);
-  }
-});
 </script>
 </body>
 </html>
