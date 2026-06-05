@@ -176,7 +176,7 @@ async function gdriveApiCall(token, url, options = {}) {
 async function gdriveLoad() {
   const doLoad = async (token) => {
     showToast('Connecting to Drive…');
-    const q = encodeURIComponent(`name='Recipes' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+    const q    = encodeURIComponent(`name='Recipes' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
     const resp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
     if (!resp) { gdriveAuth(doLoad); return; }
 
@@ -189,28 +189,84 @@ async function gdriveLoad() {
     if (!resp2) { gdriveAuth(doLoad); return; }
 
     const files = (await resp2.json()).files || [];
-    if (!files.length) { showToast('No files in your Recipes folder'); return; }
+    if (!files.length) { showToast('No recipe files found in your Recipes folder'); return; }
 
-    const file = files[0];   // most recent
-    showToast(`Loading ${file.name}…`);
-    const r3 = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`);
-    if (!r3) { gdriveAuth(doLoad); return; }
-
-    try {
-      const parsed = await r3.json();
-      if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid');
-      data         = parsed;
-      openChapters = new Set([data.chapters[0]?.id]);
-      persistToStorage();
-      deskCurrentId = null; mobCurrentId = null;
-      renderAll(); showPanel('deskWelcome'); mob_backToList();
-      showToast(`Loaded: ${file.name} ✓`);
-    } catch (e) { showToast('Load failed'); console.error(e); }
+    // Show picker modal
+    _showDriveFilePicker(files, async (fileId, fileName) => {
+      showToast(`Loading ${fileName}…`);
+      const r3 = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+      if (!r3) { gdriveAuth(doLoad); return; }
+      try {
+        const parsed = await r3.json();
+        if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+        data         = parsed;
+        openChapters = new Set([data.chapters[0]?.id]);
+        persistToStorage();
+        deskCurrentId = null; mobCurrentId = null;
+        renderAll(); showPanel('deskWelcome'); mob_backToList();
+        showToast(`Loaded: ${fileName} ✓`);
+      } catch (e) { showToast('Load failed — invalid file'); console.error(e); }
+    });
   };
 
   const token = getGdriveToken();
   if (token) doLoad(token);
   else gdriveAuth(doLoad);
+}
+
+function _showDriveFilePicker(files, onSelect) {
+  // Remove any existing picker
+  document.getElementById('drivePickerOverlay')?.remove();
+
+  const fmt = (isoStr) => {
+    if (!isoStr) return '';
+    const d = new Date(isoStr);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  const overlay = document.createElement('div');
+  overlay.id    = 'drivePickerOverlay';
+  overlay.style.cssText =
+    'position:fixed;inset:0;background:rgba(26,18,8,.6);z-index:150;' +
+    'display:flex;align-items:center;justify-content:center;padding:1rem';
+
+  overlay.innerHTML = `
+    <div style="background:var(--warm-white);border:1px solid var(--border);border-radius:6px;
+                padding:1.8rem;width:100%;max-width:400px;max-height:80vh;display:flex;flex-direction:column;">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--brown);
+                 margin-bottom:.3rem">Choose a Recipe Book</h3>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">
+        Select a file from your Google Drive <em>Recipes</em> folder:
+      </p>
+      <div style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:4px;">
+        ${files.map(f => `
+          <div onclick="document.getElementById('drivePickerOverlay')._select('${f.id}','${f.name.replace(/'/g, "\\'")}')"
+               style="padding:.75rem 1rem;border-bottom:1px solid var(--border);cursor:pointer;
+                      display:flex;align-items:center;justify-content:space-between;
+                      transition:background .12s;"
+               onmouseover="this.style.background='var(--panel)'"
+               onmouseout="this.style.background=''">
+            <div>
+              <div style="font-size:.88rem;font-weight:700;color:var(--ink)">${f.name}</div>
+              <div style="font-size:.7rem;color:var(--muted);margin-top:2px">${fmt(f.modifiedTime)}</div>
+            </div>
+            <span style="color:var(--muted);font-size:.8rem">›</span>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+        <button onclick="document.getElementById('drivePickerOverlay').remove()"
+                class="btn-cancel">Cancel</button>
+      </div>
+    </div>`;
+
+  // Attach the select handler directly on the element so it has closure over onSelect
+  overlay._select = (fileId, fileName) => {
+    overlay.remove();
+    onSelect(fileId, fileName);
+  };
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 // ── Public / Private mode toggle ────────────────────────────────
