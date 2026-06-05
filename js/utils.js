@@ -229,21 +229,32 @@ function setMode(mode) {
 }
 
 function updateModeUI() {
-  const mode = getMode();
+  const mode     = getMode();
   const isPublic = mode === 'public';
 
-  // Desktop pills (in the settings panel)
+  // Mode pill buttons
   document.querySelectorAll('.mode-pill-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
 
-  // Show a persistent indicator in the header so the user always knows
+  // Show/hide sync button groups — only visible in private mode
+  document.querySelectorAll('.sync-actions').forEach(el => {
+    el.style.display = isPublic ? 'none' : '';
+  });
+
+  // Header save/load buttons
+  const hdrSave = document.getElementById('hdrSaveBtn');
+  const hdrLoad = document.getElementById('hdrLoadBtn');
+  if (hdrSave) hdrSave.style.display = isPublic ? 'none' : '';
+  if (hdrLoad) hdrLoad.style.display = isPublic ? 'none' : '';
+
+  // Mode indicator
   const indicator = document.getElementById('modeIndicator');
   if (indicator) {
-    indicator.textContent   = isPublic ? '🌐 Shared' : '🔒 Private';
-    indicator.style.color   = isPublic ? 'var(--success)' : 'var(--muted)';
-    indicator.title         = isPublic
-      ? 'Public mode — changes sync to shared book automatically'
+    indicator.textContent = isPublic ? '🌐 Shared' : '🔒 Private';
+    indicator.style.color = isPublic ? 'var(--success)' : 'var(--muted)';
+    indicator.title       = isPublic
+      ? 'Shared mode — changes sync automatically'
       : 'Private mode — changes are local only';
   }
 }
