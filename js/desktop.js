@@ -101,7 +101,7 @@ function desk_saveRecipe() {
   deskEditingId = null;
 
   // ── Sync to Firestore (per-recipe, not bulk) ──────────────────
-  if (window.firestoreSaveRecipe) firestoreSaveRecipe(recipe);
+if (window.firestoreSaveRecipe && getMode() === 'public') firestoreSaveRecipe(recipe);
 
   renderAll();
   desk_showRecipe(deskCurrentId);
