@@ -156,7 +156,7 @@ function mob_deleteCurrentRecipe() {
   persistToStorage();
 
   // ── Sync deletion to Firestore ────────────────────────────────
-  if (window.firestoreDeleteRecipe) firestoreDeleteRecipe(deletedId);
+if (window.firestoreDeleteRecipe && getMode() === 'public') firestoreDeleteRecipe(deletedId);
 
   renderAll();
   mob_backToList();
