@@ -266,7 +266,7 @@ function addChapter() {
   persistToStorage();
 
   // Sync new chapter to Firestore
-  if (window.firestoreSaveChapter) firestoreSaveChapter(chapter);
+if (window.firestoreSaveChapter && getMode() === 'public') firestoreSaveChapter(chapter);
 
   renderAll();
   closeChapterModal();
