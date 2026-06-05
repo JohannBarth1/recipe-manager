@@ -1,66 +1,913 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>eRecipe</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>eRecipe</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#1a1208"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<meta name="apple-mobile-web-app-title" content="eRecipe"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json"/>
-  <meta name="theme-color" content="#1a1208"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="eRecipe"/>
+:root {
+  --cream: #faf6f0;
+  --warm-white: #fffdf9;
+  --ink: #1a1208;
+  --brown: #6b4c2a;
+  --rust: #c0571a;
+  --gold: #c8952a;
+  --light-brown: #e8d5b7;
+  --border: #d4b896;
+  --muted: #8a7060;
+  --panel: #f2ebe0;
+  --danger: #b03030;
+  --header-h: 64px;
+  --mob-nav-h: 60px;
+}
 
-  <!-- Icons -->
-  <link rel="icon" href="favicon.ico" sizes="any"/>
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png"/>
-  <link rel="apple-touch-icon" href="icon-192.png"/>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap"/>
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+/* ── LOGIN SCREEN ── */
+#loginScreen {
+  position: fixed; inset: 0;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 1.6rem;
+  z-index: 999; transition: opacity .4s;
+}
+#loginScreen.hidden { opacity: 0; pointer-events: none; }
+.login-title { font-family: 'Playfair Display', serif; font-size: 2.8rem; color: var(--light-brown); letter-spacing: -.02em; }
+.login-sub { font-size: .62rem; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
+.login-divider { width: 40px; height: 2px; background: var(--gold); opacity: .4; }
+.login-prompt { font-size: .82rem; color: var(--muted); letter-spacing: .04em; }
+.btn-google {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem 1.4rem; background: var(--warm-white);
+  border: none; border-radius: 3px; cursor: pointer;
+  font-family: 'Lato', sans-serif; font-size: .88rem; font-weight: 700;
+  color: var(--ink); letter-spacing: .04em;
+  box-shadow: 0 2px 10px rgba(0,0,0,.3);
+  transition: background .15s, transform .12s;
+}
+.btn-google:hover { background: #fff; transform: translateY(-1px); }
+.btn-google svg { width: 20px; height: 20px; }
+  
+/* ── HEADER ───────────────────────────────────── */
+header {
+  background: var(--ink);
+  color: var(--cream);
+  padding: 0 1.5rem;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid var(--gold);
+  flex-shrink: 0;
+  gap: 0.8rem;
+}
+.brand-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: var(--light-brown);
+  white-space: nowrap;
+}
+.brand-sub {
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 2px;
+}
+.header-actions { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="css/styles.css"/>
 
-  <!-- Third-party scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async></script>
+.hbtn {
+  border: none;
+  padding: 0.45rem 0.9rem;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.hbtn-primary { background: var(--gold); color: #fff; }
+.hbtn-primary:hover { background: #a87820; }
+.hbtn-ghost { background: transparent; color: var(--light-brown); border: 1px solid #555; }
+.hbtn-ghost:hover { background: #2a2010; }
+
+/* ── APP BODY ─────────────────────────────────── */
+.app {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════════════
+   DESKTOP SIDEBAR
+══════════════════════════════════════════════ */
+.sidebar {
+  width: 250px;
+  min-width: 210px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.sidebar-hdr {
+  padding: 0.9rem 1.2rem 0.6rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+}
+.chapter-list { flex: 1; overflow-y: auto; padding: 0.4rem 0; }
+.chapter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem 0.5rem 0.9rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.88rem;
+  color: var(--brown);
+  cursor: pointer;
+  user-select: none;
+  border-left: 3px solid transparent;
+  transition: background 0.15s;
+}
+.chapter-heading:hover { background: var(--light-brown); }
+.chapter-heading .ch-arrow { font-size: 0.6rem; color: var(--muted); transition: transform 0.2s; }
+.chapter-heading.open .ch-arrow { transform: rotate(90deg); }
+.chapter-controls {
+  display: none;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.chapter-heading:hover .chapter-controls { display: flex; }
+.ch-ctrl {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.65rem;
+  color: var(--muted);
+  border-radius: 2px;
+  line-height: 1;
+}
+.ch-ctrl:hover { background: rgba(0,0,0,0.08); color: var(--ink); }
+.recipe-list { display: none; }
+.recipe-list.open { display: block; }
+.recipe-item {
+  padding: 0.35rem 1rem 0.35rem 1.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.12s;
+}
+.recipe-item:hover { background: rgba(200,149,42,0.12); }
+.recipe-item.active { background: rgba(192,87,26,0.1); border-left-color: var(--rust); font-weight: 700; color: var(--rust); }
+.sidebar-footer {
+  border-top: 1px solid var(--border);
+  padding: 0.7rem;
+  display: flex;
+  gap: 0.4rem;
+}
+.sidebar-footer button {
+  flex: 1;
+  padding: 0.5rem 0.3rem;
+  font-size: 0.7rem;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--border);
+}
+.btn-add-recipe { background: var(--gold); color: #fff; border-color: var(--gold); }
+.btn-add-recipe:hover { background: #a87820; }
+.btn-add-chapter { background: transparent; color: var(--brown); }
+.btn-add-chapter:hover { background: var(--light-brown); }
+
+/* ══════════════════════════════════════════════
+   MAIN PANEL
+══════════════════════════════════════════════ */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Welcome */
+.welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted);
+}
+.welcome-icon { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.35; }
+.welcome h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--brown); margin-bottom: 0.5rem; }
+.welcome p { font-size: 0.88rem; max-width: 300px; line-height: 1.6; }
+
+/* Recipe view */
+.recipe-view { padding: 2rem 2.5rem; max-width: 740px; display: none; }
+.recipe-view.active { display: block; }
+.recipe-chapter-tag {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.recipe-view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.3rem;
+}
+.recipe-view h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+.view-actions { display: flex; gap: 0.4rem; flex-shrink: 0; margin-top: 0.4rem; }
+.btn-edit, .btn-delete {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.72rem;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all 0.15s;
+}
+.btn-edit { background: transparent; color: var(--brown); border-color: var(--border); }
+.btn-edit:hover { background: var(--light-brown); }
+.btn-delete { background: transparent; color: var(--danger); border-color: #e0b0b0; }
+.btn-delete:hover { background: #fbeaea; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+.recipe-desc { font-style: italic; color: var(--muted); font-size: 0.93rem; margin-bottom: 1.2rem; line-height: 1.6; }
+.section-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--rust);
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+}
+.ingredients-box {
+  background: var(--panel);
+  border-left: 3px solid var(--gold);
+  padding: 0.9rem 1.1rem;
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 1.3rem;
+}
+.ingredients-box ul { padding-left: 0.6rem; list-style-type: disc; }
+.ingredients-box li::marker { color: var(--rust); }
+.ingredients-box li { font-size: 0.88rem; margin-bottom: 0.3rem; line-height: 1.5; }
+.steps-list { padding-left: 0; list-style: none; margin-bottom: 1.3rem; }
+.steps-list li { display: flex; gap: 0.9rem; margin-bottom: 0.8rem; font-size: 0.88rem; line-height: 1.6; }
+.step-num {
+  flex-shrink: 0;
+  width: 1.5rem; height: 1.5rem;
+  background: var(--rust);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 700;
+  margin-top: 0.15rem;
+}
+.recipe-tip {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 0.83rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+}
+.recipe-tip::before { content: "✦ Tip: "; color: var(--gold); font-style: normal; font-weight: 700; }
+
+/* Editor */
+.editor { padding: 2rem 2.5rem; max-width: 740px; display: none; }
+.editor.active { display: block; }
+.editor h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--brown); margin-bottom: 1.3rem; }
+.form-row { margin-bottom: 1rem; }
+.form-row label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+.form-row input, .form-row select, .form-row textarea {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  font-family: 'Lato', sans-serif;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-row select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7060' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  padding-right: 2.2rem;
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--gold); }
+.form-row textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+.form-hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.25rem; }
+.editor-actions {
+  display: flex; gap: 0.7rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.btn-save {
+  background: var(--rust); color: #fff; border: none;
+  padding: 0.7rem 1.6rem;
+  font-family: 'Lato', sans-serif; font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: 2px; cursor: pointer; transition: background 0.15s;
+}
+.btn-save:hover { background: #a04415; }
+.btn-cancel {
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 0.7rem 1.2rem;
+  font-family: 'Lato', sans-serif; font-size: 0.82rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border-radius: 2px; cursor: pointer; transition: all 0.15s;
+}
+.btn-cancel:hover { background: var(--light-brown); }
+
+/* ══════════════════════════════════════════════
+   MOBILE BOTTOM NAV
+══════════════════════════════════════════════ */
+.mob-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--mob-nav-h);
+  background: var(--ink);
+  border-top: 2px solid var(--gold);
+  z-index: 50;
+}
+.mob-nav-inner {
+  display: flex;
+  height: 100%;
+}
+.mob-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  border: none;
+  background: none;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-tab .tab-icon { font-size: 1.3rem; line-height: 1; }
+.mob-tab.active { color: var(--gold); }
+.mob-tab:active { background: rgba(255,255,255,0.05); }
+
+.mob-panel {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.mob-panel.active { display: flex; }
+
+.mob-list-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.mob-chapter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.2rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--brown);
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.mob-chapter-heading .ch-arrow { transition: transform 0.2s; color: var(--muted); font-size: 0.7rem; }
+.mob-chapter-heading.open .ch-arrow { transform: rotate(90deg); }
+.mob-recipe-list { display: none; }
+.mob-recipe-list.open { display: block; }
+.mob-recipe-row {
+  padding: 0.85rem 1.4rem 0.85rem 1.8rem;
+  font-size: 0.92rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--warm-white);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s;
+}
+.mob-recipe-row:active { background: var(--light-brown); }
+.mob-recipe-row .arrow { color: var(--muted); font-size: 0.8rem; }
+
+.mob-view-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.2rem 1.2rem 1.5rem; }
+.mob-back {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rust);
+  cursor: pointer;
+  margin-bottom: 1rem;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-view-actions { display: flex; gap: 0.5rem; margin-top: 0.8rem; margin-bottom: 0.4rem; }
+
+.mob-editor-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.2rem 1.2rem 2rem; }
+.mob-editor-scroll h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--brown); margin-bottom: 1.2rem; }
+.mob-editor-scroll .form-row textarea { min-height: 120px; }
+.mob-editor-bar {
+  padding: 0.7rem 1rem;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 0.5rem;
+}
+.mob-editor-bar .btn-save { flex: 2; text-align: center; }
+.mob-editor-bar .btn-cancel { flex: 1; text-align: center; }
+
+.mob-add-bar {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.mob-add-bar button {
+  flex: 1;
+  padding: 0.7rem;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-add-bar button:active { filter: brightness(0.9); }
+.mob-btn-recipe { background: var(--gold); color: #fff; border-right: 1px solid rgba(255,255,255,0.2); }
+.mob-btn-chapter { background: var(--brown); color: var(--cream); }
+
+/* ── MOBILE SETTINGS ──────────────────────────── */
+.mob-settings-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1.2rem; }
+.mob-settings-scroll h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--brown); margin-bottom: 1.2rem; }
+
+/* Mode pill (shared between mobile settings & desktop popover) */
+.mode-pill-btn {
+  border: none;
+  border-radius: 16px;
+  padding: 5px 12px;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: var(--muted);
+  -webkit-tap-highlight-color: transparent;
+}
+.mode-pill-btn.active { background: var(--gold); color: #fff; }
+.mode-pill-btn.active.pub { background: #2a7a4a; }
+
+
+/* Grouped action buttons */
+.action-group {
+  margin-bottom: 1.2rem;
+}
+.action-group-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+.action-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.8rem 0.5rem;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--warm-white);
+  color: var(--brown);
+  text-align: center;
+  line-height: 1.2;
+  -webkit-tap-highlight-color: transparent;
+}
+.action-btn:active { filter: brightness(0.93); }
+.action-btn .ab-icon { font-size: 1.4rem; line-height: 1; }
+.action-btn.primary { background: var(--gold); color: #fff; border-color: var(--gold); }
+.action-btn.green { background: #2a7a4a; color: #fff; border-color: #2a7a4a; }
+.action-btn.dark { background: var(--brown); color: #fff; border-color: var(--brown); }
+.action-btn.danger-outline { color: var(--danger); border-color: #e0b0b0; }
+
+.settings-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 0.4rem;
+}
+
+/* ── MODAL ─────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(26,18,8,0.55);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.8rem;
+  width: 100%;
+  max-width: 360px;
+}
+.modal h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 1rem; color: var(--brown); }
+.modal .form-row { margin-bottom: 0.8rem; }
+.modal-actions { display: flex; gap: 0.6rem; margin-top: 1.2rem; justify-content: flex-end; }
+
+/* ── TOAST ─────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: calc(var(--mob-nav-h) + 1rem);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: var(--ink);
+  color: var(--light-brown);
+  padding: 0.7rem 1.3rem;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+  z-index: 200;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── RESPONSIVE ────────────────────────────────── */
+@media (max-width: 640px) {
+  .sidebar { display: none; }
+  .desktop-main { display: none; }
+  .mob-nav { display: block; }
+  .mob-panels { display: flex; flex-direction: column; flex: 1; overflow: hidden; padding-bottom: var(--mob-nav-h); }
+  .toast { bottom: calc(var(--mob-nav-h) + 0.8rem); }
+  .header-actions .hbtn-primary,
+  .header-actions .hbtn-ghost { display: none; }
+  header { padding: 0 1rem; }
+}
+@media (min-width: 641px) {
+  .mob-panels { display: none; }
+  .desktop-main { display: flex; flex: 1; overflow: hidden; }
+  .toast { bottom: 1.5rem; left: auto; right: 2rem; transform: translateY(6px); }
+  .toast.show { transform: translateY(0); }
+}
+
+/* ── NAMING MODAL ──────────────────────────────── */
+.name-modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(26,18,8,0.6);
+  z-index: 150;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.name-modal-overlay.open { display: flex; }
+.name-modal {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.8rem;
+  width: 100%;
+  max-width: 380px;
+}
+.name-modal h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: .3rem; color: var(--brown); }
+.name-modal p  { font-size: .82rem; color: var(--muted); margin-bottom: 1rem; }
+.name-modal input {
+  width: 100%; padding: .65rem .9rem;
+  font-family: 'Lato', sans-serif; font-size: 1rem;
+  border: 1px solid var(--border); border-radius: 3px;
+  background: var(--cream); color: var(--ink); outline: none;
+  margin-bottom: .3rem;
+}
+.name-modal input:focus { border-color: var(--gold); }
+.name-modal .name-hint { font-size: .72rem; color: var(--muted); margin-bottom: 1rem; }
+.name-modal .modal-actions { display: flex; gap: .6rem; justify-content: flex-end; }
+
+/* ── PRINT / RECIPE CARDS ──────────────────────── */
+@media print {
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; }
+  @page { size: A4; margin: 0; }
+  body { margin: 0; padding: 0; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+#printArea {
+  display: none;
+  font-family: Georgia, serif;
+}
+.card-page {
+  width: 210mm;
+  height: 297mm;
+  display: grid;
+  grid-template-columns: 95mm 95mm;
+  grid-template-rows: 140mm 140mm;
+  gap: 2mm;
+  padding-top: 7.5mm;
+  padding-bottom: 7.5mm;
+  padding-left: 9mm;
+  padding-right: 9mm;
+  page-break-after: always;
+  box-sizing: border-box;
+  position: relative;
+  background: #fff;
+}
+.card-page.back-page { background: #faf6f0 !important; }
+.recipe-card {
+  border: 1px solid #c8952a;
+  border-radius: 3mm;
+  padding: 4mm 5mm 4mm 9mm;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 95mm;
+  height: 140mm;
+  font-size: 7.5pt;
+  line-height: 1.35;
+  position: relative;
+  background: #fbf9f5;
+}
+.recipe-card.back {
+  background: #faf6f0;
+  border: none;
+  padding: 4mm 5mm 4mm 5mm;
+}
+.recipe-card.back .card-spine-svg { display: none !important; }
+.card-header { border-bottom: 0.5mm solid #c8952a; margin-bottom: 2mm; padding-bottom: 1.5mm; }
+.card-book-name { font-size: 5.5pt; letter-spacing: .12em; text-transform: uppercase; color: #8a7060; margin-bottom: .5mm; }
+.card-title { font-family: Georgia, serif; font-size: 11pt; font-weight: bold; line-height: 1.2; color: #1a1208; }
+.card-desc { font-style: italic; color: #8a7060; font-size: 6.5pt; margin-top: 1mm; }
+.card-section { font-size: 6pt; letter-spacing: .12em; text-transform: uppercase; color: #c0571a; font-weight: bold; margin: 2mm 0 1mm; }
+.card-ing-box { border-left: 1mm solid #c8952a; padding-left: 2mm; margin-bottom: 1mm; }
+.card ul { padding-left: 3mm; margin: 0; }
+.card ol { padding-left: 3.5mm; margin: 0; }
+.card li { margin: .3mm 0; }
+.card-subhead { font-weight: bold; font-size: 7pt; margin: 1.5mm 0 .5mm; list-style: none; margin-left: -1mm; }
+.card-tip { font-style: italic; color: #666; font-size: 6pt; border-top: .3mm dashed #bbb; padding-top: 1.5mm; margin-top: auto; }
+.card-spine-svg { position: absolute; top: 0; left: 0; width: 5mm; height: 100%; display: block; }
+
+/* ── DESKTOP SETTINGS POPOVER ──────────────────── */
+.desk-settings {
+  display: none;
+  position: fixed;
+  top: calc(var(--header-h) + 8px);
+  right: 1rem;
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1.2rem 1.4rem;
+  width: 320px;
+  z-index: 80;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.desk-settings.open { display: block; }
+.desk-settings h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--brown);
+  margin-bottom: .9rem;
+  padding-bottom: .4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+
+
+.desk-settings .ds-label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: .35rem;
+}
+.desk-settings .ds-note {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: .3rem;
+  line-height: 1.5;
+}
+.desk-settings .ds-divider { border: none; border-top: 1px solid var(--border); margin: .9rem 0; }
+.desk-settings .ds-row { display: flex; gap: .5rem; margin-top: .5rem; }
+.desk-settings .ds-row button {
+  flex: 1;
+  padding: .5rem .4rem;
+  font-size: 0.72rem;
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--cream);
+  color: var(--brown);
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.desk-settings .ds-row button:hover { background: var(--light-brown); }
+.desk-settings .ds-row button.primary { background: var(--gold); color: #fff; border-color: var(--gold); }
+.desk-settings .ds-row button.primary:hover { background: #a87820; }
+.desk-settings .ds-row button.green { background: #2a7a4a; color: #fff; border-color: #2a7a4a; }
+.desk-settings .ds-row button.green:hover { background: #1f5c37; }
+
+/* ── TIMERS ────────────────────────────────────── */
+/* Timer modal overlay — matches existing modal design language */
+.timer-overlay { display:none; position:fixed; inset:0; background:rgba(26,18,8,0.55); z-index:100; align-items:center; justify-content:center; padding:1rem; }
+.timer-overlay.open { display:flex; }
+.timer-modal { background:var(--warm-white); border:1px solid var(--border); border-radius:6px; padding:1.8rem; width:100%; max-width:380px; max-height:85vh; overflow-y:auto; }
+.timer-modal h3 { font-family:'Playfair Display',serif; font-size:1.2rem; margin-bottom:1rem; color:var(--brown); display:flex; align-items:center; justify-content:space-between; }
+.timer-modal-close { background:none; border:none; color:var(--muted); font-size:1.1rem; cursor:pointer; padding:2px 6px; line-height:1; }
+.timer-modal-close:hover { color:var(--ink); }
+.timer-section-label { font-size:0.65rem; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:0.5rem; }
+.timer-presets { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem; }
+.timer-preset-btn { background:var(--panel); border:1px solid var(--border); color:var(--brown); border-radius:20px; padding:0.35rem 0.85rem; font-family:'Lato',sans-serif; font-size:0.78rem; font-weight:700; cursor:pointer; transition:background 0.15s; -webkit-tap-highlight-color:transparent; }
+.timer-preset-btn:hover { background:var(--light-brown); }
+.timer-preset-btn:active { background:var(--light-brown); }
+.timer-custom-row { display:flex; gap:0.5rem; align-items:center; margin-bottom:1.2rem; padding-bottom:1.2rem; border-bottom:1px solid var(--border); }
+.timer-custom-row input { width:80px; padding:0.5rem 0.6rem; font-size:1rem; font-family:'Lato',sans-serif; background:var(--warm-white); border:1px solid var(--border); border-radius:3px; color:var(--ink); outline:none; text-align:center; }
+.timer-custom-row input:focus { border-color:var(--gold); }
+.timer-custom-row select { padding:0.5rem 0.6rem; font-size:0.88rem; font-family:'Lato',sans-serif; background:var(--warm-white); border:1px solid var(--border); border-radius:3px; color:var(--ink); outline:none; -webkit-appearance:none; }
+.timer-custom-row button { padding:0.5rem 1rem; background:var(--rust); color:#fff; border:none; border-radius:2px; font-family:'Lato',sans-serif; font-size:0.78rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; transition:background 0.15s; -webkit-tap-highlight-color:transparent; }
+.timer-custom-row button:hover { background:#a04415; }
+.timer-list { display:flex; flex-direction:column; gap:0.5rem; }
+.timer-card { background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:0.65rem 0.9rem; display:flex; align-items:center; gap:0.7rem; }
+.timer-card.done { border-color:var(--gold); background:rgba(200,149,42,0.08); }
+.timer-card-label { flex:1; font-size:0.85rem; color:var(--brown); line-height:1.3; }
+.timer-card-time { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--ink); min-width:4rem; text-align:right; letter-spacing:0.03em; }
+.timer-card.done .timer-card-time { color:var(--gold); }
+.timer-card-btn { background:transparent; border:1px solid var(--border); border-radius:3px; color:var(--muted); padding:3px 8px; font-size:0.75rem; cursor:pointer; transition:background 0.15s; -webkit-tap-highlight-color:transparent; }
+.timer-card-btn:hover { background:var(--light-brown); color:var(--ink); }
+.inline-timer-btn { display:inline-flex; align-items:center; gap:3px; background:rgba(192,87,26,0.08); border:1px solid rgba(192,87,26,0.3); color:var(--rust); border-radius:10px; padding:1px 7px; font-size:0.75em; font-family:'Lato',sans-serif; font-weight:700; cursor:pointer; vertical-align:middle; margin-left:3px; -webkit-tap-highlight-color:transparent; transition:background 0.15s; }
+.inline-timer-btn:hover, .inline-timer-btn:active { background:rgba(192,87,26,0.2); }
+.timer-badge { position:absolute; top:4px; right:10px; background:var(--rust); color:#fff; border-radius:8px; font-size:0.55rem; font-weight:700; padding:1px 4px; min-width:14px; text-align:center; display:none; }
+#tabTimer { position:relative; }
+
+  /* ── RECIPE COMMENTS ── */
+.recipe-chat { margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+.recipe-chat-label { font-size: .65rem; letter-spacing: .2em; text-transform: uppercase; color: var(--rust); font-weight: 700; margin-bottom: .7rem; }
+.chat-messages {
+  display: flex; flex-direction: column; gap: .45rem;
+  max-height: 260px; overflow-y: auto; scroll-behavior: smooth;
+  background: #f7f2ea; border: 1px solid var(--border);
+  border-radius: 4px; padding: .6rem .7rem; margin-bottom: .5rem;
+}
+.chat-messages:empty::after {
+  content: 'No comments yet — be the first!';
+  font-size: .74rem; color: var(--muted); font-style: italic;
+  text-align: center; padding: .4rem 0; display: block;
+}
+.msg-row { display: flex; gap: .4rem; align-items: flex-end; }
+.msg-row.mine { flex-direction: row-reverse; }
+.msg-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1.5px solid var(--border); }
+.msg-avatar-init { width: 22px; height: 22px; border-radius: 50%; background: var(--brown); color: var(--light-brown); font-size: .52rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1.5px solid var(--border); }
+.msg-bubble-wrap { display: flex; flex-direction: column; max-width: 78%; }
+.msg-row.mine .msg-bubble-wrap { align-items: flex-end; }
+.msg-meta { font-size: .57rem; color: var(--muted); margin-bottom: 2px; }
+.msg-row.mine .msg-meta { text-align: right; }
+.msg-bubble { padding: .38rem .65rem; font-size: .82rem; line-height: 1.45; word-break: break-word; background: #fff; color: var(--ink); border: 1px solid var(--border); border-radius: 10px 10px 10px 2px; }
+.msg-row.mine .msg-bubble { background: var(--ink); color: #f0ebe0; border-color: transparent; border-radius: 10px 10px 2px 10px; }
+.chat-input-row { display: flex; gap: .4rem; align-items: flex-end; }
+.chat-textarea { flex: 1; resize: none; min-height: 34px; max-height: 90px; padding: .38rem .6rem; font-family: 'Lato', sans-serif; font-size: .85rem; color: var(--ink); background: var(--warm-white); border: 1px solid var(--border); border-radius: 3px; outline: none; line-height: 1.4; }
+.chat-textarea:focus { border-color: var(--gold); }
+.chat-send-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--rust); color: #fff; border: none; cursor: pointer; font-size: .9rem; display: flex; align-items: center; justify-content: center; transition: background .15s, transform .1s; flex-shrink: 0; }
+.chat-send-btn:hover { background: #a04415; }
+.chat-send-btn:active { transform: scale(.9); }
+</style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     LOGIN SCREEN
-════════════════════════════════════════════════════════════════ -->
+  <!-- Login -->
 <div id="loginScreen">
   <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
     <div class="login-title">eRecipe</div>
-    <div class="login-sub">All your favourite recipes</div>
+    <div class="login-sub">All your favourite Recipes</div>
   </div>
   <div class="login-divider"></div>
   <div class="login-prompt">Sign in to continue</div>
   <button class="btn-google" id="btnGoogleSignIn">
-    <!-- Google "G" logo -->
-    <svg viewBox="0 0 24 24">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-    </svg>
+    <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
     Sign in with Google
   </button>
 </div>
-
-
-<!-- ═══════════════════════════════════════════════════════════════
-     HEADER
-════════════════════════════════════════════════════════════════ -->
+  
+<!-- HEADER -->
 <header>
   <div style="display:flex;align-items:center;gap:.8rem">
-    <img src="icon-64.png" width="38" height="38" style="border-radius:6px" alt="eRecipe logo"/>
+<img src="icon-64.png" width="38" height="38" style="border-radius:6px">
     <div>
       <div class="brand-title">eRecipe</div>
       <div class="brand-sub">All your favourite recipes</div>
@@ -68,37 +915,16 @@
   </div>
   <div class="header-actions">
     <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
-    <button class="notif-btn" id="notifBtn" onclick="toggleNotifDropdown()" title="Notifications">
-      🔔<span class="notif-badge" id="notifBadge"></span>
-    </button>
-    <button class="hbtn hbtn-ghost" onclick="gdriveLoad()">☁ Load</button>
-    <button class="hbtn hbtn-primary" onclick="firestoreSaveShared()">☁ Save</button>
-    <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
+    <button class="hbtn hbtn-ghost" onclick="gdriveLoad()" title="Load from Drive">☁ Load</button>
+    <button class="hbtn hbtn-primary" onclick="gdriveSave()" title="Save to Drive">☁ Save</button>
+    <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()" title="More options">⚙</button>
   </div>
 </header>
 
-
-<!-- ═══════════════════════════════════════════════════════════════
-     NOTIFICATION DROPDOWN
-════════════════════════════════════════════════════════════════ -->
-<div class="notif-dropdown" id="notifDropdown">
-  <div class="notif-header">
-    <span class="notif-header-label">🔔 Notifications</span>
-    <button class="notif-mark-all" onclick="markAllRead()">Mark all read</button>
-  </div>
-  <div id="notifList"><div class="notif-empty">No notifications yet</div></div>
-</div>
-
-
-<!-- ═══════════════════════════════════════════════════════════════
-     APP BODY
-════════════════════════════════════════════════════════════════ -->
 <div class="app">
 
-  <!-- ── DESKTOP LAYOUT ───────────────────────────────────────── -->
+  <!-- ══ DESKTOP LAYOUT ══ -->
   <div class="desktop-main">
-
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-hdr">Chapters &amp; Recipes</div>
       <div class="chapter-list" id="deskChapterList"></div>
@@ -108,22 +934,14 @@
       </div>
     </aside>
 
-    <!-- Main panel -->
     <main class="main" id="deskMain">
-
-      <!-- Welcome state -->
-      <div class="welcome" id="deskWelcome" style="display:none">
-        <h2>Welcome to eRecipe</h2>
-        <p>Select a recipe from the sidebar, or add a new one to get started.</p>
-      </div>
-
-      <!-- Recipe view -->
+      <div class="welcome" id="deskWelcome" style="display:none"></div>
       <div class="recipe-view" id="deskRecipeView">
         <div class="recipe-chapter-tag" id="deskViewChapter"></div>
         <div class="recipe-view-header">
           <h1 id="deskViewTitle"></h1>
           <div class="view-actions">
-            <button class="btn-edit"   onclick="desk_editCurrentRecipe()">Edit</button>
+            <button class="btn-edit" onclick="desk_editCurrentRecipe()">Edit</button>
             <button class="btn-delete" onclick="desk_deleteCurrentRecipe()">Delete</button>
           </div>
         </div>
@@ -134,81 +952,60 @@
         <div class="section-label">Instructions</div>
         <ol class="steps-list" id="deskViewSteps"></ol>
         <div class="recipe-tip" id="deskViewTip" style="display:none"></div>
-        <!-- Comments -->
         <div class="recipe-chat" id="deskViewChat" style="display:none">
-          <div class="recipe-chat-label">💬 Comments</div>
-          <div class="chat-messages" id="deskChatMsgs"></div>
-          <div class="chat-input-row">
-            <textarea class="chat-textarea" id="deskChatInput"
-                      placeholder="Add a comment… (Enter to send)" rows="1"
-                      onkeydown="recipeChat_keydown(event,'desk')"></textarea>
-            <button class="chat-send-btn" onclick="recipeChat_send('desk')" title="Send">➤</button>
-          </div>
-        </div>
-      </div><!-- /recipe-view -->
-
-      <!-- Editor -->
+  <div class="recipe-chat-label">💬 Comments</div>
+  <div class="chat-messages" id="deskChatMsgs"></div>
+  <div class="chat-input-row">
+    <textarea class="chat-textarea" id="deskChatInput" placeholder="Add a comment… (Enter to send)" rows="1"
+      onkeydown="recipeChat_keydown(event,'desk')"></textarea>
+    <button class="chat-send-btn" onclick="recipeChat_send('desk')" title="Send">➤</button>
+  </div>
+</div>
+      </div>
       <div class="editor" id="deskEditor">
         <h2 id="deskEditorTitle">Add Recipe</h2>
-        <div class="form-row">
-          <label>Recipe Name</label>
-          <input id="deskFTitle" type="text" placeholder="e.g. Cowboy Coffee Cake"/>
-        </div>
-        <div class="form-row">
-          <label>Chapter</label>
-          <select id="deskFChapter"></select>
-        </div>
-        <div class="form-row">
-          <label>Description</label>
-          <textarea id="deskFDesc" rows="2" placeholder="A short description..."></textarea>
-        </div>
+        <div class="form-row"><label>Recipe Name</label><input id="deskFTitle" type="text" placeholder="e.g. Cowboy Coffee Cake"/></div>
+        <div class="form-row"><label>Chapter</label><select id="deskFChapter"></select></div>
+        <div class="form-row"><label>Description</label><textarea id="deskFDesc" rows="2" placeholder="A short description..."></textarea></div>
         <div class="form-row">
           <label>Ingredients</label>
-          <textarea id="deskFIngredients" rows="8"
-                    placeholder="One ingredient per line&#10;e.g. 2 cups flour"></textarea>
+          <textarea id="deskFIngredients" rows="8" placeholder="One ingredient per line&#10;e.g. 2 cups flour"></textarea>
           <div class="form-hint">One ingredient per line</div>
         </div>
         <div class="form-row">
           <label>Instructions</label>
-          <textarea id="deskFSteps" rows="9"
-                    placeholder="One step per line&#10;e.g. Preheat oven to 375F."></textarea>
+          <textarea id="deskFSteps" rows="9" placeholder="One step per line&#10;e.g. Preheat oven to 375F."></textarea>
           <div class="form-hint">One step per line</div>
         </div>
-        <div class="form-row">
-          <label>Tip (optional)</label>
-          <input id="deskFTip" type="text" placeholder="e.g. No buttermilk? Use milk + 1 tbsp vinegar."/>
-        </div>
+        <div class="form-row"><label>Tip (optional)</label><input id="deskFTip" type="text" placeholder="e.g. No buttermilk? Use milk + 1 tbsp vinegar."/></div>
         <div class="editor-actions">
-          <button class="btn-save"   onclick="desk_saveRecipe()">Save Recipe</button>
+          <button class="btn-save" onclick="desk_saveRecipe()">Save Recipe</button>
           <button class="btn-cancel" onclick="desk_cancelEdit()">Cancel</button>
         </div>
-      </div><!-- /editor -->
-
+      </div>
     </main>
-  </div><!-- /desktop-main -->
+  </div>
 
-
-  <!-- ── MOBILE PANELS ─────────────────────────────────────────── -->
+  <!-- ══ MOBILE LAYOUT ══ -->
   <div class="mob-panels">
 
-    <!-- Panel: Recipe List -->
+    <!-- Panel 1: Recipe List -->
     <div class="mob-panel active" id="mobPanelList">
       <div class="mob-list-scroll" id="mobChapterList"></div>
       <div class="mob-add-bar">
-        <button class="mob-btn-recipe"  onclick="mob_showAddRecipe()">+ Add Recipe</button>
+        <button class="mob-btn-recipe" onclick="mob_showAddRecipe()">+ Add Recipe</button>
         <button class="mob-btn-chapter" onclick="showAddChapter()">+ Chapter</button>
       </div>
     </div>
 
-    <!-- Panel: Recipe View -->
+    <!-- Panel 2: Recipe View -->
     <div class="mob-panel" id="mobPanelView">
       <div class="mob-view-scroll">
         <div class="mob-back" onclick="mob_backToList()">← Recipes</div>
         <div class="recipe-chapter-tag" id="mobViewChapter"></div>
-        <h1 style="font-family:'Playfair Display',serif;font-size:1.6rem;line-height:1.2;margin-bottom:.3rem"
-            id="mobViewTitle"></h1>
+        <h1 style="font-family:'Playfair Display',serif;font-size:1.6rem;line-height:1.2;margin-bottom:0.3rem" id="mobViewTitle"></h1>
         <div class="mob-view-actions">
-          <button class="btn-edit"   onclick="mob_editCurrentRecipe()">Edit</button>
+          <button class="btn-edit" onclick="mob_editCurrentRecipe()">Edit</button>
           <button class="btn-delete" onclick="mob_deleteCurrentRecipe()">Delete</button>
         </div>
         <hr class="divider"/>
@@ -218,159 +1015,190 @@
         <div class="section-label">Instructions</div>
         <ol class="steps-list" id="mobViewSteps"></ol>
         <div class="recipe-tip" id="mobViewTip" style="display:none;margin-bottom:1rem"></div>
-        <!-- Comments -->
         <div class="recipe-chat" id="mobViewChat" style="display:none;margin-bottom:1rem">
-          <div class="recipe-chat-label">💬 Comments</div>
-          <div class="chat-messages" id="mobChatMsgs"></div>
-          <div class="chat-input-row">
-            <textarea class="chat-textarea" id="mobChatInput"
-                      placeholder="Add a comment… (Enter to send)" rows="1"
-                      onkeydown="recipeChat_keydown(event,'mob')"></textarea>
-            <button class="chat-send-btn" onclick="recipeChat_send('mob')" title="Send">➤</button>
-          </div>
-        </div>
+  <div class="recipe-chat-label">💬 Comments</div>
+  <div class="chat-messages" id="mobChatMsgs"></div>
+  <div class="chat-input-row">
+    <textarea class="chat-textarea" id="mobChatInput" placeholder="Add a comment… (Enter to send)" rows="1"
+      onkeydown="recipeChat_keydown(event,'mob')"></textarea>
+    <button class="chat-send-btn" onclick="recipeChat_send('mob')" title="Send">➤</button>
+  </div>
+</div>
       </div>
-    </div><!-- /mobPanelView -->
+    </div>
 
-    <!-- Panel: Editor -->
+    <!-- Panel 3: Editor -->
     <div class="mob-panel" id="mobPanelEditor">
       <div class="mob-editor-scroll">
         <h2 id="mobEditorTitle">Add Recipe</h2>
-        <div class="form-row">
-          <label>Recipe Name</label>
-          <input id="mobFTitle" type="text" autocomplete="off"/>
-        </div>
-        <div class="form-row">
-          <label>Chapter</label>
-          <select id="mobFChapter"></select>
-        </div>
-        <div class="form-row">
-          <label>Description</label>
-          <textarea id="mobFDesc" rows="2"></textarea>
-        </div>
+        <div class="form-row"><label>Recipe Name</label><input id="mobFTitle" type="text" placeholder="e.g. Cowboy Coffee Cake" autocomplete="off"/></div>
+        <div class="form-row"><label>Chapter</label><select id="mobFChapter"></select></div>
+        <div class="form-row"><label>Description</label><textarea id="mobFDesc" rows="2" placeholder="A short description..."></textarea></div>
         <div class="form-row">
           <label>Ingredients</label>
-          <textarea id="mobFIngredients" rows="7" placeholder="One ingredient per line"></textarea>
+          <textarea id="mobFIngredients" rows="7" placeholder="One ingredient per line&#10;e.g. 2 cups flour"></textarea>
           <div class="form-hint">One ingredient per line</div>
         </div>
         <div class="form-row">
           <label>Instructions</label>
-          <textarea id="mobFSteps" rows="8" placeholder="One step per line"></textarea>
+          <textarea id="mobFSteps" rows="8" placeholder="One step per line&#10;e.g. Preheat oven to 375F."></textarea>
           <div class="form-hint">One step per line</div>
         </div>
-        <div class="form-row">
-          <label>Tip (optional)</label>
-          <input id="mobFTip" type="text" autocomplete="off"/>
-        </div>
+        <div class="form-row"><label>Tip (optional)</label><input id="mobFTip" type="text" placeholder="e.g. No buttermilk? Use milk + 1 tbsp vinegar." autocomplete="off"/></div>
       </div>
       <div class="mob-editor-bar">
-        <button class="btn-save"   onclick="mob_saveRecipe()">Save</button>
+        <button class="btn-save" onclick="mob_saveRecipe()">Save</button>
         <button class="btn-cancel" onclick="mob_cancelEdit()">Cancel</button>
       </div>
-    </div><!-- /mobPanelEditor -->
+    </div>
 
-    <!-- Panel: Settings -->
+    <!-- Panel 4: Settings -->
     <div class="mob-panel" id="mobPanelSettings">
       <div class="mob-settings-scroll">
         <h2>Settings</h2>
 
+        <!-- Mode toggle — pill style -->
+        <div class="action-group">
+          <div class="action-group-label">Recipe book mode</div>
+          <div style="display:flex;background:rgba(0,0,0,0.06);border-radius:20px;padding:3px;gap:2px;width:fit-content;margin-top:.3rem">
+            <button class="mode-pill-btn" id="mobBtnPub" onclick="setMode('public')">🌐 Public</button>
+            <button class="mode-pill-btn active" id="mobBtnPriv" onclick="setMode('private')">🔒 Private</button>
+          </div>
+          <div class="mode-desc" id="mobModeDesc" style="margin-top:.5rem">
+            <strong>Private:</strong> Your recipes saved to a <em>Recipes</em> folder in your own Google Drive.
+          </div>
+        </div>
+
+        <!-- Cloud sync -->
         <div class="action-group">
           <div class="action-group-label">Cloud sync</div>
           <div class="action-row">
-            <button class="action-btn primary" onclick="firestoreSaveShared()">
+            <button class="action-btn primary" onclick="gdriveSave()">
               <span class="ab-icon">☁</span>Save
             </button>
-            <button class="action-btn" onclick="firestoreLoadShared()">
+            <button class="action-btn" onclick="gdriveLoad()">
               <span class="ab-icon">☁</span>Load
             </button>
           </div>
-          <p class="settings-note" style="margin-top:.5rem">
-            Saves only add/update recipes — nothing is deleted from the shared book.
-          </p>
+          <p class="settings-note" style="margin-top:.5rem">Sign in with Google when prompted.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
+  <span style="font-size:.82rem;color:var(--brown);font-weight:700">Auto-sync on save</span>
+  <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+    <input type="checkbox" id="mobAutosyncToggle" onchange="setAutosync(this.checked)"
+      style="width:1.1rem;height:1.1rem;cursor:pointer;accent-color:var(--gold)"/>
+  </label>
+</div>
+<p class="settings-note">Automatically saves to cloud whenever you add or edit a recipe.</p>
         </div>
 
+
+
+        <!-- Export -->
         <div class="action-group">
           <div class="action-group-label">Export</div>
           <div class="action-row">
             <button class="action-btn dark" onclick="exportEpub()">
               <span class="ab-icon">📖</span>EPUB
             </button>
+            <button class="action-btn green epub-drive-section" onclick="exportEpubToDrive()">
+              <span class="ab-icon">☁</span>EPUB → Drive
+            </button>
             <button class="action-btn dark" onclick="printCards()">
               <span class="ab-icon">🖨</span>Cards
             </button>
           </div>
-        </div>
-
-        <details>
-          <summary style="font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;
-                          color:var(--muted);font-weight:700;cursor:pointer;
-                          padding-bottom:.4rem;border-bottom:1px solid var(--border);
-                          display:block;margin-bottom:.5rem">
-            Local backup
-          </summary>
-          <div class="action-row" style="margin-top:.5rem">
-            <button class="action-btn" onclick="saveLocalFile()">
-              <span class="ab-icon">⬇</span>Download
-            </button>
-            <button class="action-btn" onclick="loadLocalFile()">
-              <span class="ab-icon">⬆</span>Load file
-            </button>
+          <p class="settings-note epub-drive-section" style="margin-top:.5rem">EPUB folder for Drive export:</p>
+          <div class="epub-drive-section" style="display:flex;gap:.4rem;margin-top:.4rem;align-items:center">
+            <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
+              style="flex:1;padding:.55rem .7rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--warm-white);color:var(--ink)"
+              onchange="setEpubFolder(this.value)"/>
+            <button onclick="setEpubFolder(this.previousElementSibling.value)"
+              style="padding:.55rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">Set</button>
           </div>
-        </details>
-
-        <div class="action-group" style="margin-top:2rem">
-          <button onclick="logout()" class="action-btn danger-outline"
-                  style="width:100%;padding:.9rem;flex-direction:row;gap:.6rem;">
-            <span class="ab-icon">🚪</span>Sign Out
-          </button>
         </div>
+
+                <!-- Local backup -->
+<details>
+  <summary style="font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem;border-bottom:1px solid var(--border);display:block;margin-bottom:.5rem">Local backup</summary>
+  <div class="action-row" style="margin-top:.5rem">
+    <button class="action-btn" onclick="saveLocalFile()">
+      <span class="ab-icon">⬇</span>Download
+    </button>
+    <button class="action-btn" onclick="loadLocalFile()">
+      <span class="ab-icon">⬆</span>Load file
+    </button>
+  </div>
+</details>
+<div class="action-group" style="margin-top: 2rem;">
+      <button onclick="logout()" class="action-btn danger-outline" style="width: 100%; padding: 0.9rem; font-size: 0.85rem; flex-direction: row; gap: 0.6rem;">
+        <span class="ab-icon">🚪</span> Sign Out
+      </button>
+    </div>
+
+  </div>
+</div>        
       </div>
-    </div><!-- /mobPanelSettings -->
+    </div>
 
   </div><!-- /mob-panels -->
-
 </div><!-- /app -->
 
-
-<!-- ═══════════════════════════════════════════════════════════════
-     DESKTOP SETTINGS PANEL
-════════════════════════════════════════════════════════════════ -->
+<!-- Desktop settings popover -->
 <div class="desk-settings" id="deskSettings">
   <h3>⚙ Settings</h3>
-  <span class="ds-label">Cloud sync</span>
-  <p class="ds-note">Saves add/update recipes only — nothing is deleted from the shared book.</p>
-  <div class="ds-row" style="margin-top:.4rem">
-    <button onclick="firestoreSaveShared()" class="primary">☁ Save</button>
-    <button onclick="firestoreLoadShared()">☁ Load</button>
+
+  <!-- Mode toggle -->
+  <span class="ds-label">Recipe book mode</span>
+  <div style="display:flex;background:rgba(0,0,0,0.06);border-radius:20px;padding:3px;gap:2px;width:fit-content;margin-top:.4rem">
+    <button class="mode-pill-btn" id="deskBtnPub" onclick="setMode('public')">🌐 Public</button>
+    <button class="mode-pill-btn active" id="deskBtnPriv" onclick="setMode('private')">🔒 Private</button>
   </div>
+  <p class="ds-note" id="deskModeDesc" style="margin-top:.4rem">Your recipes are saved to a <em>Recipes</em> folder in your own Google Drive.</p>
+
   <hr class="ds-divider"/>
+
+  <!-- EPUB folder (still needed for Drive EPUB export) -->
+  <div class="epub-drive-section">
+  <span class="ds-label">EPUB Drive folder</span>
+  <div style="display:flex;gap:.5rem;align-items:center;margin-top:.35rem">
+    <input class="epub-folder-input" type="text" placeholder="e.g. Recipes/EPUBs"
+      style="flex:1;padding:.5rem .7rem;font-size:.88rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--cream);color:var(--ink);outline:none"
+      onkeydown="if(event.key==='Enter') setEpubFolder(this.value)"/>
+    <button onclick="setEpubFolder(this.previousElementSibling.value)"
+      style="padding:.5rem .8rem;background:var(--brown);color:#fff;border:none;border-radius:3px;font-family:Lato,sans-serif;font-size:.75rem;font-weight:700;cursor:pointer">Set</button>
+  </div>
+  <p class="ds-note">Folder in your Drive for EPUB exports.</p>
+      <hr class="ds-divider"/>
+  </div>
+  
+  <!-- /epub-drive-section -->
+
+
+
   <span class="ds-label">Export</span>
-  <div class="ds-row" style="margin-top:.35rem">
+  <div class="ds-row epub-drive-section" style="margin-top:.35rem">
+    <button onclick="exportEpubToDrive()" class="green">☁ EPUB → Drive</button>
+  </div>
+<div class="ds-row" style="margin-top:.35rem">
     <button onclick="exportEpub()">⬇ EPUB</button>
     <button onclick="printCards()">🖨 Cards</button>
-  </div>
+</div>
   <hr class="ds-divider"/>
-  <details>
-    <summary style="font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;
-                    color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem">
-      Local backup
-    </summary>
-    <div class="ds-row" style="margin-top:.5rem">
-      <button onclick="saveLocalFile()">⬇ Download</button>
-      <button onclick="loadLocalFile()">⬆ Load file</button>
-    </div>
-  </details>
-  <hr class="ds-divider" style="margin-top:1rem"/>
-  <button onclick="logout()" class="action-btn danger-outline"
-          style="width:100%;padding:.6rem;margin-top:.5rem;flex-direction:row;gap:.5rem;">
-    <span class="ab-icon" style="font-size:1.1rem">🚪</span>Sign Out
-  </button>
+
+<details>
+  <summary style="font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;padding-bottom:.4rem">Local backup</summary>
+  <div class="ds-row" style="margin-top:.5rem">
+    <button onclick="saveLocalFile()">⬇ Download</button>
+    <button onclick="loadLocalFile()">⬆ Load file</button>
+  </div>
+</details>
+<hr class="ds-divider" style="margin-top: 1rem;" />
+    <button onclick="logout()" class="action-btn danger-outline" style="width: 100%; padding: 0.6rem; margin-top: 0.5rem; flex-direction: row; gap: 0.5rem;">
+      <span class="ab-icon" style="font-size: 1.1rem;">🚪</span> Sign Out
+    </button>  
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════════════════
-     MOBILE NAVIGATION BAR
-════════════════════════════════════════════════════════════════ -->
+<!-- Mobile bottom nav -->
 <nav class="mob-nav">
   <div class="mob-nav-inner">
     <button class="mob-tab active" id="tabRecipes" onclick="mob_switchTab('recipes')">
@@ -380,31 +1208,20 @@
       <span class="tab-icon">⏱</span><span>Timers</span>
       <span class="timer-badge" id="timerBadge"></span>
     </button>
-    <button class="mob-tab" id="tabNotif" onclick="toggleNotifDropdown()">
-      <span class="tab-icon">🔔</span><span>Alerts</span>
-      <span class="timer-badge" id="mobNotifBadge" style="top:2px;right:8px"></span>
-    </button>
     <button class="mob-tab" id="tabSettings" onclick="mob_switchTab('settings')">
       <span class="tab-icon">⚙️</span><span>Settings</span>
     </button>
   </div>
 </nav>
 
-
-<!-- ═══════════════════════════════════════════════════════════════
-     TIMER MODAL
-════════════════════════════════════════════════════════════════ -->
+<!-- Timer modal -->
 <div class="timer-overlay" id="timerTray" onclick="if(event.target===this)timerTrayToggle()">
   <div class="timer-modal">
-    <h3>⏱ Timers
-      <button class="timer-modal-close" onclick="timerTrayToggle()">✕</button>
-    </h3>
-    <div id="timerNotifRow"
-         style="margin-bottom:.8rem;font-size:.8rem;color:var(--muted);
-                display:flex;align-items:center;justify-content:space-between">
-      <span id="timerNotifStatus">Alerts: off</span>
-      <button class="timer-preset-btn" onclick="timerRequestPermission()">Enable alerts</button>
-    </div>
+    <h3>⏱ Timers <button class="timer-modal-close" onclick="timerTrayToggle()">✕</button></h3>
+    <div id="timerNotifRow" style="margin-bottom:.8rem;font-size:.8rem;color:var(--muted);display:flex;align-items:center;justify-content:space-between">
+  <span id="timerNotifStatus">Alerts: off</span>
+  <button class="timer-preset-btn" onclick="timerRequestPermission()">Enable alerts</button>
+</div>
     <div class="timer-section-label">Quick start</div>
     <div class="timer-presets">
       <button class="timer-preset-btn" onclick="timerAdd(5,'5 min')">5 min</button>
@@ -427,65 +1244,1550 @@
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════════════════
-     CHAPTER MODAL
-════════════════════════════════════════════════════════════════ -->
+<!-- Add Chapter Modal -->
 <div class="modal-overlay" id="chapterModal">
   <div class="modal">
     <h3>Add New Chapter</h3>
     <div class="form-row">
       <label>Chapter Name</label>
-      <input type="text" id="newChapterName" placeholder="e.g. Soups &amp; Stews" autocomplete="off"/>
+      <input type="text" id="newChapterName" placeholder="e.g. Soups & Stews" autocomplete="off"/>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeChapterModal()">Cancel</button>
-      <button class="btn-save"   onclick="addChapter()">Add</button>
+      <button class="btn-save" onclick="addChapter()">Add</button>
     </div>
   </div>
 </div>
 
+<!-- Print area -->
+<div id="printArea"></div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     NAME / FILENAME MODAL
-════════════════════════════════════════════════════════════════ -->
+<!-- Naming modal -->
 <div class="name-modal-overlay" id="nameModal">
   <div class="name-modal">
     <h3 id="nameModalTitle">Name your file</h3>
-    <p  id="nameModalDesc"></p>
-    <input type="text" id="nameModalInput" autocomplete="off"/>
+    <p id="nameModalDesc">This name will be used for the downloaded file and as the book title.</p>
+    <input type="text" id="nameModalInput" placeholder="e.g. Italian Favourites" autocomplete="off"/>
     <div class="name-hint" id="nameModalHint"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeNameModal()">Cancel</button>
-      <button class="btn-save"   onclick="confirmNameModal()">Continue</button>
+      <button class="btn-save" onclick="confirmNameModal()">Continue</button>
     </div>
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════════════════
-     MISC
-════════════════════════════════════════════════════════════════ -->
-<div id="printArea"></div>
 <div class="toast" id="toast"></div>
-<input type="file" id="fileInput" accept=".json" style="display:none"
-       onchange="handleFileLoad(event)"/>
+<input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileLoad(event)"/>
+
+<script>
+// ══════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════
+const LS_KEY = 'hk_recipe_book_v2';
+
+const DEFAULT_DATA = {
+  chapters: [
+    {id:'breakfast', name:'Breakfast Foods'},
+    {id:'cakes',     name:'Cakes'},
+    {id:'cookies',   name:'Cookies'},
+    {id:'candy',     name:'Candy'},
+    {id:'mains',     name:'Meat & Main Dishes'},
+  ],
+  recipes: [
+    {id:'r1',chapterId:'breakfast',title:'Cowboy Coffee Cake',desc:'A rustic, hearty coffee cake with a thick brown sugar crumble.',ingredients:['2 cups all-purpose flour','3/4 cup brown sugar, packed','1/4 cup granulated sugar','1/2 tsp salt','1 1/2 tsp cinnamon','1/2 cup cold unsalted butter, cut into pieces','1 tsp baking powder','1/2 tsp baking soda','1 large egg','1 cup buttermilk'],steps:['Preheat oven to 375F (190C). Grease an 8x8 inch baking pan.','Combine flour, both sugars, salt, and cinnamon. Cut in cold butter until crumbly.','Scoop out 1/2 cup of crumb mixture for topping.','Stir baking powder and soda into remaining mix. Add egg and buttermilk, stir until just combined.','Spread in pan, sprinkle crumble on top.','Bake 25-30 minutes until golden. Cool 10 minutes before slicing.'],tip:'No buttermilk? Add 1 tbsp vinegar to 1 cup regular milk and let sit 5 minutes.'},
+    {id:'r2',chapterId:'cakes',title:'Classic Yellow Birthday Cake',desc:'A buttery, tender yellow cake with fluffy chocolate buttercream.',ingredients:['2 1/2 cups all-purpose flour','2 1/2 tsp baking powder','1/2 tsp salt','1 cup unsalted butter, softened','2 cups sugar','4 large eggs','1 tbsp vanilla extract','1 cup whole milk','Frosting: 1 cup butter, 3 cups powdered sugar, 1/2 cup cocoa powder, 1/4 cup heavy cream, 1 tsp vanilla'],steps:['Preheat oven to 350F (175C). Grease and flour two 9-inch round pans.','Whisk flour, baking powder, and salt.','Beat butter and sugar until fluffy, about 4 minutes. Add eggs one at a time, then vanilla.','Alternate flour mix and milk, beginning and ending with flour.','Bake 30-35 minutes until a toothpick comes out clean. Cool completely, then frost.'],tip:'Refrigerate the frosted cake 20 minutes before slicing for cleaner cuts.'},
+    {id:'r3',chapterId:'cookies',title:'Brown Butter Chocolate Chip Cookies',desc:"Brown butter and a fridge rest make these the best cookies you'll ever bake.",ingredients:['2 1/4 cups all-purpose flour','1 tsp baking soda','1 tsp salt','1 cup unsalted butter','3/4 cup granulated sugar','3/4 cup brown sugar, packed','2 large eggs','2 tsp vanilla extract','2 cups chocolate chips','Flaky sea salt for topping'],steps:['Brown butter until golden and nutty. Cool 10 minutes.','Whisk in both sugars, then eggs and vanilla.','Stir in flour, baking soda, and salt. Fold in chocolate chips.','Refrigerate at least 1 hour (overnight is better).','Bake at 375F (190C) for 10-12 minutes. Sprinkle with flaky salt. Cool on pan 5 minutes.'],tip:'Dough keeps frozen 3 months — bake from frozen, add 2 minutes.'},
+  ]
+};
+
+let data = loadFromStorage();
+let openChapters = new Set([data.chapters[0]?.id]);
+
+let deskCurrentId = null;
+let deskEditingId = null;
+let mobCurrentId  = null;
+let mobEditingId  = null;
+
+// ══════════════════════════════════════════════════
+// MODE  (private | public)
+// ══════════════════════════════════════════════════
+const MODE_KEY = 'hk_recipe_mode';
+// Public shared folder ID
+const PUBLIC_FOLDER_ID = '1wxywQiLGkZ18S40rZi3JpXUZg4Ee0TaE';
+// Private always uses "Recipes" subfolder
+const PRIVATE_FOLDER_NAME = 'Recipes';
+
+function getMode() { return localStorage.getItem(MODE_KEY) || 'public'; }
+  const AUTOSYNC_KEY = 'hk_autosync';
+function getAutosync() { return localStorage.getItem(AUTOSYNC_KEY) === 'true'; }
+function setAutosync(val) {
+  localStorage.setItem(AUTOSYNC_KEY, val);
+  document.querySelectorAll('#mobAutosyncToggle, #deskAutosyncToggle').forEach(el => el.checked = val);
+  showToast(val ? 'Auto-sync on' : 'Auto-sync off');
+}
+function setMode(m) {
+  localStorage.setItem(MODE_KEY, m);
+  updateModeUI(m);
+  showToast(m === 'public' ? '🌐 Public mode — shared recipe book' : '🔒 Private mode — your Drive');
+}
+
+function updateModeUI(m) {
+  const isPriv = m === 'private';
+
+  // Private buttons (mob + desk)
+  ['mobBtnPriv', 'deskBtnPriv'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'mode-pill-btn' + (isPriv ? ' active' : '');
+  });
+  // Public buttons (mob + desk)
+  ['mobBtnPub', 'deskBtnPub'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'mode-pill-btn' + (!isPriv ? ' active pub' : '');
+  });
+
+  const privDesc = '<strong>Private:</strong> Your recipes are saved to a <em>Recipes</em> folder in your own Google Drive.';
+  const pubDesc  = '<strong>Public:</strong> Recipes are saved to and loaded from a shared Gist. PIN required to save.';
+  ['deskModeDesc', 'mobModeDesc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = isPriv ? privDesc : pubDesc;
+  });
+
+  // Hide EPUB Drive folder fields in public mode (not applicable)
+  document.querySelectorAll('.epub-drive-section').forEach(el => {
+    el.style.display = isPriv ? '' : 'none';
+  });
+  document.querySelectorAll('#mobAutosyncToggle, #deskAutosyncToggle').forEach(el => el.checked = getAutosync());
+}
+
+// ══════════════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════════════
+function loadFromStorage() {
+  try { const s = localStorage.getItem(LS_KEY); if (s) return JSON.parse(s); } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function persistToStorage() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════
+// NAMING MODAL
+// ══════════════════════════════════════════════════
+let nameModalCallback = null;
+
+function showNameModal({ title, desc, placeholder, hint, defaultVal, callback }) {
+  document.getElementById('nameModalTitle').textContent = title;
+  document.getElementById('nameModalDesc').textContent = desc;
+  document.getElementById('nameModalInput').placeholder = placeholder || '';
+  document.getElementById('nameModalInput').value = defaultVal || '';
+  document.getElementById('nameModalHint').textContent = hint || '';
+  nameModalCallback = callback;
+  document.getElementById('nameModal').classList.add('open');
+  setTimeout(() => document.getElementById('nameModalInput').select(), 80);
+}
+function closeNameModal() {
+  document.getElementById('nameModal').classList.remove('open');
+  nameModalCallback = null;
+}
+function confirmNameModal() {
+  const val = document.getElementById('nameModalInput').value.trim();
+  if (!val) { document.getElementById('nameModalInput').focus(); return; }
+  const cb = nameModalCallback;
+  closeNameModal();
+  if (cb) cb(val);
+}
+document.getElementById('nameModalInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmNameModal();
+  if (e.key === 'Escape') closeNameModal();
+});
+
+const BOOK_NAME_KEY = 'hk_book_name';
+function getBookName() { return localStorage.getItem(BOOK_NAME_KEY) || 'My Recipes'; }
+function setBookName(n) { localStorage.setItem(BOOK_NAME_KEY, n); }
+
+function saveLocalFile() {
+  showNameModal({
+    title: 'Save Recipe File',
+    desc: 'Choose a name for this recipe book.',
+    placeholder: 'e.g. Italian Favourites',
+    defaultVal: getBookName(),
+    hint: 'Saved as: [name].json',
+    callback: (name) => {
+      setBookName(name);
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const fname = name.replace(/[^a-z0-9\-_ ]/gi, '').trim().replace(/ /g, '_') || 'recipes';
+      a.href = url; a.download = `${fname}.json`; a.click();
+      URL.revokeObjectURL(url);
+      showToast(`${fname}.json saved`);
+    }
+  });
+}
+
+function loadLocalFile() {
+  document.getElementById('fileInput').click();
+}
+function handleFileLoad(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const parsed = JSON.parse(evt.target.result);
+      if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+      data = parsed;
+      const guessedName = file.name.replace(/\.json$/i,'').replace(/_/g,' ');
+      if (guessedName) setBookName(guessedName);
+      openChapters = new Set([data.chapters[0]?.id]);
+      persistToStorage();
+      deskCurrentId = null; deskEditingId = null;
+      mobCurrentId = null; mobEditingId = null;
+      renderAll();
+      showPanel('deskWelcome');
+      mob_backToList();
+      showToast(`Loaded: ${file.name}`);
+    } catch(err) {
+      showToast('Could not read file — is it a valid .json?');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ══════════════════════════════════════════════════
+// RECIPE CARDS PRINT
+// ══════════════════════════════════════════════════
+function cardSectionedList(lines, tag) {
+  const open = () => `<${tag} style="padding-left:3.5mm;margin:0">`;
+  const close = () => `</${tag}>`;
+  let html = open(); let isOpen = true;
+  for (const line of lines) {
+    const t = line.trim(); if (!t) continue;
+    if (t.endsWith(':')) {
+      if (isOpen) { html += close(); isOpen = false; }
+      html += `<li class="card-subhead">${esc(t.slice(0,-1))}</li>${open()}`;
+      isOpen = true;
+    } else {
+      html += `<li>${esc(t)}</li>`;
+    }
+  }
+  if (isOpen) html += close();
+  return html;
+}
+
+function buildCard(recipe, side, cardNum, totalCards, bookName) {
+  const ch = data.chapters.find(c => c.id === recipe.chapterId);
+  const titleText = recipe.title;
+  const metaText = (ch ? ch.name + ' · ' : '') + bookName;
+  const spine = `<svg class="card-spine-svg" xmlns="http://www.w3.org/2000/svg"
+    width="100%" height="100%" viewBox="0 0 20 544" preserveAspectRatio="none"
+    style="position:absolute;top:0;left:0;display:block">
+  <rect width="20" height="544" fill="#c8952a"/>
+  <text x="10" y="525" font-family="Georgia,serif" font-size="14.5" font-weight="bold"
+        fill="#1a1208" text-anchor="start" dominant-baseline="central"
+        transform="rotate(-90,10,525)">${esc(titleText)}</text>
+  <text x="10" y="20" font-family="Georgia,serif" font-size="8.5" font-weight="600"
+        fill="#1a1208" text-anchor="end" dominant-baseline="central"
+        transform="rotate(-90,10,20)">${esc(metaText)}</text>
+</svg>`;
+  if (side === 'front') {
+    return `<div class="recipe-card">
+      ${spine}
+      ${recipe.desc ? `<p class="card-desc" style="margin-bottom:2mm;padding-bottom:1.5mm;border-bottom:0.5mm solid #c8952a">${esc(recipe.desc)}</p>` : '<div style="border-bottom:0.5mm solid #c8952a;margin-bottom:2mm;padding-bottom:0"></div>'}
+      <div class="card-section">Ingredients</div>
+      <div class="card-ing-box">${cardSectionedList(recipe.ingredients, 'ul')}</div>
+    </div>`;
+  } else {
+    return `<div class="recipe-card back">
+      ${spine}
+      <div style="border-bottom:0.5mm solid #c8952a;margin-bottom:2mm"></div>
+      <div class="card-section">Instructions</div>
+      ${cardSectionedList(recipe.steps, 'ol')}
+      ${recipe.tip ? `<div class="card-tip"><strong>Tip:</strong> ${esc(recipe.tip)}</div>` : ''}
+    </div>`;
+  }
+}
+
+function printCards() {
+  const bookName = getBookName();
+  const recipes = data.recipes;
+  if (!recipes.length) { showToast('No recipes to print'); return; }
+  const pages = [];
+  for (let i = 0; i < recipes.length; i += 4) {
+    const batch = recipes.slice(i, i + 4);
+    let frontHtml = '<div class="card-page">';
+    for (let j = 0; j < 4; j++) {
+      const r = batch[j];
+      frontHtml += r ? buildCard(r, 'front', i+j+1, recipes.length, bookName) : '<div class="recipe-card" style="border:1px dashed #ddd;background:#fafafa"></div>';
+    }
+    frontHtml += '</div>';
+    let backHtml = '<div class="card-page back-page">';
+    for (const j of [1,0,3,2]) {
+      const r = batch[j];
+      backHtml += r ? buildCard(r, 'back', i+j+1, recipes.length, bookName) : '<div class="recipe-card" style="border:1px dashed #ddd;background:#fafafa"></div>';
+    }
+    backHtml += '</div>';
+    pages.push(frontHtml, backHtml);
+  }
+  document.getElementById('printArea').innerHTML = pages.join('');
+  window.print();
+}
+
+// ══════════════════════════════════════════════════
+// SHARED RENDER HELPERS
+// ══════════════════════════════════════════════════
+function renderAll() {
+  renderDesktopSidebar();
+  renderMobileList();
+  populateChapterSelects();
+}
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function renderSectionedList(lines, tag) {
+  const subStyle = `list-style:none;font-weight:700;margin-top:.7em;margin-left:-0.5em`;
+  let html = `<${tag}>`;
+  let open = true;
+  let stepNum = 0;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.endsWith(':')) {
+      if (open) { html += `</${tag}>`; open = false; }
+      html += `<li style="${subStyle}">${esc(trimmed.slice(0, -1))}</li><${tag}>`;
+      open = true;
+      if (tag === 'ol') stepNum = 0;
+    } else {
+      if (tag === 'ol') {
+        stepNum++;
+        html += `<li><span class="step-num">${stepNum}</span><span>${esc(trimmed)}</span></li>`;
+      } else {
+        html += `<li>${esc(trimmed)}</li>`;
+      }
+    }
+  }
+  if (open) html += `</${tag}>`;
+  return html;
+}
+function epubSectionedList(lines, tag) {
+  let html = `<${tag}>`;
+  let open = true;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.endsWith(':')) {
+      if (open) { html += `</${tag}>`; open = false; }
+      html += `<p class="sec-head">${esc(trimmed.slice(0, -1))}</p><${tag}>`;
+      open = true;
+    } else {
+      html += `<li>${esc(trimmed)}</li>`;
+    }
+  }
+  if (open) html += `</${tag}>`;
+  return html;
+}
+function renderRecipeInto(recipe, ids) {
+  const ch = data.chapters.find(c => c.id === recipe.chapterId);
+  document.getElementById(ids.chapter).textContent = ch ? ch.name : '';
+  document.getElementById(ids.title).textContent = recipe.title;
+  if (ids.desc) {
+    const descEl = document.getElementById(ids.desc);
+    descEl.innerHTML = linkifyTimers(esc(recipe.desc || ''));
+  }
+  document.getElementById(ids.ingredients).innerHTML = renderSectionedList(recipe.ingredients, 'ul');
+  // Linkify timers in steps
+  const stepsHtml = renderSectionedList(recipe.steps, 'ol');
+  document.getElementById(ids.steps).innerHTML = linkifyTimers(stepsHtml);
+  const tipEl = document.getElementById(ids.tip);
+  if (recipe.tip) {
+    tipEl.innerHTML = linkifyTimers(esc(recipe.tip));
+    tipEl.style.display = 'block';
+  } else { tipEl.style.display = 'none'; }
+}
+function populateChapterSelects() {
+  const opts = data.chapters.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  document.getElementById('deskFChapter').innerHTML = opts;
+  document.getElementById('mobFChapter').innerHTML = opts;
+}
+function showPanel(id) {
+  ['deskWelcome','deskRecipeView','deskEditor'].forEach(p => {
+    const el = document.getElementById(p);
+    el.classList.remove('active'); el.style.display = '';
+  });
+  const target = document.getElementById(id);
+  if (id === 'deskWelcome') target.style.display = '';
+  else target.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+// DESKTOP
+// ══════════════════════════════════════════════════
+function renderDesktopSidebar() {
+  const list = document.getElementById('deskChapterList');
+  list.innerHTML = data.chapters.map((ch, idx) => {
+    const recipes = data.recipes.filter(r => r.chapterId === ch.id);
+    const isOpen = openChapters.has(ch.id);
+    const isFirst = idx === 0;
+    const isLast = idx === data.chapters.length - 1;
+    return `<div class="chapter-group">
+      <div class="chapter-heading ${isOpen?'open':''}" onclick="toggleChapter('${ch.id}')">
+        <span>${esc(ch.name)}</span>
+        <div style="display:flex;align-items:center;gap:2px">
+<span onclick="event.stopPropagation();chapterMenu('${ch.id}',this)"
+  style="padding:2px 8px;font-size:.85rem;color:var(--muted);cursor:pointer">⋯</span>
+        </div>
+      </div>
+      <div class="recipe-list ${isOpen?'open':''}">
+        ${recipes.map(r => `<div class="recipe-item ${r.id===deskCurrentId?'active':''}" onclick="desk_showRecipe('${r.id}')">${esc(r.title)}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleChapter(id) {
+  openChapters.has(id) ? openChapters.delete(id) : openChapters.add(id);
+  renderDesktopSidebar();
+}
+function moveChapter(id, dir) {
+  const idx = data.chapters.findIndex(c => c.id === id);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= data.chapters.length) return;
+  const tmp = data.chapters[idx]; data.chapters[idx] = data.chapters[newIdx]; data.chapters[newIdx] = tmp;
+  persistToStorage(); renderAll();
+}
+function deleteChapter(id) {
+  const ch = data.chapters.find(c => c.id === id);
+  const count = data.recipes.filter(r => r.chapterId === id).length;
+  const warn = count > 0 ? ` It contains ${count} recipe${count>1?'s':''} which will also be deleted.` : '';
+  if (!confirm(`Delete chapter "${ch.name}"?${warn}`)) return;
+  data.chapters = data.chapters.filter(c => c.id !== id);
+  data.recipes  = data.recipes.filter(r => r.chapterId !== id);
+  if (deskCurrentId && !data.recipes.find(r => r.id === deskCurrentId)) {
+    deskCurrentId = null; showPanel('deskWelcome');
+  }
+  persistToStorage(); renderAll();
+  showToast(`"${ch.name}" deleted`);
+}
+function desk_showRecipe(id) {
+  const r = data.recipes.find(x => x.id === id);
+  if (!r) return;
+  deskCurrentId = id; deskEditingId = null;
+  renderRecipeInto(r, { chapter:'deskViewChapter', title:'deskViewTitle', desc:'deskViewDesc', ingredients:'deskViewIngredients', steps:'deskViewSteps', tip:'deskViewTip' });
+  showPanel('deskRecipeView'); renderDesktopSidebar();
+  if (window.recipeChat_load) recipeChat_load(id);
+}
+function desk_showAddRecipe() {
+  deskEditingId = null;
+  document.getElementById('deskEditorTitle').textContent = 'Add New Recipe';
+  ['deskFTitle','deskFDesc','deskFIngredients','deskFSteps','deskFTip'].forEach(id => document.getElementById(id).value = '');
+  populateChapterSelects(); showPanel('deskEditor');
+}
+function desk_editCurrentRecipe() {
+  if (!deskCurrentId) return;
+  const r = data.recipes.find(x => x.id === deskCurrentId);
+  if (!r) return;
+  deskEditingId = deskCurrentId;
+  document.getElementById('deskEditorTitle').textContent = 'Edit Recipe';
+  document.getElementById('deskFTitle').value = r.title;
+  document.getElementById('deskFDesc').value = r.desc || '';
+  document.getElementById('deskFIngredients').value = r.ingredients.join('\n');
+  document.getElementById('deskFSteps').value = r.steps.join('\n');
+  document.getElementById('deskFTip').value = r.tip || '';
+  populateChapterSelects();
+  document.getElementById('deskFChapter').value = r.chapterId;
+  showPanel('deskEditor');
+}
+function desk_saveRecipe() {
+  const title       = document.getElementById('deskFTitle').value.trim();
+  const chapterId   = document.getElementById('deskFChapter').value;
+  const desc        = document.getElementById('deskFDesc').value.trim();
+  const ingredients = document.getElementById('deskFIngredients').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const steps       = document.getElementById('deskFSteps').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const tip         = document.getElementById('deskFTip').value.trim();
+  if (!title) return showToast('Please enter a recipe name');
+  if (!ingredients.length) return showToast('Please add at least one ingredient');
+  if (!steps.length) return showToast('Please add at least one step');
+  if (deskEditingId) {
+    const idx = data.recipes.findIndex(r => r.id === deskEditingId);
+    data.recipes[idx] = {...data.recipes[idx], title, chapterId, desc, ingredients, steps, tip};
+    deskCurrentId = deskEditingId;
+    showToast('Recipe updated!');
+  } else {
+    const id = 'r_' + Date.now();
+    data.recipes.push({id, chapterId, title, desc, ingredients, steps, tip});
+    deskCurrentId = id;
+    showToast('Recipe added!');
+  }
+  openChapters.add(chapterId); persistToStorage(); deskEditingId = null;
+  renderAll(); desk_showRecipe(deskCurrentId);
+  if (getAutosync()) gdriveSave();
+}
+
+  
+function desk_cancelEdit() {
+  if (deskCurrentId) desk_showRecipe(deskCurrentId);
+  else showPanel('deskWelcome');
+}
+function desk_deleteCurrentRecipe() {
+  if (!deskCurrentId) return;
+  const r = data.recipes.find(x => x.id === deskCurrentId);
+  if (!confirm(`Delete "${r.title}"? This cannot be undone.`)) return;
+  data.recipes = data.recipes.filter(x => x.id !== deskCurrentId);
+  deskCurrentId = null; persistToStorage(); renderAll(); showPanel('deskWelcome');
+  showToast('Recipe deleted');
+}
+
+// ══════════════════════════════════════════════════
+// MOBILE
+// ══════════════════════════════════════════════════
+function renderMobileList() {
+  const list = document.getElementById('mobChapterList');
+  list.innerHTML = data.chapters.map((ch, idx) => {
+    const recipes = data.recipes.filter(r => r.chapterId === ch.id);
+    const isOpen = openChapters.has(ch.id);
+    const isFirst = idx === 0, isLast = idx === data.chapters.length - 1;
+    return `<div>
+      <div class="mob-chapter-heading ${isOpen?'open':''}" onclick="mob_toggleChapter('${ch.id}')">
+        <span>${esc(ch.name)}</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span onclick="event.stopPropagation();chapterMenu('${ch.id}',this)"
+            style="padding:2px 6px;font-size:.8rem;color:var(--muted);cursor:pointer">⋯</span>
+        </div>
+      </div>
+      <div class="mob-recipe-list ${isOpen?'open':''}">
+        ${recipes.map(r => `<div class="mob-recipe-row" onclick="mob_showRecipe('${r.id}')">
+          <span>${esc(r.title)}</span><span class="arrow">›</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function chapterMenu(id, triggerEl) {
+  const ch = data.chapters.find(c => c.id === id);
+  const idx = data.chapters.findIndex(c => c.id === id);
+  const isFirst = idx === 0, isLast = idx === data.chapters.length - 1;
+  const isMobile = window.innerWidth <= 640;
+
+  document.getElementById('chapterMenuEl')?.remove();
+  const menu = document.createElement('div');
+  menu.id = 'chapterMenuEl';
+
+  if (isMobile) {
+    menu.style.cssText = `position:fixed;inset:0;background:rgba(26,18,8,0.5);z-index:120;display:flex;align-items:flex-end`;
+    menu.innerHTML = `
+      <div style="width:100%;background:var(--warm-white);border-top:2px solid var(--gold);padding-bottom:env(safe-area-inset-bottom)">
+        <div style="padding:.8rem 1.2rem;font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown);border-bottom:1px solid var(--border)">${esc(ch.name)}</div>
+        ${!isFirst ? `<div onclick="moveChapter('${id}',-1);document.getElementById('chapterMenuEl').remove();renderAll()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▲ Move Up</div>` : ''}
+        ${!isLast  ? `<div onclick="moveChapter('${id}',1);document.getElementById('chapterMenuEl').remove();renderAll()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;border-bottom:1px solid var(--border)">▼ Move Down</div>` : ''}
+        <div onclick="document.getElementById('chapterMenuEl').remove();deleteChapter('${id}')" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--danger);border-bottom:1px solid var(--border)">✕ Delete Chapter</div>
+        <div onclick="document.getElementById('chapterMenuEl').remove()" style="padding:.9rem 1.2rem;font-size:.95rem;cursor:pointer;color:var(--muted)">Cancel</div>
+      </div>`;
+    menu.addEventListener('click', e => { if (e.target === menu) menu.remove(); });
+  } else {
+    const rect = triggerEl.getBoundingClientRect();
+    menu.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;background:var(--warm-white);border:1px solid var(--border);border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:120;min-width:160px;overflow:hidden`;
+    menu.innerHTML = `
+      ${!isFirst ? `<div onclick="moveChapter('${id}',-1);document.getElementById('chapterMenuEl').remove()" style="padding:.6rem 1rem;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--border)">▲ Move Up</div>` : ''}
+      ${!isLast  ? `<div onclick="moveChapter('${id}',1);document.getElementById('chapterMenuEl').remove()" style="padding:.6rem 1rem;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--border)">▼ Move Down</div>` : ''}
+      <div onclick="document.getElementById('chapterMenuEl').remove();deleteChapter('${id}')" style="padding:.6rem 1rem;font-size:.82rem;cursor:pointer;color:var(--danger)">✕ Delete</div>`;
+    setTimeout(() => document.addEventListener('click', function h(e) {
+      if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('click', h); }
+    }), 0);
+  }
+
+  document.body.appendChild(menu);
+}
+function mob_toggleChapter(id) {
+  openChapters.has(id) ? openChapters.delete(id) : openChapters.add(id);
+  renderMobileList();
+}
+function mob_showPanel(panelId) {
+  document.querySelectorAll('.mob-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+}
+function mob_showRecipe(id) {
+  const r = data.recipes.find(x => x.id === id);
+  if (!r) return;
+  mobCurrentId = id;
+  renderRecipeInto(r, { chapter:'mobViewChapter', title:'mobViewTitle', desc:'mobViewDesc', ingredients:'mobViewIngredients', steps:'mobViewSteps', tip:'mobViewTip' });
+  mob_showPanel('mobPanelView');
+  document.querySelector('#mobPanelView .mob-view-scroll').scrollTop = 0;
+  if (window.recipeChat_load) recipeChat_load(id);
+}
+function mob_backToList() {
+  mob_showPanel('mobPanelList');
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tabRecipes').classList.add('active');
+}
+function mob_showAddRecipe() {
+  mobEditingId = null;
+  document.getElementById('mobEditorTitle').textContent = 'Add New Recipe';
+  ['mobFTitle','mobFDesc','mobFIngredients','mobFSteps','mobFTip'].forEach(id => document.getElementById(id).value = '');
+  populateChapterSelects();
+  mob_showPanel('mobPanelEditor');
+  document.querySelector('#mobPanelEditor .mob-editor-scroll').scrollTop = 0;
+}
+function mob_editCurrentRecipe() {
+  if (!mobCurrentId) return;
+  const r = data.recipes.find(x => x.id === mobCurrentId);
+  if (!r) return;
+  mobEditingId = mobCurrentId;
+  document.getElementById('mobEditorTitle').textContent = 'Edit Recipe';
+  document.getElementById('mobFTitle').value = r.title;
+  document.getElementById('mobFDesc').value = r.desc || '';
+  document.getElementById('mobFIngredients').value = r.ingredients.join('\n');
+  document.getElementById('mobFSteps').value = r.steps.join('\n');
+  document.getElementById('mobFTip').value = r.tip || '';
+  populateChapterSelects();
+  document.getElementById('mobFChapter').value = r.chapterId;
+  mob_showPanel('mobPanelEditor');
+  document.querySelector('#mobPanelEditor .mob-editor-scroll').scrollTop = 0;
+}
+function mob_saveRecipe() {
+  const title       = document.getElementById('mobFTitle').value.trim();
+  const chapterId   = document.getElementById('mobFChapter').value;
+  const desc        = document.getElementById('mobFDesc').value.trim();
+  const ingredients = document.getElementById('mobFIngredients').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const steps       = document.getElementById('mobFSteps').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const tip         = document.getElementById('mobFTip').value.trim();
+  if (!title) return showToast('Please enter a recipe name');
+  if (!ingredients.length) return showToast('Please add at least one ingredient');
+  if (!steps.length) return showToast('Please add at least one step');
+  if (mobEditingId) {
+    const idx = data.recipes.findIndex(r => r.id === mobEditingId);
+    data.recipes[idx] = {...data.recipes[idx], title, chapterId, desc, ingredients, steps, tip};
+    mobCurrentId = mobEditingId;
+    showToast('Recipe updated!');
+  } else {
+    const id = 'r_' + Date.now();
+    data.recipes.push({id, chapterId, title, desc, ingredients, steps, tip});
+    mobCurrentId = id;
+    showToast('Recipe added!');
+  }
+  openChapters.add(chapterId); persistToStorage(); mobEditingId = null;
+  renderAll(); mob_showRecipe(mobCurrentId);
+  if (getAutosync()) gdriveSave();
+}
+function mob_cancelEdit() {
+  if (mobCurrentId) mob_showRecipe(mobCurrentId);
+  else mob_backToList();
+}
+function mob_deleteCurrentRecipe() {
+  if (!mobCurrentId) return;
+  const r = data.recipes.find(x => x.id === mobCurrentId);
+  if (!confirm(`Delete "${r.title}"?`)) return;
+  data.recipes = data.recipes.filter(x => x.id !== mobCurrentId);
+  mobCurrentId = null; persistToStorage(); renderAll(); mob_backToList();
+  showToast('Recipe deleted');
+}
+function mob_switchTab(tab) {
+  // Close timer tray when switching to another tab
+  document.getElementById('timerTray').classList.remove('open');
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  if (tab === 'recipes') {
+    document.getElementById('tabRecipes').classList.add('active');
+    mob_showPanel('mobPanelList');
+  } else {
+    document.getElementById('tabSettings').classList.add('active');
+    mob_showPanel('mobPanelSettings');
+  }
+}
+
+// ══════════════════════════════════════════════════
+// CHAPTER MODAL
+// ══════════════════════════════════════════════════
+function showAddChapter() {
+  document.getElementById('newChapterName').value = '';
+  document.getElementById('chapterModal').classList.add('open');
+  setTimeout(() => document.getElementById('newChapterName').focus(), 80);
+}
+function closeChapterModal() { document.getElementById('chapterModal').classList.remove('open'); }
+function addChapter() {
+  const name = document.getElementById('newChapterName').value.trim();
+  if (!name) return showToast('Please enter a chapter name');
+  const id = 'ch_' + Date.now();
+  data.chapters.push({id, name});
+  openChapters.add(id); persistToStorage(); renderAll(); closeChapterModal();
+  showToast(`"${name}" added`);
+}
+document.getElementById('newChapterName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addChapter();
+  if (e.key === 'Escape') closeChapterModal();
+});
+
+// ══════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+  function waitForFirestore(timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    if (window.firestoreLoad) { resolve(); return; }
+    const start = Date.now();
+    const check = setInterval(() => {
+      if (window.firestoreLoad) { clearInterval(check); resolve(); }
+      else if (Date.now() - start > timeout) {
+        clearInterval(check);
+        showToast('Firebase not ready — check connection');
+        reject();
+      }
+    }, 100);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// GOOGLE DRIVE
+// ══════════════════════════════════════════════════
+const GD_CLIENT_ID   = '970185316494-1et3pq5g5bqk7ckt59079ra008lgfvq0.apps.googleusercontent.com';
+const GD_SCOPE       = 'https://www.googleapis.com/auth/drive.file';
+const GD_FILE_ID_KEY = 'hk_gdrive_file_id';
+const GD_TOKEN_KEY   = 'hk_gdrive_token';
+
+function getGdriveToken() { return localStorage.getItem(GD_TOKEN_KEY); }
+
+let gTokenClient = null;
+function gdriveAuth(callback) {
+  if (!window.google) { showToast('Google API not loaded yet — try again'); return; }
+  gTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GD_CLIENT_ID,
+    scope: GD_SCOPE,
+    callback: (resp) => {
+      if (resp.error) { showToast('Google sign-in failed'); return; }
+      localStorage.setItem(GD_TOKEN_KEY, resp.access_token);
+      callback(resp.access_token);
+    }
+  });
+  gTokenClient.requestAccessToken();
+}
+
+async function gdriveApiCall(token, url, options = {}) {
+  const resp = await fetch(url, {
+    ...options,
+    headers: { 'Authorization': `Bearer ${token}`, ...(options.headers || {}) }
+  });
+  if (resp.status === 401) { localStorage.removeItem(GD_TOKEN_KEY); return null; }
+  return resp;
+}
+
+// Resolve the target folder ID based on current mode
+// private → find/create "Recipes" subfolder in user's Drive
+// public  → use the hardcoded shared folder ID directly
+async function getTargetFolderId(token) {
+  const mode = getMode();
+  if (mode === 'public') {
+    // Verify we can access the shared folder by listing it
+    return PUBLIC_FOLDER_ID;
+  }
+  // Private: find or create "Recipes" in user's Drive
+  const q = encodeURIComponent(`name='${PRIVATE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const resp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  if (!resp) return 'AUTH_EXPIRED';
+  const json = await resp.json();
+  if (json.files && json.files.length > 0) return json.files[0].id;
+  // Create it
+  const createResp = await gdriveApiCall(token, 'https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: PRIVATE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+  });
+  if (!createResp) return 'AUTH_EXPIRED';
+  const created = await createResp.json();
+  showToast(`Created "Recipes" folder in your Drive`);
+  return created.id;
+}
+
+async function driveListJsonFiles(token, folderId) {
+  const q = encodeURIComponent(`'${folderId}' in parents and mimeType='application/json' and trashed=false`);
+  const resp = await gdriveApiCall(token,
+    `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc`);
+  if (!resp) return 'AUTH_EXPIRED';
+  const json = await resp.json();
+  return json.files || [];
+}
+
+// Drive file picker (same as before)
+function showDriveFilePicker(files, folderLabel, mode, onPick) {
+  document.getElementById('drivePickerModal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'drivePickerModal';
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(26,18,8,0.6);z-index:160;display:flex;align-items:center;justify-content:center;padding:1rem`;
+  const isSave = mode === 'save';
+  const fileRows = files.map(f => {
+    const date = new Date(f.modifiedTime).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+    return `<div class="dpicker-row" data-id="${f.id}" data-name="${f.name.replace(/\.json$/i,'')}" onclick="dPickerSelect(this)">
+      <span class="dpicker-name">${f.name.replace(/\.json$/i,'')}</span>
+      <span class="dpicker-date">${date}</span>
+    </div>`;
+  }).join('');
+  modal.innerHTML = `
+    <div style="background:var(--warm-white);border:1px solid var(--border);border-radius:6px;padding:1.6rem;width:100%;max-width:420px;max-height:80vh;display:flex;flex-direction:column;gap:.8rem">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--brown)">${isSave ? '☁ Save to' : '☁ Load from'} <em>${folderLabel}</em></h3>
+      <div style="font-size:.8rem;color:var(--muted)">${isSave ? 'Pick an existing file to overwrite, or enter a new name.' : 'Pick a file to load.'}</div>
+      <div id="dPickerList" style="flex:1;overflow-y:auto;border:1px solid var(--border);border-radius:4px;max-height:280px">
+        ${files.length ? fileRows : '<div style="padding:1rem;color:var(--muted);font-size:.85rem;text-align:center">No JSON files found here yet.</div>'}
+      </div>
+      ${isSave ? `
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <input id="dPickerNameInput" type="text" placeholder="New file name…" autocomplete="off"
+          value="${getBookName()}"
+          style="flex:1;padding:.55rem .8rem;font-size:1rem;font-family:Lato,sans-serif;border:1px solid var(--border);border-radius:3px;background:var(--cream);color:var(--ink);outline:none"
+          oninput="document.querySelectorAll('.dpicker-row').forEach(r=>r.classList.remove('selected'))"/>
+        <span style="font-size:.8rem;color:var(--muted)">.json</span>
+      </div>` : ''}
+      <div style="display:flex;gap:.6rem;justify-content:flex-end">
+        <button class="btn-cancel" onclick="document.getElementById('drivePickerModal').remove()">Cancel</button>
+        <button class="btn-save" onclick="dPickerConfirm('${mode}')">${isSave ? 'Save' : 'Load'}</button>
+      </div>
+    </div>
+    <style>
+      .dpicker-row{display:flex;justify-content:space-between;align-items:center;padding:.65rem 1rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+      .dpicker-row:last-child{border-bottom:none}
+      .dpicker-row:hover{background:var(--light-brown)}
+      .dpicker-row.selected{background:rgba(192,87,26,.12);font-weight:700}
+      .dpicker-name{font-size:.88rem;color:var(--ink)}
+      .dpicker-date{font-size:.75rem;color:var(--muted);flex-shrink:0;margin-left:.5rem}
+    </style>`;
+  document.body.appendChild(modal);
+  window._drivePickerCallback = onPick;
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+function dPickerSelect(row) {
+  document.querySelectorAll('.dpicker-row').forEach(r => r.classList.remove('selected'));
+  row.classList.add('selected');
+  const ni = document.getElementById('dPickerNameInput');
+  if (ni) ni.value = row.dataset.name;
+}
+function dPickerConfirm(mode) {
+  const modal = document.getElementById('drivePickerModal');
+  const selected = modal.querySelector('.dpicker-row.selected');
+  const ni = document.getElementById('dPickerNameInput');
+  if (mode === 'save') {
+    const name = ni ? ni.value.trim() : (selected ? selected.dataset.name : '');
+    if (!name) { showToast('Please enter a file name'); return; }
+    modal.remove(); window._drivePickerCallback({ name, fileId: selected ? selected.dataset.id : null });
+  } else {
+    if (!selected) { showToast('Please select a file'); return; }
+    modal.remove(); window._drivePickerCallback({ name: selected.dataset.name, fileId: selected.dataset.id });
+  }
+}
+
+async function gdriveSave() {
+  if (getMode() === 'public') {
+    await waitForFirestore();
+    await window.firestoreSave(); return;
+  }
+  const mode = getMode();
+  const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
+
+  const doSave = async (token) => {
+    showToast('Connecting to Drive…');
+    const folderId = await getTargetFolderId(token);
+    if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
+
+    const files = await driveListJsonFiles(token, folderId);
+    if (files === 'AUTH_EXPIRED') { gdriveAuth(doSave); return; }
+
+    showDriveFilePicker(files, folderLabel, 'save', async ({ name, fileId }) => {
+      setBookName(name);
+      const fileName = name.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') + '.json';
+      showToast('Saving…');
+      try {
+        const json = JSON.stringify(data, null, 2);
+        let resp;
+        if (fileId) {
+          resp = await gdriveApiCall(token,
+            `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: json
+          });
+          if (resp && resp.ok) {
+            await gdriveApiCall(token,
+              `https://www.googleapis.com/drive/v3/files/${fileId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: fileName })
+            });
+          }
+        } else {
+          const boundary = 'boundary_recipes_hk';
+          const metadata = JSON.stringify({ name: fileName, mimeType: 'application/json', parents: [folderId] });
+          const multipart = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${json}\r\n--${boundary}--`;
+          resp = await gdriveApiCall(token,
+            'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+            body: multipart
+          });
+        }
+        if (!resp) { gdriveAuth(doSave); return; }
+        const result = await resp.json();
+        if (result.id) {
+          localStorage.setItem(GD_FILE_ID_KEY, result.id);
+          showToast(`Saved ✓`);
+        } else { throw new Error(JSON.stringify(result)); }
+      } catch(e) { showToast('Save failed — try again'); console.error(e); }
+    });
+  };
+
+  const token = getGdriveToken();
+  if (token) doSave(token); else gdriveAuth(doSave);
+}
+
+async function gdriveLoad() {
+  if (getMode() === 'public') {
+    await waitForFirestore();
+    await window.firestoreLoad(); return;
+  }
+  const mode = getMode();
+  const folderLabel = mode === 'public' ? 'Shared recipe book' : 'Recipes (your Drive)';
+
+  const doLoad = async (token) => {
+    showToast('Connecting to Drive…');
+    const folderId = await getTargetFolderId(token);
+    if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
+
+    const files = await driveListJsonFiles(token, folderId);
+    if (files === 'AUTH_EXPIRED') { gdriveAuth(doLoad); return; }
+    if (!files.length) { showToast(mode === 'public' ? 'No recipes in shared folder yet' : 'No files in your Recipes folder yet'); return; }
+
+    showDriveFilePicker(files, folderLabel, 'load', async ({ name, fileId }) => {
+      setBookName(name);
+      localStorage.setItem(GD_FILE_ID_KEY, fileId);
+      showToast('Loading…');
+      try {
+        const resp = await gdriveApiCall(token,
+          `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+        if (!resp) { gdriveAuth(doLoad); return; }
+        const parsed = await resp.json();
+        if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+        data = parsed;
+        openChapters = new Set([data.chapters[0]?.id]);
+        persistToStorage();
+        deskCurrentId = null; deskEditingId = null; mobCurrentId = null; mobEditingId = null;
+        renderAll(); showPanel('deskWelcome'); mob_backToList();
+        showToast(`Loaded: ${name} ✓`);
+      } catch(e) { showToast('Load failed'); console.error(e); }
+    });
+  };
+
+  const token = getGdriveToken();
+  if (token) doLoad(token); else gdriveAuth(doLoad);
+}
+
+// ══════════════════════════════════════════════════
+// EPUB FOLDER (Drive export)
+// ══════════════════════════════════════════════════
+const EPUB_FOLDER_KEY = 'hk_epub_folder';
+
+function getEpubFolder() { return localStorage.getItem(EPUB_FOLDER_KEY) || ''; }
+function setEpubFolder(val) {
+  const f = val.trim();
+  if (!f) { showToast('Please enter a folder name'); return; }
+  localStorage.setItem(EPUB_FOLDER_KEY, f);
+  document.querySelectorAll('.epub-folder-input').forEach(el => el.value = f);
+  showToast(`EPUB folder set to "${f}"`);
+}
+
+async function gdriveFindFolder(token, folderName) {
+  if (!folderName) return 'NO_FOLDER';
+  const q = encodeURIComponent(`name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const resp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  if (!resp) return 'AUTH_EXPIRED';
+  const json = await resp.json();
+  if (json.files && json.files.length > 0) return json.files[0].id;
+  const createResp = await gdriveApiCall(token, 'https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: folderName, mimeType: 'application/vnd.google-apps.folder' })
+  });
+  if (!createResp) return 'AUTH_EXPIRED';
+  const created = await createResp.json();
+  return created.id;
+}
+
+// ══════════════════════════════════════════════════
+// EPUB EXPORT
+// ══════════════════════════════════════════════════
+async function buildEpub(bookName) {
+  const zip = new JSZip();
+  zip.file('mimetype', 'application/epub+zip', {compression:'STORE'});
+  zip.file('META-INF/container.xml', `<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:schemas:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
+  const css = `
+body{font-family:Georgia,serif;margin:1em 1.2em;line-height:1.4;font-size:1em}
+h1{font-size:1.5em;border-bottom:2px solid #333;padding-bottom:.2em;margin-top:.8em;margin-bottom:.2em}
+h2{font-size:1.1em;border-bottom:1px solid #bbb;padding-bottom:.15em;margin-top:.9em;margin-bottom:.3em}
+p.intro{font-style:italic;color:#555;margin:.2em 0 .6em;font-size:.9em}
+p.sec-head{font-weight:bold;margin:.6em 0 .1em;font-size:.95em}
+.ing{border-left:2px solid #c8952a;padding:.3em .6em;margin:.3em 0 .6em}
+ul,ol{margin:.2em 0 .2em 1.3em;padding:0}
+li{margin:.2em 0;font-size:.95em}
+.tip{font-style:italic;color:#666;padding:.4em .7em;border:1px dashed #bbb;margin-top:.8em;font-size:.88em}
+.chapter-title{page-break-before:always}
+.cover-date{color:#888;font-size:.85em;margin-top:2em}`;
+  zip.file('OEBPS/style/main.css', css);
+  const x = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const wrap = (title, body) =>
+    `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${x(title)}</title><link rel="stylesheet" type="text/css" href="style/main.css"/></head><body>${body}</body></html>`;
+  const dateStr = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  zip.file('OEBPS/cover.xhtml', wrap(bookName,
+    `<h1>${x(bookName)}</h1><p class="intro">All your favourite recipes.</p><ul>${data.chapters.map(c=>`<li>${x(c.name)}</li>`).join('')}</ul><p class="cover-date">Last updated: ${dateStr}</p>`));
+  const mf = [
+    `<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>`,
+    `<item id="css" href="style/main.css" media-type="text/css"/>`,
+    `<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>`,
+    `<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>`,
+  ];
+  const sp = [`<itemref idref="cover"/>`];
+  const ncxPoints = [`<navPoint id="cover" playOrder="1"><navLabel><text>Title Page</text></navLabel><content src="cover.xhtml"/></navPoint>`];
+  const navItems = [`<li><a href="cover.xhtml">Title Page</a></li>`];
+  let po = 2;
+  for (const ch of data.chapters) {
+    const rs = data.recipes.filter(r => r.chapterId === ch.id);
+    if (!rs.length) continue;
+    const chFname = `ch_${ch.id}.xhtml`;
+    zip.file(`OEBPS/${chFname}`, wrap(ch.name, `<h1 class="chapter-title">${x(ch.name)}</h1><ul>${rs.map(r=>`<li>${x(r.title)}</li>`).join('')}</ul>`));
+    mf.push(`<item id="ch_${ch.id}" href="${chFname}" media-type="application/xhtml+xml"/>`);
+    sp.push(`<itemref idref="ch_${ch.id}"/>`);
+    const chNavPoints = [];
+    const chNavLi = [];
+    chNavPoints.push(`<navPoint id="chi_${ch.id}" playOrder="${po}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chFname}"/></navPoint>`);
+    po++;
+    for (const r of rs) {
+      const rid = r.id.replace(/[^a-z0-9_]/gi,'_');
+      const fname = `recipe_${rid}.xhtml`;
+      let body = `<h1>${x(r.title)}</h1>`;
+      if (r.desc) body += `<p class="intro">${x(r.desc)}</p>`;
+      body += `<h2>Ingredients</h2><div class="ing">${epubSectionedList(r.ingredients,'ul')}</div>`;
+      body += `<h2>Instructions</h2>${epubSectionedList(r.steps,'ol')}`;
+      if (r.tip) body += `<div class="tip"><strong>Tip:</strong> ${x(r.tip)}</div>`;
+      zip.file(`OEBPS/${fname}`, wrap(r.title, body));
+      mf.push(`<item id="${rid}" href="${fname}" media-type="application/xhtml+xml"/>`);
+      sp.push(`<itemref idref="${rid}"/>`);
+      chNavPoints.push(`<navPoint id="r_${rid}" playOrder="${po}"><navLabel><text>${x(r.title)}</text></navLabel><content src="${fname}"/></navPoint>`);
+      chNavLi.push(`<li><a href="${fname}">${x(r.title)}</a></li>`);
+      po++;
+    }
+    ncxPoints.push(`<navPoint id="chg_${ch.id}" playOrder="${po-rs.length-1}"><navLabel><text>${x(ch.name)}</text></navLabel><content src="${chFname}"/>${chNavPoints.slice(1).join('')}</navPoint>`);
+    navItems.push(`<li><a href="${chFname}">${x(ch.name)}</a><ol>${chNavLi.join('')}</ol></li>`);
+  }
+  const safeId = bookName.replace(/[^a-z0-9]/gi,'-').toLowerCase();
+  zip.file('OEBPS/content.opf',
+    `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="uid" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">${safeId}</dc:identifier><dc:title>${x(bookName)}</dc:title><dc:language>en</dc:language></metadata><manifest>${mf.join('')}</manifest><spine toc="ncx">${sp.join('')}</spine></package>`);
+  zip.file('OEBPS/toc.ncx',
+    `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="${safeId}"/></head><docTitle><text>${x(bookName)}</text></docTitle><navMap>${ncxPoints.join('')}</navMap></ncx>`);
+  zip.file('OEBPS/nav.xhtml',
+    `<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Contents</title></head><body><nav epub:type="toc"><h1>Contents</h1><ol>${navItems.join('')}</ol></nav></body></html>`);
+  const blob = await zip.generateAsync({type:'blob', mimeType:'application/epub+zip'});
+  const fname = bookName.replace(/[^a-z0-9\-_ ]/gi,'').trim().replace(/ /g,'_') || 'recipes';
+  return { blob, fname };
+}
+
+async function exportEpub() {
+  showNameModal({
+    title: 'Download EPUB',
+    desc: 'This name will be used as the book title and filename.',
+    placeholder: 'e.g. Italian Favourites',
+    defaultVal: getBookName(),
+    hint: 'Saved as: [name].epub',
+    callback: async (name) => {
+      try {
+        setBookName(name);
+        showToast('Building EPUB…');
+        const { blob, fname } = await buildEpub(name);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `${fname}.epub`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('EPUB downloaded!');
+      } catch(e) { showToast('EPUB build failed'); console.error(e); }
+    }
+  });
+}
+
+async function exportEpubToDrive() {
+  const epubFolder = getEpubFolder();
+  if (!epubFolder) { showToast('Please set an EPUB folder in Settings first'); return; }
+  showNameModal({
+    title: 'Save EPUB to Drive',
+    desc: `EPUB will be saved to your "${epubFolder}" folder.`,
+    placeholder: 'e.g. Italian Favourites',
+    defaultVal: getBookName(),
+    hint: `Destination: ${epubFolder}/[name].epub`,
+    callback: async (name) => {
+      setBookName(name);
+      const { blob, fname } = await buildEpub(name);
+      const fileName = `${fname}.epub`;
+      const doUpload = async (token) => {
+        showToast('Uploading EPUB…');
+        try {
+          const folderId = await gdriveFindFolder(token, epubFolder);
+          if (folderId === 'AUTH_EXPIRED') { gdriveAuth(doUpload); return; }
+          if (folderId === 'NO_FOLDER') { showToast('Please set an EPUB folder in Settings'); return; }
+          const q = encodeURIComponent(`name='${fileName}' and '${folderId}' in parents and trashed=false`);
+          const listResp = await gdriveApiCall(token,
+            `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
+          const listJson = listResp ? await listResp.json() : { files: [] };
+          const existingId = listJson.files?.[0]?.id;
+          const arrayBuf = await blob.arrayBuffer();
+          let resp;
+          if (existingId) {
+            resp = await gdriveApiCall(token,
+              `https://www.googleapis.com/upload/drive/v3/files/${existingId}?uploadType=media`, {
+              method: 'PATCH', headers: { 'Content-Type': 'application/epub+zip' }, body: arrayBuf
+            });
+          } else {
+            const boundary = 'epub_boundary_hk';
+            const metaJson = JSON.stringify({ name: fileName, mimeType: 'application/epub+zip', parents: [folderId] });
+            const enc = new TextEncoder();
+            const partHeader = enc.encode(
+              `--${boundary}\r\nContent-Type: application/json\r\n\r\n${metaJson}\r\n` +
+              `--${boundary}\r\nContent-Type: application/epub+zip\r\n\r\n`
+            );
+            const partFooter = enc.encode(`\r\n--${boundary}--`);
+            const epubBytes = new Uint8Array(arrayBuf);
+            const combined = new Uint8Array(partHeader.length + epubBytes.length + partFooter.length);
+            combined.set(partHeader, 0); combined.set(epubBytes, partHeader.length);
+            combined.set(partFooter, partHeader.length + epubBytes.length);
+            resp = await gdriveApiCall(token,
+              'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+              method: 'POST',
+              headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+              body: combined
+            });
+          }
+          if (!resp) { gdriveAuth(doUpload); return; }
+          const result = await resp.json();
+          if (result.id) { showToast(`EPUB saved to Drive ✓`); }
+          else { throw new Error(JSON.stringify(result)); }
+        } catch(e) { showToast('EPUB upload failed'); console.error(e); }
+      };
+      const token = getGdriveToken();
+      if (token) doUpload(token); else gdriveAuth(doUpload);
+    }
+  });
+}
+
+function toggleDeskSettings() {
+  document.getElementById('deskSettings').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const s = document.getElementById('deskSettings');
+  if (s.classList.contains('open') &&
+      !s.contains(e.target) &&
+      !e.target.closest('[onclick="toggleDeskSettings()"]')) {
+    s.classList.remove('open');
+  }
+});
 
 
-<!-- ═══════════════════════════════════════════════════════════════
-     APPLICATION SCRIPTS  (load order matters)
-════════════════════════════════════════════════════════════════ -->
-<script src="js/data.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/timers.js"></script>
-<script src="js/notifications.js"></script>
-<script src="js/print.js"></script>
-<script src="js/render.js"></script>
-<script src="js/desktop.js"></script>
-<script src="js/mobile.js"></script>
+// ══════════════════════════════════════════════════
+// TIMERS
+// ══════════════════════════════════════════════════
+  let audioCtx = null;
+function ensureAudioCtx() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  } catch(e) {}
+  return audioCtx;
+}
+let timers = []; // { id, label, totalSecs, remaining, interval, done }
+let timerNextId = 1;
 
-<!-- Firebase (ES module — must come last so globals above are ready) -->
-<script type="module" src="js/firebase.js"></script>
+function timerTrayToggle() {
+  const tray = document.getElementById('timerTray');
+  tray.classList.toggle('open');
+  // Sync mobile tab highlight
+  const isOpen = tray.classList.contains('open');
+  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+  if (isOpen) {
+    const timerTab = document.getElementById('tabTimer');
+    if (timerTab) timerTab.classList.add('active');
+  } else {
+    document.getElementById('tabRecipes').classList.add('active');
+  }
+  timerUpdateNotifRow();
+}
 
+  function timerRequestPermission() {
+  Notification.requestPermission().then(p => {
+    timerUpdateNotifRow();
+    if (p === 'granted') showToast('Alerts enabled ✓');
+    else showToast('Alerts blocked — check browser settings');
+  });
+}
+
+function timerUpdateNotifRow() {
+  const row = document.getElementById('timerNotifRow');
+  const status = document.getElementById('timerNotifStatus');
+  if (!row) return;
+  if (!('Notification' in window)) { row.style.display = 'none'; return; }
+  if (Notification.permission === 'granted') {
+    status.textContent = '🔔 Alerts on';
+    status.style.color = '#2a7a4a';
+    row.querySelector('button').style.display = 'none';
+  } else if (Notification.permission === 'denied') {
+    status.textContent = '🔕 Alerts blocked in browser settings';
+    row.querySelector('button').style.display = 'none';
+  } else {
+    status.textContent = 'Alerts: off';
+    row.querySelector('button').style.display = '';
+  }
+}
+
+function timerAdd(minutes, label) {
+  ensureAudioCtx();  
+  const secs = minutes * 60;
+  const id = timerNextId++;
+  const t = { id, label, totalSecs: secs, remaining: secs, interval: null, done: false };
+  timers.push(t);
+  t.interval = setInterval(() => timerTick(id), 1000);
+  timerRender();
+  // Open tray if not already open
+  if (!document.getElementById('timerTray').classList.contains('open')) timerTrayToggle();
+}
+
+function timerAddCustom() {
+  const val = parseInt(document.getElementById('timerCustomVal').value);
+  const unit = document.getElementById('timerCustomUnit').value;
+  if (!val || val < 1) { showToast('Enter a valid number'); return; }
+  const mins = unit === 'hr' ? val * 60 : val;
+  const label = unit === 'hr' ? `${val} hr` : `${val} min`;
+  document.getElementById('timerCustomVal').value = '';
+  timerAdd(mins, label);
+}
+
+function timerTick(id) {
+  const t = timers.find(x => x.id === id);
+  if (!t || t.done) return;
+  t.remaining--;
+  if (t.remaining <= 0) {
+    t.remaining = 0;
+    t.done = true;
+    clearInterval(t.interval);
+    timerNotify(t.label);
+  }
+  timerRender();
+}
+
+function timerNotify(label) {
+  // Audio beep
+  try {
+    const ctx = ensureAudioCtx();
+    if (ctx && ctx.state === 'running') {
+      const beep = (freq, start, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.6, ctx.currentTime + start);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + duration);
+      };
+      beep(880, 0, 0.3);
+      beep(880, 0.35, 0.3);
+      beep(880, 0.7, 0.5);
+    }
+  } catch(e) {}
+
+  // Vibrate
+  if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]);
+
+  // Browser notification
+  if (Notification.permission === 'granted') {
+    new Notification('⏱ Timer done!', {
+      body: label + ' is up.',
+      icon: 'icon-192.png',
+      requireInteraction: true
+    });
+  }
+
+  showToast('⏱ ' + label + ' — done!');
+}
+
+function timerRemove(id) {
+  const t = timers.find(x => x.id === id);
+  if (t && t.interval) clearInterval(t.interval);
+  timers = timers.filter(x => x.id !== id);
+  timerRender();
+}
+
+function timerReset(id) {
+  const t = timers.find(x => x.id === id);
+  if (!t) return;
+  if (t.interval) clearInterval(t.interval);
+  t.remaining = t.totalSecs;
+  t.done = false;
+  t.interval = setInterval(() => timerTick(id), 1000);
+  timerRender();
+}
+
+function timerFmt(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function timerRender() {
+  const list = document.getElementById('timerList');
+  if (!list) return;
+  list.innerHTML = timers.map(t => `
+    <div class="timer-card ${t.done ? 'done' : ''}">
+      <div class="timer-card-label">${t.label}</div>
+      <div class="timer-card-time">${t.done ? 'Done!' : timerFmt(t.remaining)}</div>
+      ${t.done
+        ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>`
+        : ''}
+      <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
+    </div>`).join('');
+
+  // Show/hide "Running" label
+  const lbl = document.getElementById('timerListLabel');
+  if (lbl) lbl.style.display = timers.length ? '' : 'none';
+  // Badge: count of running (non-done) timers
+  const badge = document.getElementById('timerBadge');
+  if (badge) {
+    const running = timers.filter(t => !t.done).length;
+    badge.textContent = running;
+    badge.style.display = running > 0 ? 'block' : 'none';
+  }
+}
+
+// ── Inline timer buttons in recipe text ───────────
+// Matches: "5 minutes", "1 hour", "30 min", "2 hrs", "1½ hours" etc.
+const TIME_RE = /(\d+(?:[.,½¼¾]\d*)?)\s*(hours?|hrs?|minutes?|mins?)/gi;
+
+function linkifyTimers(text) {
+  return text.replace(TIME_RE, (match, num, unit) => {
+    // Parse number (handle fractions like 1½ loosely)
+    let n = parseFloat(num.replace(',', '.').replace('½', '.5').replace('¼', '.25').replace('¾', '.75'));
+    const isHour = /^h/i.test(unit);
+    const mins = isHour ? Math.round(n * 60) : Math.round(n);
+    if (mins < 1 || mins > 600) return match; // skip unreasonable values
+    const label = match.trim();
+    return `${match}<button class="inline-timer-btn" onclick="timerAdd(${mins},'${label.replace(/'/g,"\'")}')">⏱ Start</button>`;
+  });
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+renderAll();
+  timerUpdateNotifRow();
+  // Keep screen awake while app is open
+if ('wakeLock' in navigator) {
+  let wakeLock;
+  const requestWakeLock = async () => {
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+  };
+  requestWakeLock();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  });
+}
+showPanel('deskWelcome');
+updateModeUI(getMode());
+document.querySelectorAll('.epub-folder-input').forEach(el => el.value = getEpubFolder());
+
+if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent.com' && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    const swPath = new URL('./sw.js', window.location.href).pathname;
+    navigator.serviceWorker.register(swPath)
+      .then(reg => console.log('eRecipe: SW registered, scope:', reg.scope))
+      .catch(e => console.warn('eRecipe: SW registration failed:', e.message));
+  });
+}
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc,
+         collection, addDoc, onSnapshot,
+         query, orderBy, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup,
+         signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAhaUyytbY_ynqEgdZJh40SbSJKL8jKbeg",
+  authDomain: "erecipe-ab5e4.firebaseapp.com",
+  projectId: "erecipe-ab5e4",
+  storageBucket: "erecipe-ab5e4.firebasestorage.app",
+  messagingSenderId: "73525633063",
+  appId: "1:73525633063:web:319615f3b1cc0f794c2e02"
+};
+
+const app      = initializeApp(firebaseConfig);
+const db       = getFirestore(app);
+const auth     = getAuth(app);
+const provider = new GoogleAuthProvider();
+const REF      = doc(db, "recipes", "shared");
+
+let currentUser    = null;
+let chatRecipeId   = null;  // which recipe's comments are loaded
+let chatUnsub      = null;  // unsub for active comment listener
+
+// ── AUTH ────────────────────────────────────────────────
+document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
+  try { await signInWithPopup(auth, provider); }
+  catch(e) { showToast("Google sign-in failed"); console.error(e); }
+});
+
+window.logout = async function() {
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  try { await signOut(auth); } catch(e) { console.error(e); }
+};
+
+onAuthStateChanged(auth, async user => {
+  const loginScreen = document.getElementById("loginScreen");
+  if (!user) {
+    currentUser = null;
+    if (loginScreen) { loginScreen.style.opacity='1'; loginScreen.style.display='flex'; loginScreen.classList.remove('hidden'); }
+    return;
+  }
+  currentUser = user;
+  if (loginScreen) { loginScreen.classList.add('hidden'); setTimeout(()=>loginScreen.style.display='none',300); }
+  try {
+    await setDoc(doc(db,"users",user.uid),{
+      displayName: user.displayName||"", email: user.email||"",
+      photoURL: user.photoURL||"", updatedAt: Date.now()
+    },{ merge:true });
+  } catch(e) { console.error("User profile save failed:",e); }
+});
+
+// ── FIRESTORE RECIPES ───────────────────────────────────
+window.firestoreLoad = async function() {
+  showToast("Loading shared recipes…");
+  try {
+    const snap = await getDoc(REF);
+    if (!snap.exists()) { showToast("No shared recipes found yet"); return; }
+    const { recipes:r, chapters:c } = snap.data();
+    if (!r||!c) throw new Error("Invalid format");
+    data = { recipes:r, chapters:c };
+    openChapters = new Set([data.chapters[0]?.id]);
+    persistToStorage();
+    deskCurrentId=null; deskEditingId=null; mobCurrentId=null; mobEditingId=null;
+    renderAll(); showPanel("deskWelcome"); mob_backToList();
+    showToast("Loaded shared recipes ✓");
+  } catch(e) { showToast("Load failed — check console"); console.error(e); }
+};
+
+const CACHED_PIN_KEY = 'hk_pin_cache';
+window.firestoreSave = async function(silent=false) {
+  let pin;
+  if (silent) { pin=sessionStorage.getItem(CACHED_PIN_KEY); if(!pin)return; }
+  else {
+    pin=prompt("Enter PIN to save to shared book:"); if(pin===null)return;
+    sessionStorage.setItem(CACHED_PIN_KEY,pin);
+  }
+  showToast("Saving…");
+  try {
+    await setDoc(REF,{...data,pin});
+    showToast("Saved to shared book ✓");
+  } catch(e) {
+    if(e.code==="permission-denied"){ sessionStorage.removeItem(CACHED_PIN_KEY); showToast("Incorrect PIN"); }
+    else { showToast("Save failed"); console.error(e); }
+  }
+};
+
+// ── COMMENTS ────────────────────────────────────────────
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderChatMessages(msgs, containerIds) {
+  containerIds.forEach(cid => {
+    const el = document.getElementById(cid);
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+    if (msgs.length===0) { el.innerHTML=''; return; }
+    el.innerHTML = msgs.map(m => {
+      const mine = m.uid === currentUser?.uid;
+      const name = m.displayName || 'Unknown';
+      const time = fmtTime(m.createdAt);
+      const avatarHTML = m.photoURL
+        ? `<img class="msg-avatar" src="${esc(m.photoURL)}" alt="${esc(name)}"/>`
+        : `<div class="msg-avatar-init">${name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}</div>`;
+      return `<div class="msg-row ${mine?'mine':''}">
+        ${avatarHTML}
+        <div class="msg-bubble-wrap">
+          <div class="msg-meta">${mine?'':esc(name)+' · '}${time}</div>
+          <div class="msg-bubble">${esc(m.text)}</div>
+        </div>
+      </div>`;
+    }).join('');
+    if (atBottom) el.scrollTop = el.scrollHeight;
+  });
+}
+
+// Called whenever a recipe is shown — loads its comments
+window.recipeChat_load = function(recipeId) {
+  // Unsubscribe from previous recipe's comments
+  if (chatUnsub) { chatUnsub(); chatUnsub=null; }
+  chatRecipeId = recipeId;
+
+  // Show the chat widgets
+  ['deskViewChat','mobViewChat'].forEach(id => {
+    const el=document.getElementById(id); if(el) el.style.display='';
+  });
+  // Clear inputs
+  ['deskChatInput','mobChatInput'].forEach(id => {
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+
+  if (!recipeId) return;
+
+  const q = query(
+    collection(db,'recipe_comments',recipeId,'messages'),
+    orderBy('createdAt','asc')
+  );
+  chatUnsub = onSnapshot(q, snap => {
+    const msgs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderChatMessages(msgs, ['deskChatMsgs','mobChatMsgs']);
+  }, err => console.error('Chat error:',err));
+};
+
+window.recipeChat_keydown = function(e, prefix) {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); recipeChat_send(prefix); }
+};
+
+window.recipeChat_send = async function(prefix) {
+  if (!currentUser) { showToast('Sign in to comment'); return; }
+  if (!chatRecipeId) return;
+  const input = document.getElementById(`${prefix}ChatInput`);
+  const text  = input?.value.trim();
+  if (!text) return;
+  input.value = '';
+  try {
+    await addDoc(collection(db,'recipe_comments',chatRecipeId,'messages'), {
+      text,
+      uid:          currentUser.uid,
+      displayName:  currentUser.displayName || currentUser.email,
+      photoURL:     currentUser.photoURL || '',
+      createdAt:    serverTimestamp()
+    });
+  } catch(e) { showToast('Failed to send'); console.error(e); }
+};
+</script>
 </body>
 </html>
