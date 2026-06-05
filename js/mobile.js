@@ -162,3 +162,6 @@ if (window.firestoreDeleteRecipe && getMode() === 'public') firestoreDeleteRecip
   mob_backToList();
   showToast('Recipe deleted');
 }
+// ── App init (runs after all scripts have loaded) ────────────────
+renderAll();
+showPanel('deskWelcome');
