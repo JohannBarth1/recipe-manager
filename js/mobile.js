@@ -132,7 +132,7 @@ function mob_saveRecipe() {
   mobEditingId = null;
 
   // ── Sync to Firestore (per-recipe, not bulk) ──────────────────
-  if (window.firestoreSaveRecipe) firestoreSaveRecipe(recipe);
+if (window.firestoreSaveRecipe && getMode() === 'public') firestoreSaveRecipe(recipe);
 
   renderAll();
   mob_showRecipe(mobCurrentId);
