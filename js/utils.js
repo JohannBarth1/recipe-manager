@@ -212,3 +212,41 @@ async function gdriveLoad() {
   if (token) doLoad(token);
   else gdriveAuth(doLoad);
 }
+
+// ── Public / Private mode toggle ────────────────────────────────
+// Private = local only (no auto-sync on save)
+// Public  = syncs to Firestore automatically on every save/delete
+
+const MODE_KEY = 'hk_recipe_mode';
+
+function getMode() {
+  return localStorage.getItem(MODE_KEY) || 'private';
+}
+
+function setMode(mode) {
+  localStorage.setItem(MODE_KEY, mode);
+  updateModeUI();
+}
+
+function updateModeUI() {
+  const mode = getMode();
+  const isPublic = mode === 'public';
+
+  // Desktop pills (in the settings panel)
+  document.querySelectorAll('.mode-pill-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+
+  // Show a persistent indicator in the header so the user always knows
+  const indicator = document.getElementById('modeIndicator');
+  if (indicator) {
+    indicator.textContent   = isPublic ? '🌐 Shared' : '🔒 Private';
+    indicator.style.color   = isPublic ? 'var(--success)' : 'var(--muted)';
+    indicator.title         = isPublic
+      ? 'Public mode — changes sync to shared book automatically'
+      : 'Private mode — changes are local only';
+  }
+}
+
+// Call on startup so UI reflects the saved mode
+updateModeUI();
