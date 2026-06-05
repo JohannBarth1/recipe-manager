@@ -140,3 +140,75 @@ if (
       .catch(err => console.warn('SW registration failed:', err.message));
   });
 }
+
+// ── Google Drive load (private mode) ────────────────────────────
+const GD_CLIENT_ID = '970185316494-1et3pq5g5bqk7ckt59079ra008lgfvq0.apps.googleusercontent.com';
+const GD_SCOPE     = 'https://www.googleapis.com/auth/drive.file';
+const GD_TOKEN_KEY = 'hk_gdrive_token';
+
+function getGdriveToken() { return localStorage.getItem(GD_TOKEN_KEY); }
+
+let gTokenClient = null;
+
+function gdriveAuth(callback) {
+  if (!window.google) { showToast('Google API not loaded yet'); return; }
+  gTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GD_CLIENT_ID,
+    scope:     GD_SCOPE,
+    callback:  (resp) => {
+      if (resp.error) { showToast('Google sign-in failed'); return; }
+      localStorage.setItem(GD_TOKEN_KEY, resp.access_token);
+      callback(resp.access_token);
+    }
+  });
+  gTokenClient.requestAccessToken();
+}
+
+async function gdriveApiCall(token, url, options = {}) {
+  const resp = await fetch(url, {
+    ...options,
+    headers: { 'Authorization': `Bearer ${token}`, ...(options.headers || {}) }
+  });
+  if (resp.status === 401) { localStorage.removeItem(GD_TOKEN_KEY); return null; }
+  return resp;
+}
+
+async function gdriveLoad() {
+  const doLoad = async (token) => {
+    showToast('Connecting to Drive…');
+    const q = encodeURIComponent(`name='Recipes' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+    const resp = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+    if (!resp) { gdriveAuth(doLoad); return; }
+
+    const json = await resp.json();
+    if (!json.files?.length) { showToast('No Recipes folder found in your Drive'); return; }
+
+    const folderId = json.files[0].id;
+    const q2       = encodeURIComponent(`'${folderId}' in parents and mimeType='application/json' and trashed=false`);
+    const resp2    = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files?q=${q2}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc`);
+    if (!resp2) { gdriveAuth(doLoad); return; }
+
+    const files = (await resp2.json()).files || [];
+    if (!files.length) { showToast('No files in your Recipes folder'); return; }
+
+    const file = files[0];   // most recent
+    showToast(`Loading ${file.name}…`);
+    const r3 = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`);
+    if (!r3) { gdriveAuth(doLoad); return; }
+
+    try {
+      const parsed = await r3.json();
+      if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid');
+      data         = parsed;
+      openChapters = new Set([data.chapters[0]?.id]);
+      persistToStorage();
+      deskCurrentId = null; mobCurrentId = null;
+      renderAll(); showPanel('deskWelcome'); mob_backToList();
+      showToast(`Loaded: ${file.name} ✓`);
+    } catch (e) { showToast('Load failed'); console.error(e); }
+  };
+
+  const token = getGdriveToken();
+  if (token) doLoad(token);
+  else gdriveAuth(doLoad);
+}
