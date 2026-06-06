@@ -4,8 +4,11 @@
    ════════════════════════════════════════════════════════════════ */
 
 // ── State ────────────────────────────────────────────────────────
-let notifItems = [];                        // exposed globally for firebase.js
+let notifItems = [];
 const SEEN_KEY = 'hk_seen_comments';
+
+// Track which recipe subscriptions have completed their initial load
+const _initialLoadDone = new Set();
 
 function getSeenComments() {
   try { return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]')); }
@@ -15,31 +18,33 @@ function getSeenComments() {
 function markNotifSeen(msgId) {
   const s   = getSeenComments();
   s.add(msgId);
-  const arr = [...s].slice(-500);           // keep last 500 only
+  const arr = [...s].slice(-500);
   localStorage.setItem(SEEN_KEY, JSON.stringify(arr));
 }
 
-// Mark a notification as read (called when recipe is opened)
 function markNotifRead(msgId) {
   const n = notifItems.find(x => x.id === msgId);
   if (n && !n.read) { n.read = true; updateNotifBadge(); }
 }
 
-// ── Called by firebase.js whenever comment snapshots arrive ──────
-// msgs        — full array of messages for this recipe
-// recipeId    — recipe doc id
-// recipeTitle — display name
-// myUid       — current user's uid (to filter own comments)
-window.notif_onNewComments = function(msgs, recipeId, recipeTitle, myUid) {
+// Called by firebase.js on every snapshot update
+// isInitial = true means this is the first snapshot fire (existing messages)
+window.notif_onNewComments = function(msgs, recipeId, recipeTitle, myUid, isInitial) {
   const seen = getSeenComments();
 
+  if (isInitial) {
+    // On first load, just mark everything as seen — don't notify for old messages
+    msgs.forEach(m => markNotifSeen(m.id));
+    return;
+  }
+
+  // Subsequent snapshots — only process genuinely new messages
   msgs.forEach(m => {
-    if (m.uid === myUid)  { markNotifSeen(m.id); return; } // own message
-    if (seen.has(m.id))   return;                           // already processed
+    if (m.uid === myUid)   { markNotifSeen(m.id); return; } // own message
+    if (seen.has(m.id))    return;                           // already processed
 
     markNotifSeen(m.id);
 
-    // Insert at front of list (newest first)
     notifItems.unshift({
       id:            m.id,
       recipeId,
@@ -51,8 +56,12 @@ window.notif_onNewComments = function(msgs, recipeId, recipeTitle, myUid) {
     });
 
     updateNotifBadge();
+
+    // Also show a toast so the user knows immediately
+    showToast(`💬 ${m.displayName || 'Someone'} commented on ${recipeTitle}`);
   });
 };
+
 
 // ── Toggle dropdown ──────────────────────────────────────────────
 function toggleNotifDropdown() {
