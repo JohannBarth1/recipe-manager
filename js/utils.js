@@ -293,25 +293,33 @@ function updateModeUI() {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
 
-  // Show/hide sync button groups — only visible in private mode
+  // Show/hide sync button groups
   document.querySelectorAll('.sync-actions').forEach(el => {
     el.style.display = isPublic ? 'none' : '';
   });
 
-  // Header save/load buttons
-  const hdrSave = document.getElementById('hdrSaveBtn');
-  const hdrLoad = document.getElementById('hdrLoadBtn');
-  if (hdrSave) hdrSave.style.display = isPublic ? 'none' : '';
-  if (hdrLoad) hdrLoad.style.display = isPublic ? 'none' : '';
+  // Sync dot colour
+  const dot = document.getElementById('syncDot');
+  if (dot) {
+    dot.style.background = isPublic ? '#2a7a4a' : 'var(--muted)';
+    dot.title            = isPublic ? 'Shared mode — syncing' : 'Private mode';
+  }
+}
 
-  // Mode indicator
-  const indicator = document.getElementById('modeIndicator');
-  if (indicator) {
-    indicator.textContent = isPublic ? '🌐 Shared' : '🔒 Private';
-    indicator.style.color = isPublic ? 'var(--success)' : 'var(--muted)';
-    indicator.title       = isPublic
-      ? 'Shared mode — changes sync automatically'
-      : 'Private mode — changes are local only';
+// Call this after auth resolves to show the avatar
+function updateUserBadge(user) {
+  const badge  = document.getElementById('userBadge');
+  const avatar = document.getElementById('userAvatar');
+  if (!badge || !avatar) return;
+  if (user && user.photoURL) {
+    avatar.src         = user.photoURL;
+    badge.style.display= 'flex';
+  } else if (user) {
+    // No photo — show initials instead
+    avatar.style.display = 'none';
+    badge.style.display  = 'flex';
+  } else {
+    badge.style.display  = 'none';
   }
 }
 
