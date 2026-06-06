@@ -73,8 +73,11 @@
   </button>
   <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
 <div id="userBadge" style="display:none;align-items:center;gap:5px;position:relative">
-  <button style="position:relative;display:inline-flex;cursor:pointer"
-       onclick="toggleAvatarMenu()">
+<button style="position:relative;display:inline-flex;cursor:pointer;
+                 background:transparent;border:none;padding:0;
+                 -webkit-appearance:none;appearance:none;
+                 -webkit-tap-highlight-color:transparent;"
+          onclick="toggleAvatarMenu()">
     <img id="userAvatar" src="" width="28" height="28"
          style="border-radius:50%;border:2px solid #444;display:block"/>
     <span id="syncDot" style="
