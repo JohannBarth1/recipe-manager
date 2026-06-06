@@ -72,18 +72,39 @@
     🔔<span class="notif-badge" id="notifBadge"></span>
   </button>
   <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
-  <div id="userBadge" style="display:none;align-items:center;gap:5px">
-    <div style="position:relative;display:inline-flex">
-      <img id="userAvatar" src="" width="28" height="28"
-           style="border-radius:50%;border:2px solid #444;display:block"/>
-      <span id="syncDot" style="
-        position:absolute;bottom:-1px;right:-1px;
-        width:9px;height:9px;border-radius:50%;
-        border:2px solid var(--ink);
-        background:var(--muted);
-        display:block"></span>
-    </div>
+<div id="userBadge" style="display:none;align-items:center;gap:5px;position:relative">
+  <div style="position:relative;display:inline-flex;cursor:pointer"
+       onclick="toggleAvatarMenu()">
+    <img id="userAvatar" src="" width="28" height="28"
+         style="border-radius:50%;border:2px solid #444;display:block"/>
+    <span id="syncDot" style="
+      position:absolute;bottom:-1px;right:-1px;
+      width:9px;height:9px;border-radius:50%;
+      border:2px solid var(--ink);
+      background:var(--muted);
+      display:block"></span>
   </div>
+  <!-- Avatar dropdown menu -->
+  <div id="avatarMenu" style="
+    display:none;
+    position:absolute;top:calc(100% + 8px);right:0;
+    background:var(--warm-white);border:1px solid var(--border);
+    border-radius:6px;padding:.5rem;
+    box-shadow:0 4px 16px rgba(0,0,0,.15);
+    z-index:200;white-space:nowrap;min-width:140px">
+    <div id="avatarMenuName" style="
+      font-size:.72rem;color:var(--muted);padding:.3rem .5rem .5rem;
+      border-bottom:1px solid var(--border);margin-bottom:.3rem"></div>
+    <button onclick="logout()" style="
+      width:100%;text-align:left;padding:.45rem .5rem;
+      background:none;border:none;cursor:pointer;
+      font-family:'Lato',sans-serif;font-size:.82rem;
+      color:var(--danger);border-radius:3px;
+      display:flex;align-items:center;gap:.5rem">
+      🚪 Sign Out
+    </button>
+  </div>
+</div>
 </div>
 </header>
 
