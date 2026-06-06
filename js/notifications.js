@@ -127,11 +127,22 @@ function _esc(s) {
 }
 
 function _timeAgo(ts) {
-  if (!ts) return '';
+  if (!ts) return 'just now';  // ← was returning '' which caused empty time labels
   const d    = ts.toDate ? ts.toDate() : new Date(ts);
+  if (isNaN(d.getTime())) return 'just now';  // ← guard against bad timestamps
   const secs = Math.floor((Date.now() - d) / 1000);
   if (secs < 60)    return 'just now';
   if (secs < 3600)  return `${Math.floor(secs / 60)}m ago`;
   if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
+
+// Refresh "time ago" labels every minute so "just now" → "2m ago" etc.
+setInterval(() => {
+  notifItems.forEach(n => {
+    // timeAgo is recalculated fresh on render, so just re-render if open
+  });
+  const dropdown = document.getElementById('notifDropdown');
+  if (dropdown.classList.contains('open')) renderNotifDropdown();
+  updateNotifBadge();
+}, 60000);
