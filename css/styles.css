@@ -710,6 +710,67 @@ header {
 
 
 /* ════════════════════════════════════════════════════════════════
+   COMMUNITY PANEL
+   ════════════════════════════════════════════════════════════════ */
+.community-slidein {
+  position: fixed; top: var(--header-h); right: -380px;
+  width: 360px; bottom: 0;
+  background: var(--warm-white);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 75;
+  transition: right .3s ease;
+  box-shadow: -4px 0 20px rgba(0,0,0,.1);
+}
+.community-slidein.open { right: 0; }
+
+.community-slidein-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .9rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+
+.community-panel-inner {
+  display: flex; flex-direction: column; height: 100%; overflow: hidden;
+}
+
+.community-tabs {
+  display: flex; gap: 0;
+  border-bottom: 2px solid var(--border);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+.community-tab {
+  flex: 1; padding: .6rem .4rem;
+  font-family: 'Lato', sans-serif; font-size: .68rem; font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase;
+  border: none; background: transparent; color: var(--muted);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -2px; transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.community-tab.active {
+  color: var(--rust); border-bottom-color: var(--rust);
+  background: var(--warm-white);
+}
+.community-tab.disabled {
+  opacity: .4; cursor: not-allowed;
+}
+
+.community-section        { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.community-section.active { display: flex; }
+
+.community-input-bar {
+  display: flex; gap: .4rem; align-items: flex-end;
+  padding: .6rem .8rem;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
@@ -732,6 +793,7 @@ header {
     max-height: 60vh;
     border-radius: 12px 12px 0 0;
     border-bottom: none;
+   .community-slidein { display: none; }
   }
   /* Prevent iOS zoom on input focus — must be exactly 16px */
   input,
