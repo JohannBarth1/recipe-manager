@@ -18,14 +18,21 @@ function populateChapterSelects() {
 
 // ── Panel switcher (desktop) ─────────────────────────────────────
 function showPanel(id) {
-  ['deskWelcome', 'deskRecipeView', 'deskEditor'].forEach(p => {
-    const el = document.getElementById(p);
-    el.classList.remove('active');
-    el.style.display = '';
-  });
-  const target = document.getElementById(id);
-  if (id === 'deskWelcome') target.style.display = '';
-  else target.classList.add('active');
+  const welcome = document.getElementById('deskWelcome');
+  const recipeView = document.getElementById('deskRecipeView');
+  const editor = document.getElementById('deskEditor');
+
+  // Hide all three first
+  welcome.style.display = 'none';
+  recipeView.classList.remove('active');
+  editor.classList.remove('active');
+
+  // Show the requested one
+  if (id === 'deskWelcome') {
+    welcome.style.display = 'flex';
+  } else {
+    document.getElementById(id).classList.add('active');
+  }
 }
 
 // ── Sectioned list renderer (ingredients / steps) ────────────────
