@@ -71,6 +71,7 @@ onAuthStateChanged(auth, async user => {
 
   if (!user) {
     currentUser = null;
+     if (window.updateUserBadge) updateUserBadge(null);
     _clearAllCommentSubs();
     if (loginScreen) {
       loginScreen.style.opacity = '1';
@@ -90,6 +91,7 @@ onAuthStateChanged(auth, async user => {
 
   // Signed in
   currentUser = user;
+   if (window.updateUserBadge) updateUserBadge(user);
   if (loginScreen) {
     loginScreen.classList.add('hidden');
     setTimeout(() => loginScreen.style.display = 'none', 300);
