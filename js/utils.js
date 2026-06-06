@@ -381,3 +381,65 @@ function updateUserBadge(user) {
     badge.style.display = 'none';
   }
 }
+
+async function _publishRecipe(recipe, btn) {
+  if (!window.firestoreSaveRecipe) { showToast('Not signed in'); return; }
+  if (btn) { btn.textContent = '✓ Published'; btn.classList.add('published'); btn.disabled = true; }
+  await firestoreSaveRecipe(recipe);
+  showToast(`"${recipe.title}" published to shared book ✓`);
+}
+
+// ── Publish nudge ────────────────────────────────────────────────
+let _recipesViewedThisSession = 0;
+const NUDGE_KEY = 'hk_nudge_shown';
+
+function trackRecipeView() {
+  if (getMode() !== 'private') return;
+  if (sessionStorage.getItem(NUDGE_KEY)) return;  // shown once per session
+  _recipesViewedThisSession++;
+  if (_recipesViewedThisSession >= 3) _showPublishNudge();
+}
+
+function _showPublishNudge() {
+  sessionStorage.setItem(NUDGE_KEY, '1');
+  document.getElementById('publishNudge')?.remove();
+
+  const nudge = document.createElement('div');
+  nudge.id    = 'publishNudge';
+  nudge.style.cssText = `
+    position:fixed;bottom:calc(var(--mob-nav-h) + 1rem);left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);color:var(--light-brown);
+    padding:.9rem 1.2rem;border-radius:6px;
+    border:1px solid var(--gold);
+    box-shadow:0 4px 20px rgba(0,0,0,.3);
+    z-index:201;max-width:320px;width:calc(100% - 2rem);
+    font-family:'Lato',sans-serif;font-size:.82rem;line-height:1.5;
+    display:flex;flex-direction:column;gap:.6rem;`;
+  nudge.innerHTML = `
+    <div>
+      <div style="font-weight:700;color:var(--gold);margin-bottom:.2rem">
+        🌐 Share your recipes?
+      </div>
+      You're in private mode — your recipes are only visible to you.
+      Switch to Shared to let others enjoy them too.
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end">
+      <button onclick="document.getElementById('publishNudge').remove()"
+              style="background:transparent;border:1px solid #555;color:var(--muted);
+                     padding:.35rem .8rem;border-radius:3px;cursor:pointer;
+                     font-family:'Lato',sans-serif;font-size:.75rem;">
+        Keep private
+      </button>
+      <button onclick="setMode('public');document.getElementById('publishNudge').remove();"
+              style="background:var(--gold);border:none;color:#fff;
+                     padding:.35rem .8rem;border-radius:3px;cursor:pointer;
+                     font-family:'Lato',sans-serif;font-size:.75rem;font-weight:700;">
+        Switch to Shared
+      </button>
+    </div>`;
+  document.body.appendChild(nudge);
+
+  // Auto-dismiss after 12 seconds
+  setTimeout(() => nudge.remove(), 12000);
+}
