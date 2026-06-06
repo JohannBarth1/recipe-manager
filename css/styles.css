@@ -708,18 +708,3 @@ header {
   body  { margin: 0; padding: 0; }
   *     { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
-
-@media (min-width: 641px) {
-  .mob-panels   { display: none; }
-  .desktop-main { display: flex; flex: 1; overflow: hidden; }
-  .toast        { bottom: 1.5rem; left: auto; right: 2rem; transform: translateY(6px); }
-  .toast.show   { transform: translateY(0); }
-}
-
-@media print {
-  body > *:not(#printArea) { display: none !important; }
-  #printArea { display: block !important; }
-  @page { size: A4; margin: 0; }
-  body  { margin: 0; padding: 0; }
-  *     { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-}
