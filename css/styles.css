@@ -670,6 +670,21 @@ header {
   -webkit-appearance: none;
   appearance: none;
 }
+#userBadge button,
+#userBadge button:hover,
+#userBadge button:focus,
+#userBadge button:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  box-shadow: none !important;
+}
 
 /* ════════════════════════════════════════════════════════════════
    PRINT STYLES
