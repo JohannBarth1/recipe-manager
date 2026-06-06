@@ -292,7 +292,10 @@ function setMode(mode) {
 function updateModeUI() {
   const mode     = getMode();
   const isPublic = mode === 'public';
-
+const publishBtns = document.querySelectorAll('.btn-publish');
+publishBtns.forEach(btn => {
+  btn.style.display = isPublic ? 'none' : '';
+});
   // Mode pill buttons
   document.querySelectorAll('.mode-pill-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
