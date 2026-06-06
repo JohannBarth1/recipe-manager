@@ -40,7 +40,7 @@ function mob_showRecipe(id) {
   if (!r) return;
 
   mobCurrentId = id;
-
+setLastRecipeId(id);
   renderRecipeInto(r, {
     chapter:     'mobViewChapter',
     title:       'mobViewTitle',
@@ -152,6 +152,7 @@ function mob_deleteCurrentRecipe() {
 
   const deletedId = mobCurrentId;
   data.recipes = data.recipes.filter(x => x.id !== deletedId);
+clearLastRecipeId();
   mobCurrentId = null;
   persistToStorage();
 
