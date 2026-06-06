@@ -424,3 +424,23 @@ window.recipeChat_delete = async function (msgId) {
     await deleteDoc(doc(db, 'recipe_comments', chatRecipeId, 'messages', msgId));
   } catch (e) { showToast('Could not delete comment'); console.error(e); }
 };
+
+// Save the user's cleared notification IDs to Firestore
+async function persistClearedNotifs(ids) {
+  if (!currentUser) return;
+  try {
+    await setDoc(doc(db, 'users', currentUser.uid), {
+      clearedNotifs: [...ids]
+    }, { merge: true });
+  } catch(e) { console.error('persistClearedNotifs error:', e); }
+}
+
+// Load the user's cleared notification IDs from Firestore
+async function loadClearedNotifs() {
+  if (!currentUser) return new Set();
+  try {
+    const snap = await getDoc(doc(db, 'users', currentUser.uid));
+    const data = snap.data();
+    return new Set(data?.clearedNotifs || []);
+  } catch(e) { return new Set(); }
+}
