@@ -661,31 +661,6 @@ header {
 .desk-settings .ds-row button.green        { background: #2a7a4a; color: #fff; border-color: #2a7a4a; }
 .desk-settings .ds-row button.green:hover  { background: #1f5c37; }
 
-#userBadge button {
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-appearance: none;
-  appearance: none;
-}
-#userBadge button,
-#userBadge button:hover,
-#userBadge button:focus,
-#userBadge button:active {
-  background: transparent !important;
-  background-color: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-appearance: none;
-  appearance: none;
-  outline: none;
-  box-shadow: none !important;
-}
-
 /* ════════════════════════════════════════════════════════════════
    PRINT STYLES
    ════════════════════════════════════════════════════════════════ */
