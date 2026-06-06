@@ -699,6 +699,7 @@ header {
   }
 }
 @media (min-width: 641px) {
+   .chat-textarea {font-size: 16px !important;}
   .mob-panels   { display: none; }
   .desktop-main { display: flex; flex: 1; overflow: hidden; }
   .toast        { bottom: 1.5rem; left: auto; right: 2rem; transform: translateY(6px); }
