@@ -238,10 +238,24 @@ window.firestoreLoad = async function () {
     deskCurrentId = null; deskEditingId = null;
     mobCurrentId  = null; mobEditingId  = null;
 
-    renderAll();
-    showPanel('deskWelcome');
-    mob_backToList();
-    showToast(`Loaded ${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} ✓`);
+renderAll();
+
+// Restore last viewed recipe if it still exists after load
+const lastId = getLastRecipeId();
+const lastRecipe = lastId && data.recipes.find(r => r.id === lastId);
+
+if (lastRecipe) {
+  if (window.innerWidth > 640) {
+    desk_showRecipe(lastId);
+  } else {
+    mob_showRecipe(lastId);
+  }
+} else {
+  showPanel('deskWelcome');
+  mob_backToList();
+}
+
+showToast(`Loaded ${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} ✓`);
 
     // Re-subscribe notifications for the newly loaded recipe set
     _subscribeAllCommentNotifications();
