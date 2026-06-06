@@ -178,3 +178,190 @@ window.community_onOpen = function() {
     if (msgs) msgs.scrollTop = msgs.scrollHeight;
   }, 50);
 };
+
+/* ════════════════════════════════════════════════════════════════
+   REQUESTS
+   ════════════════════════════════════════════════════════════════ */
+
+const ADMIN_HASH = 'a5e744d0164540d33b1d7ea616c28f2fa97e754a4a5d7bb7b11f2bcde94a8d9d';
+let _requestsFilter = 'all';
+let _requests       = [];
+let _requestsUnsub  = null;
+
+// ── Hash function ────────────────────────────────────────────────
+async function _sha256(str) {
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Subscribe to requests ────────────────────────────────────────
+window.requests_subscribe = function(db, collection, query, orderBy) {
+  if (_requestsUnsub) { _requestsUnsub(); _requestsUnsub = null; }
+  const { onSnapshot } = window._firestoreRefs || {};
+  if (!onSnapshot) return;
+
+  const q = query(
+    collection(db, 'community_requests'),
+    orderBy('votes', 'desc'),
+    orderBy('createdAt', 'desc')
+  );
+  _requestsUnsub = onSnapshot(q, snap => {
+    _requests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    _renderRequests();
+  }, err => console.error('Requests error:', err));
+};
+
+// ── Render request list ──────────────────────────────────────────
+function _renderRequests() {
+  const containers = ['requestsList', 'requestsListDesk'];
+  const filtered   = _requestsFilter === 'all'
+    ? _requests
+    : _requests.filter(r => r.type === _requestsFilter);
+
+  const html = filtered.length ? filtered.map(r => `
+    <div class="request-card">
+      <div class="request-card-top">
+        <span class="request-tag ${r.type}">${r.type === 'recipe' ? '🍰 Recipe' : '⚙ Feature'}</span>
+        <span class="request-status ${r.status || 'new'}"
+              onclick="requestAdmin_updateStatus('${r.id}','${r.status||'new'}')"
+              title="Click to update status (admin)">
+          ${_statusLabel(r.status)}
+        </span>
+      </div>
+      <div class="request-title">${_cEsc(r.title)}</div>
+      ${r.description ? `<div class="request-desc">${_cEsc(r.description)}</div>` : ''}
+      <div class="request-card-bottom">
+        <span class="request-author">${_cEsc(r.displayName || 'Someone')}</span>
+        <button class="request-vote ${(r.voters||[]).includes(window._currentUid?.()) ? 'voted' : ''}"
+                onclick="requestVote('${r.id}')">
+          👍 ${r.votes || 0}
+        </button>
+      </div>
+    </div>`).join('')
+  : `<div class="request-empty">No requests yet — add the first one!</div>`;
+
+  containers.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
+}
+
+function _statusLabel(status) {
+  switch(status) {
+    case 'considering': return '🤔 Considering';
+    case 'planned':     return '📅 Planned';
+    case 'done':        return '✅ Done';
+    default:            return '🆕 New';
+  }
+}
+
+// ── Filter ───────────────────────────────────────────────────────
+window.requestsFilter = function(type) {
+  _requestsFilter = type;
+  document.querySelectorAll('.requests-filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === type);
+  });
+  _renderRequests();
+};
+
+// ── Vote ─────────────────────────────────────────────────────────
+window.requestVote = async function(requestId) {
+  const uid = window._currentUid?.();
+  if (!uid) { showToast('Sign in to vote'); return; }
+  if (window._requestVote) await window._requestVote(requestId, uid);
+};
+
+// ── Admin status update ──────────────────────────────────────────
+window.requestAdmin_updateStatus = async function(requestId, currentStatus) {
+  const pw     = prompt('Admin password:');
+  if (!pw) return;
+  const hashed = await _sha256(pw.trim());
+  if (hashed !== ADMIN_HASH) { showToast('Incorrect password'); return; }
+
+  // Show status picker
+  document.getElementById('statusPickerOverlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id    = 'statusPickerOverlay';
+  overlay.style.cssText =
+    'position:fixed;inset:0;background:rgba(26,18,8,.55);z-index:300;' +
+    'display:flex;align-items:center;justify-content:center;padding:1rem';
+  overlay.innerHTML = `
+    <div style="background:var(--warm-white);border:1px solid var(--border);
+                border-radius:6px;padding:1.5rem;width:100%;max-width:300px">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;
+                 color:var(--brown);margin-bottom:1rem">Update Status</h3>
+      ${['new','considering','planned','done'].map(s => `
+        <button onclick="requestAdmin_setStatus('${requestId}','${s}')"
+                style="width:100%;text-align:left;padding:.6rem .9rem;
+                       margin-bottom:.4rem;border-radius:4px;cursor:pointer;
+                       border:1px solid var(--border);background:${currentStatus===s?'var(--panel)':'var(--warm-white)'};
+                       font-family:'Lato',sans-serif;font-size:.88rem;
+                       color:var(--ink);display:block;">
+          ${_statusLabel(s)}
+        </button>`).join('')}
+      <button onclick="document.getElementById('statusPickerOverlay').remove()"
+              style="width:100%;margin-top:.4rem;padding:.5rem;border:none;
+                     background:transparent;color:var(--muted);cursor:pointer;
+                     font-family:'Lato',sans-serif;font-size:.82rem;">
+        Cancel
+      </button>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+};
+
+window.requestAdmin_setStatus = async function(requestId, status) {
+  document.getElementById('statusPickerOverlay')?.remove();
+  if (window._requestSetStatus) await window._requestSetStatus(requestId, status);
+  showToast(`Status updated to: ${_statusLabel(status)}`);
+};
+
+// ── New request modal ────────────────────────────────────────────
+window.showNewRequestModal = function() {
+  document.getElementById('newRequestOverlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id    = 'newRequestOverlay';
+  overlay.style.cssText =
+    'position:fixed;inset:0;background:rgba(26,18,8,.55);z-index:300;' +
+    'display:flex;align-items:center;justify-content:center;padding:1rem';
+  overlay.innerHTML = `
+    <div style="background:var(--warm-white);border:1px solid var(--border);
+                border-radius:6px;padding:1.5rem;width:100%;max-width:380px">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;
+                 color:var(--brown);margin-bottom:1rem">New Request</h3>
+      <div class="form-row">
+        <label>Type</label>
+        <select id="newRequestType">
+          <option value="recipe">🍰 Recipe Request</option>
+          <option value="feature">⚙ Feature Request</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Title</label>
+        <input type="text" id="newRequestTitle" placeholder="e.g. Add a sourdough recipe"/>
+      </div>
+      <div class="form-row">
+        <label>Description (optional)</label>
+        <textarea id="newRequestDesc" rows="3"
+                  placeholder="Any extra details…"></textarea>
+      </div>
+      <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">
+        <button onclick="document.getElementById('newRequestOverlay').remove()"
+                class="btn-cancel">Cancel</button>
+        <button onclick="submitNewRequest()" class="btn-save">Submit</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('newRequestTitle')?.focus(), 80);
+};
+
+window.submitNewRequest = async function() {
+  const type  = document.getElementById('newRequestType')?.value;
+  const title = document.getElementById('newRequestTitle')?.value.trim();
+  const desc  = document.getElementById('newRequestDesc')?.value.trim();
+  if (!title) { showToast('Please enter a title'); return; }
+  document.getElementById('newRequestOverlay')?.remove();
+  if (window._submitRequest) await window._submitRequest({ type, title, desc });
+  showToast('Request submitted ✓');
+};
