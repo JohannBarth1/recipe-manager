@@ -68,9 +68,12 @@
   </div>
 <div class="header-actions">
   <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
-  <button class="notif-btn" id="headerNotifBtn" onclick="toggleNotifDropdown()" title="Notifications">
-    💬<span class="notif-badge" id="notifBadge"></span>
-  </button>
+<button class="hbtn hbtn-ghost" onclick="toggleCommunityPanel()" 
+        title="Community" style="position:relative">
+  🏘️
+  <span class="notif-badge" id="communityBadgeDesk"
+        style="top:-5px;right:-5px"></span>
+</button>
   <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
 <div id="userBadge" style="display:none;align-items:center;gap:5px;position:relative">
 <button style="position:relative;display:inline-flex;cursor:pointer;
@@ -360,8 +363,37 @@
           </div>
         </details>
       </div>
-    </div><!-- /mobPanelSettings -->
-
+    </div>
+    <!-- /mobPanelSettings -->
+<!-- Panel: Community -->
+<div class="mob-panel" id="mobPanelCommunity">
+  <div class="community-panel-inner">
+    <!-- Tab bar for future sections -->
+    <div class="community-tabs">
+      <button class="community-tab active" data-tab="chat" onclick="switchCommunityTab('chat')">
+        💬 Chat
+      </button>
+      <button class="community-tab disabled" data-tab="requests" title="Coming soon">
+        📋 Requests
+      </button>
+      <button class="community-tab disabled" data-tab="challenges" title="Coming soon">
+        🏆 Challenges
+      </button>
+    </div>
+    <!-- Chat section -->
+    <div class="community-section active" id="communityChat">
+      <div class="chat-messages" id="globalChatMsgs"
+           style="flex:1;max-height:none;border:none;border-radius:0;
+                  background:var(--warm-white);padding:1rem"></div>
+      <div class="community-input-bar">
+        <textarea class="chat-textarea" id="globalChatInput"
+                  placeholder="Say something… (Enter to send)" rows="1"
+                  onkeydown="globalChat_keydown(event)"></textarea>
+        <button class="chat-send-btn" onclick="globalChat_send()" title="Send">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
   </div><!-- /mob-panels -->
 
 </div><!-- /app -->
@@ -406,6 +438,40 @@
   </details>
 </div>
 
+  <!-- Desktop Community Panel (slide-in from right) -->
+<div class="community-slidein" id="communitySlidein">
+  <div class="community-slidein-header">
+    <span style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown)">
+      🏘️ Community
+    </span>
+    <button onclick="toggleCommunityPanel()" 
+            style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem">✕</button>
+  </div>
+  <!-- Tab bar -->
+  <div class="community-tabs">
+    <button class="community-tab active" data-tab="chat" onclick="switchCommunityTab('chat')">
+      💬 Chat
+    </button>
+    <button class="community-tab disabled" data-tab="requests" title="Coming soon">
+      📋 Requests
+    </button>
+    <button class="community-tab disabled" data-tab="challenges" title="Coming soon">
+      🏆 Challenges
+    </button>
+  </div>
+  <!-- Chat section -->
+  <div class="community-section active" id="communityChatDesk">
+    <div class="chat-messages" id="globalChatMsgsDesk"
+         style="flex:1;max-height:none;border:none;border-radius:0;
+                background:var(--warm-white);padding:1rem"></div>
+    <div class="community-input-bar">
+      <textarea class="chat-textarea" id="globalChatInputDesk"
+                placeholder="Say something… (Enter to send)" rows="1"
+                onkeydown="globalChat_keydown(event,'desk')"></textarea>
+      <button class="chat-send-btn" onclick="globalChat_send('desk')" title="Send">➤</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════════════
      MOBILE NAVIGATION BAR
@@ -419,9 +485,9 @@
       <span class="tab-icon">⏱</span><span>Timers</span>
       <span class="timer-badge" id="timerBadge"></span>
     </button>
-    <button class="mob-tab" id="tabNotif" onclick="toggleNotifDropdown()">
-      <span class="tab-icon">💬</span><span>Alerts</span>
-      <span class="timer-badge" id="mobNotifBadge" style="top:2px;right:8px"></span>
+    <button class="mob-tab" id="tabCommunity" onclick="mob_switchTab('community')">
+      <span class="tab-icon">🏘️</span><span>Community</span>
+      <span class="timer-badge" id="communityBadge" style="top:2px;right:8px"></span>
     </button>
     <button class="mob-tab" id="tabSettings" onclick="mob_switchTab('settings')">
       <span class="tab-icon">⚙️</span><span>Settings</span>
