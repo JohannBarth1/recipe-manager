@@ -107,7 +107,7 @@ function notifClick(i) {
 
 // ── Mark all read ────────────────────────────────────────────────
 function markAllRead() {
-  notifItems.forEach(n => n.read = true);
+  notifItems = [];
   updateNotifBadge();
   renderNotifDropdown();
 }
