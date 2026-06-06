@@ -65,26 +65,26 @@
       <div class="brand-title">eRecipe</div>
       <div class="brand-sub">All your favourite recipes</div>
     </div>
-<div id="userBadge" style="display:none;align-items:center;gap:5px;margin-left:.5rem">
-  <div style="position:relative;display:inline-flex">
-    <img id="userAvatar" src="" width="28" height="28"
-         style="border-radius:50%;border:2px solid #444;display:block"/>
-    <span id="syncDot" style="
-      position:absolute;bottom:-1px;right:-1px;
-      width:9px;height:9px;border-radius:50%;
-      border:2px solid var(--ink);
-      background:var(--muted);
-      display:block"></span>
+  </div>
+<div class="header-actions">
+  <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
+  <button class="notif-btn" id="headerNotifBtn" onclick="toggleNotifDropdown()" title="Notifications">
+    🔔<span class="notif-badge" id="notifBadge"></span>
+  </button>
+  <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
+  <div id="userBadge" style="display:none;align-items:center;gap:5px">
+    <div style="position:relative;display:inline-flex">
+      <img id="userAvatar" src="" width="28" height="28"
+           style="border-radius:50%;border:2px solid #444;display:block"/>
+      <span id="syncDot" style="
+        position:absolute;bottom:-1px;right:-1px;
+        width:9px;height:9px;border-radius:50%;
+        border:2px solid var(--ink);
+        background:var(--muted);
+        display:block"></span>
+    </div>
   </div>
 </div>
-  </div>
-  <div class="header-actions">
-    <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
-   <button class="notif-btn" id="headerNotifBtn" onclick="toggleNotifDropdown()" title="Notifications" style="position:relative">
-  🔔<span class="notif-badge" id="notifBadge"></span>
-</button>
-    <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
-  </div>
 </header>
 
 
