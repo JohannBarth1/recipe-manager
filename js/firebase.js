@@ -79,7 +79,7 @@ onAuthStateChanged(auth, async user => {
     }
     return;
       // Load cleared notifications from Firestore before subscribing
-  await notif_loadCleared();   // ← add this
+  if (window.notif_loadCleared) await notif_loadCleared();
 
   if (getMode() === 'public') {
     await firestoreLoad();
