@@ -5,6 +5,12 @@
 const LS_KEY      = 'hk_recipe_book_v2';
 const BOOK_NAME_KEY = 'hk_book_name';
 
+const LAST_RECIPE_KEY = 'hk_last_recipe';
+
+function getLastRecipeId()     { return localStorage.getItem(LAST_RECIPE_KEY); }
+function setLastRecipeId(id)   { localStorage.setItem(LAST_RECIPE_KEY, id || ''); }
+function clearLastRecipeId()   { localStorage.removeItem(LAST_RECIPE_KEY); }
+
 const DEFAULT_DATA = {
   chapters: [
     { id: 'breakfast', name: 'Breakfast Foods' },
