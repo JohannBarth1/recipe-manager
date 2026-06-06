@@ -87,6 +87,9 @@ onAuthStateChanged(auth, async user => {
   } else {
     _subscribeAllCommentNotifications();
   }
+     if (window.requests_subscribe) {
+  requests_subscribe(db, collection, query, orderBy);
+}
   }
 
   // Signed in
