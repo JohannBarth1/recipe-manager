@@ -48,6 +48,7 @@ setLastRecipeId(id);
   renderRecipeInto(r, {
     chapter:     'mobViewChapter',
     title:       'mobViewTitle',
+    byline:      'mobViewByline',
     desc:        'mobViewDesc',
     ingredients: 'mobViewIngredients',
     steps:       'mobViewSteps',
