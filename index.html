@@ -392,6 +392,23 @@
         <button class="chat-send-btn" onclick="globalChat_send()" title="Send">➤</button>
       </div>
     </div>
+    <!-- Requests section -->
+<div class="community-section" id="communityRequests">
+  <div class="requests-toolbar">
+    <div class="requests-filters">
+      <button class="requests-filter-btn active" data-filter="all"
+              onclick="requestsFilter('all')">All</button>
+      <button class="requests-filter-btn" data-filter="recipe"
+              onclick="requestsFilter('recipe')">🍰 Recipe</button>
+      <button class="requests-filter-btn" data-filter="feature"
+              onclick="requestsFilter('feature')">⚙ Feature</button>
+    </div>
+    <button class="requests-new-btn" onclick="showNewRequestModal()">+ New</button>
+  </div>
+  <div class="requests-list" id="requestsList">
+    <div class="request-empty">Loading…</div>
+  </div>
+</div>
   </div>
 </div>
   </div><!-- /mob-panels -->
@@ -471,6 +488,23 @@
       <button class="chat-send-btn" onclick="globalChat_send('desk')" title="Send">➤</button>
     </div>
   </div>
+  <!-- Requests section -->
+<div class="community-section" id="communityRequests">
+  <div class="requests-toolbar">
+    <div class="requests-filters">
+      <button class="requests-filter-btn active" data-filter="all"
+              onclick="requestsFilter('all')">All</button>
+      <button class="requests-filter-btn" data-filter="recipe"
+              onclick="requestsFilter('recipe')">🍰 Recipe</button>
+      <button class="requests-filter-btn" data-filter="feature"
+              onclick="requestsFilter('feature')">⚙ Feature</button>
+    </div>
+    <button class="requests-new-btn" onclick="showNewRequestModal()">+ New</button>
+  </div>
+  <div class="requests-list" id="requestsList">
+    <div class="request-empty">Loading…</div>
+  </div>
+</div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
