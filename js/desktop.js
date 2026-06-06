@@ -20,14 +20,15 @@ function desk_showRecipe(id) {
   deskEditingId = null;
   setLastRecipeId(id);   // ← add this line
 
-  renderRecipeInto(r, {
-    chapter:     'deskViewChapter',
-    title:       'deskViewTitle',
-    desc:        'deskViewDesc',
-    ingredients: 'deskViewIngredients',
-    steps:       'deskViewSteps',
-    tip:         'deskViewTip'
-  });
+renderRecipeInto(r, {
+  chapter:     'deskViewChapter',
+  title:       'deskViewTitle',
+  byline:      'deskViewByline',
+  desc:        'deskViewDesc',
+  ingredients: 'deskViewIngredients',
+  steps:       'deskViewSteps',
+  tip:         'deskViewTip'
+});
 
   showPanel('deskRecipeView');
   renderDesktopSidebar();
