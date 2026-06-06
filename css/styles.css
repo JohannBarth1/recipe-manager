@@ -118,7 +118,9 @@ header {
   background: var(--rust); color: #fff;
   border-radius: 8px; font-size: .5rem; font-weight: 700;
   padding: 1px 4px; min-width: 14px; text-align: center;
-  display: none;
+  display: none;  /* shown via JS style.display */
+  line-height: 1.4;
+  pointer-events: none;
 }
 .notif-badge.visible { display: block; }
 
