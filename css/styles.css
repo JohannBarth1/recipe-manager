@@ -33,6 +33,32 @@ body {
   overflow: hidden;
 }
 
+/* Local backup toggle arrow */
+.desk-settings details summary,
+.mob-settings-scroll details summary {
+  list-style: none;          /* remove default */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.desk-settings details summary::after,
+.mob-settings-scroll details summary::after {
+  content: '›';
+  font-size: .9rem;
+  color: var(--muted);
+  transition: transform .2s;
+  margin-left: .5rem;
+}
+.desk-settings details[open] summary::after,
+.mob-settings-scroll details[open] summary::after {
+  transform: rotate(90deg);
+}
+/* Remove webkit default arrow */
+.desk-settings details summary::-webkit-details-marker,
+.mob-settings-scroll details summary::-webkit-details-marker {
+  display: none;
+}
 
 /* ════════════════════════════════════════════════════════════════
    LOGIN
