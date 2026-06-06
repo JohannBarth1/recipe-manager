@@ -276,7 +276,7 @@ function _showDriveFilePicker(files, onSelect) {
 const MODE_KEY = 'hk_recipe_mode';
 
 function getMode() {
-  return localStorage.getItem(MODE_KEY) || 'private';
+  return localStorage.getItem(MODE_KEY) || 'public';
 }
 
 function setMode(mode) {
@@ -317,3 +317,19 @@ function updateModeUI() {
 
 // Call on startup so UI reflects the saved mode
 updateModeUI();
+
+// ── Auto-refresh on page visibility / focus ──────────────────────
+// Reloads shared recipes whenever the user returns to the tab or app.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && typeof getMode === 'function') {
+    if (getMode() === 'public' && window.firestoreLoad) {
+      firestoreLoad();
+    }
+  }
+});
+
+window.addEventListener('focus', () => {
+  if (getMode() === 'public' && window.firestoreLoad) {
+    firestoreLoad();
+  }
+});
