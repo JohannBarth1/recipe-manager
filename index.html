@@ -73,7 +73,7 @@
   </button>
   <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
 <div id="userBadge" style="display:none;align-items:center;gap:5px;position:relative">
-  <div style="position:relative;display:inline-flex;cursor:pointer"
+  <button style="position:relative;display:inline-flex;cursor:pointer"
        onclick="toggleAvatarMenu()">
     <img id="userAvatar" src="" width="28" height="28"
          style="border-radius:50%;border:2px solid #444;display:block"/>
@@ -83,7 +83,7 @@
       border:2px solid var(--ink);
       background:var(--muted);
       display:block"></span>
-  </div>
+  </button>
   <!-- Avatar dropdown menu -->
   <div id="avatarMenu" style="
     display:none;
@@ -399,11 +399,6 @@
       <button onclick="loadLocalFile()">⬆ Load file</button>
     </div>
   </details>
-  <hr class="ds-divider" style="margin-top:1rem"/>
-<button onclick="logout()" class="action-btn danger-outline"
-        style="width:auto;padding:.4rem .9rem;flex-direction:row;gap:.4rem;margin-top:.5rem">
-  <span class="ab-icon" style="font-size:.9rem">🚪</span>Sign Out
-</button>
 </div>
 
 
