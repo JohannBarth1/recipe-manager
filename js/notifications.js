@@ -115,10 +115,20 @@ function markAllRead() {
 // ── Badge counter ────────────────────────────────────────────────
 function updateNotifBadge() {
   const count    = notifItems.filter(n => !n.read).length;
-  const badge    = document.getElementById('notifBadge');
+
+  // Desktop bell badge
+  const badge = document.getElementById('notifBadge');
+  if (badge) {
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'block' : 'none';
+  }
+
+  // Mobile nav badge
   const mobBadge = document.getElementById('mobNotifBadge');
-  if (badge)    { badge.textContent    = count; badge.classList.toggle('visible', count > 0); }
-  if (mobBadge) { mobBadge.textContent = count; mobBadge.style.display = count > 0 ? 'block' : 'none'; }
+  if (mobBadge) {
+    mobBadge.textContent = count;
+    mobBadge.style.display = count > 0 ? 'block' : 'none';
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
