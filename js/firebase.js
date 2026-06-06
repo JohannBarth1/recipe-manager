@@ -120,6 +120,9 @@ onAuthStateChanged(auth, async user => {
 if (window.community_subscribe) {
   community_subscribe(db, collection, query, orderBy, addDoc, serverTimestamp, () => currentUser);
 }
+if (window.requests_subscribe) {
+  requests_subscribe(db, collection, query, orderBy);
+}
 });
 
 
