@@ -91,6 +91,9 @@ function renderRecipeInto(recipe, ids) {
   document.getElementById(ids.chapter).textContent = ch ? ch.name : '';
   document.getElementById(ids.title).textContent   = recipe.title;
 
+  if (ids.desc) {
+    document.getElementById(ids.desc).innerHTML = esc(recipe.desc || '');
+  }
   document.getElementById(ids.ingredients).innerHTML =
     renderSectionedList(recipe.ingredients, 'ul');
   document.getElementById(ids.steps).innerHTML =
@@ -98,6 +101,7 @@ function renderRecipeInto(recipe, ids) {
 
   const tipEl = document.getElementById(ids.tip);
   if (recipe.tip) {
+    tipEl.innerHTML     = esc(recipe.tip);
     tipEl.style.display = 'block';
   } else {
     tipEl.style.display = 'none';
