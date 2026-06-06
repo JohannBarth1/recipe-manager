@@ -29,12 +29,13 @@ function switchCommunityTab(tab) {
   document.querySelectorAll('.community-section').forEach(s => {
     s.classList.remove('active');
   });
-  // Activate matching sections (mobile + desktop)
   if (tab === 'chat') {
     document.getElementById('communityChat')?.classList.add('active');
     document.getElementById('communityChatDesk')?.classList.add('active');
+  } else if (tab === 'requests') {
+    document.getElementById('communityRequests')?.classList.add('active');
+    document.getElementById('communityRequestsDesk')?.classList.add('active');
   }
-  // Future tabs: requests, challenges etc go here
 }
 
 // ── Seen tracking ────────────────────────────────────────────────
