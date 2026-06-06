@@ -710,7 +710,7 @@ header {
   .mob-panels   { display: flex; flex-direction: column; flex: 1; overflow: hidden; padding-bottom: var(--mob-nav-h); }
   .toast        { bottom: calc(var(--mob-nav-h) + .8rem); }
   .header-actions .hbtn-primary,
-  .header-actions .hbtn-ghost { display: none; }
+  .header-actions .hbtn-ghost { display: none; margin-left: auto; }
   header        { padding: 0 1rem; }
   #headerNotifBtn { display: none; }
   .notif-dropdown {
