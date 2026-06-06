@@ -901,6 +901,11 @@ header {
   .desktop-main { display: flex; flex: 1; overflow: hidden; }
   .toast        { bottom: 1.5rem; left: auto; right: 2rem; transform: translateY(6px); }
   .toast.show   { transform: translateY(0); }
+
+.editor { max-width: 900px; }                          /* ← wider overall */
+  #deskFIngredients { min-height: 180px; }               /* ← deeper */
+  #deskFSteps       { min-height: 220px; }               /* ← deeper */
+  #deskFDesc        { min-height: 80px; }                /* ← slightly deeper */
 }
 @media print {
   body > *:not(#printArea) { display: none !important; }
