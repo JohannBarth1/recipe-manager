@@ -166,3 +166,10 @@ if (window.firestoreDeleteRecipe && getMode() === 'public') firestoreDeleteRecip
 // ── App init (runs after all scripts have loaded) ────────────────
 renderAll();
 showPanel('deskWelcome');
+// Restore last viewed recipe on page load from localStorage
+const lastId = getLastRecipeId();
+const lastRecipe = lastId && data.recipes.find(r => r.id === lastId);
+if (lastRecipe) {
+  if (window.innerWidth > 640) desk_showRecipe(lastId);
+  else mob_showRecipe(lastId);
+}
