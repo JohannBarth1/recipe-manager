@@ -106,6 +106,15 @@ function renderRecipeInto(recipe, ids) {
   } else {
     tipEl.style.display = 'none';
   }
+   const bylineId = ids.byline;
+if (bylineId) {
+  const bylineEl = document.getElementById(bylineId);
+  if (bylineEl) {
+    bylineEl.textContent = recipe.createdByName
+      ? `Recipe by ${recipe.createdByName}`
+      : '';
+    bylineEl.style.display = recipe.createdByName ? 'block' : 'none';
+  }
 }
 
 // ── renderAll ────────────────────────────────────────────────────
