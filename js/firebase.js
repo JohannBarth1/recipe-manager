@@ -265,14 +265,22 @@ function _clearAllCommentSubs() {
 
 function _subscribeAllCommentNotifications() {
   _clearAllCommentSubs();
+  if (!data.recipes.length) return;
+
   for (const recipe of data.recipes) {
+    let isInitial = true;  // first snapshot is always existing data
+
     const unsub = onSnapshot(
-      query(collection(db, 'recipe_comments', recipe.id, 'messages'), orderBy('createdAt', 'asc')),
+      query(
+        collection(db, 'recipe_comments', recipe.id, 'messages'),
+        orderBy('createdAt', 'asc')
+      ),
       snap => {
         const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         if (window.notif_onNewComments) {
-          notif_onNewComments(msgs, recipe.id, recipe.title, currentUser?.uid);
+          notif_onNewComments(msgs, recipe.id, recipe.title, currentUser?.uid, isInitial);
         }
+        isInitial = false;  // all subsequent snapshots are real-time updates
       },
       err => console.warn('Notification sub error for', recipe.id, err)
     );
