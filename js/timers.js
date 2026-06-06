@@ -172,18 +172,20 @@ function timerRender() {
   const list = document.getElementById('timerList');
   if (!list) return;
 
-  list.innerHTML = timers.map(t => `
-    <div class="timer-card ${t.done ? 'done' : ''}">
-      <div class="timer-card-label">${t.label}</div>
-      <div class="timer-card-time">${t.done ? 'Done!' : timerFmt(Math.max(0, remaining))}</div>
-      ${t.done ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>` : ''}
-      <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
-    </div>`).join('');
+  list.innerHTML = timers.map(t => {
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    return `
+      <div class="timer-card ${t.done ? 'done' : ''}">
+        <div class="timer-card-label">${t.label}</div>
+        <div class="timer-card-time">${t.done ? 'Done!' : timerFmt(Math.max(0, remaining))}</div>
+        ${t.done ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>` : ''}
+        <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
+      </div>`;
+  }).join('');
 
   const lbl = document.getElementById('timerListLabel');
   if (lbl) lbl.style.display = timers.length ? '' : 'none';
 
-  // Badge on timer tab
   const badge   = document.getElementById('timerBadge');
   const running = timers.filter(t => !t.done).length;
   if (badge) { badge.textContent = running; badge.style.display = running > 0 ? 'block' : 'none'; }
