@@ -487,3 +487,44 @@ window._globalChat_delete = async function(msgId) {
     await deleteDoc(doc(db, GLOBAL_CHAT_COL, 'global', 'messages', msgId));
   } catch(e) { showToast('Could not delete'); console.error(e); }
 };
+
+// ── Community Requests ───────────────────────────────────────────
+window._submitRequest = async function({ type, title, desc }) {
+  if (!currentUser) { showToast('Sign in first'); return; }
+  try {
+    await addDoc(collection(db, 'community_requests'), {
+      type,
+      title,
+      description:  desc || '',
+      uid:          currentUser.uid,
+      displayName:  currentUser.displayName || currentUser.email,
+      votes:        0,
+      voters:       [],
+      status:       'new',
+      createdAt:    serverTimestamp()
+    });
+  } catch(e) { showToast('Submit failed'); console.error(e); }
+};
+
+window._requestVote = async function(requestId, uid) {
+  try {
+    const ref    = doc(db, 'community_requests', requestId);
+    const snap   = await getDoc(ref);
+    if (!snap.exists()) return;
+    const voters = snap.data().voters || [];
+    const hasVoted = voters.includes(uid);
+    await setDoc(ref, {
+      votes:  hasVoted ? snap.data().votes - 1 : snap.data().votes + 1,
+      voters: hasVoted ? voters.filter(v => v !== uid) : [...voters, uid]
+    }, { merge: true });
+  } catch(e) { showToast('Vote failed'); console.error(e); }
+};
+
+window._requestSetStatus = async function(requestId, status) {
+  try {
+    await setDoc(doc(db, 'community_requests', requestId), { status }, { merge: true });
+  } catch(e) { showToast('Status update failed'); console.error(e); }
+};
+
+// Expose current uid for vote button state
+window._currentUid = () => currentUser?.uid;
