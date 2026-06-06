@@ -384,7 +384,7 @@ function updateUserBadge(user) {
 
 async function _publishRecipe(recipe, btn) {
   if (!window.firestoreSaveRecipe) { showToast('Not signed in'); return; }
-  if (btn) { btn.textContent = '✓ Published'; btn.classList.add('published'); btn.disabled = true; }
+  if (btn) { btn.textContent = '✓ Published'; btn.disabled = true; }
   await firestoreSaveRecipe(recipe);
   showToast(`"${recipe.title}" published to shared book ✓`);
 }
