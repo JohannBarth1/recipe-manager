@@ -22,6 +22,10 @@ function mob_switchTab(tab) {
   if (tab === 'recipes') {
     document.getElementById('tabRecipes').classList.add('active');
     mob_showPanel('mobPanelList');
+  } else if (tab === 'community') {
+    document.getElementById('tabCommunity').classList.add('active');
+    mob_showPanel('mobPanelCommunity');
+    if (window.community_onOpen) community_onOpen();
   } else {
     document.getElementById('tabSettings').classList.add('active');
     mob_showPanel('mobPanelSettings');
