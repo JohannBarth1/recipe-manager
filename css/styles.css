@@ -318,6 +318,21 @@ header {
 .recipe-tip             { font-style: italic; color: var(--muted); font-size: .83rem; padding: .7rem .9rem; border: 1px dashed var(--border); border-radius: 4px; }
 .recipe-tip::before     { content: "✦ Tip: "; color: var(--gold); font-style: normal; font-weight: 700; }
 
+.btn-publish {
+  padding: .4rem .9rem;
+  font-size: .72rem; font-family: 'Lato', sans-serif; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  border-radius: 2px; cursor: pointer;
+  border: 1px solid #a8d5b5;
+  background: transparent; color: #2a7a4a;
+  transition: all .15s;
+}
+.btn-publish:hover { background: #eaf5ee; }
+.btn-publish.published {
+  color: var(--muted);
+  border-color: var(--border);
+  cursor: default;
+}
 
 /* ════════════════════════════════════════════════════════════════
    EDITOR
