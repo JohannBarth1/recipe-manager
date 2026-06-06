@@ -134,7 +134,11 @@ function mob_saveRecipe() {
   } else {
     // Add new
     const id = 'r_' + Date.now();
-    recipe = { id, chapterId, title, desc, ingredients, steps, tip };
+    recipe = {
+  id, chapterId, title, desc, ingredients, steps, tip,
+  createdBy:     window._currentUid?.()     || '',
+  createdByName: window._currentDisplayName?.() || ''
+};
     data.recipes.push(recipe);
     mobCurrentId = id;
     showToast('Recipe added!');
