@@ -18,6 +18,7 @@ function desk_showRecipe(id) {
 
   deskCurrentId = id;
   deskEditingId = null;
+  setLastRecipeId(id);   // ← add this line
 
   renderRecipeInto(r, {
     chapter:     'deskViewChapter',
