@@ -112,6 +112,11 @@ onAuthStateChanged(auth, async user => {
   } else {
     _subscribeAllCommentNotifications();
   }
+
+   // Subscribe to community chat
+if (window.community_subscribe) {
+  community_subscribe(db, collection, query, orderBy, addDoc, serverTimestamp, () => currentUser);
+}
 });
 
 
