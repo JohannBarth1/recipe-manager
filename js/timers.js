@@ -65,11 +65,12 @@ function timerUpdateNotifRow() {
 function timerAdd(minutes, label, context) {
   ensureAudioCtx();
   const id           = timerNextId++;
-  const secs         = minutes * 60;
   const displayLabel = context ? `${label} — ${context}` : label;
-  const t = { id, label: displayLabel, totalSecs: secs, remaining: secs, interval: null, done: false };
+  const endsAt       = Date.now() + minutes * 60 * 1000;
+  const t = { id, label: displayLabel, totalSecs: minutes * 60, endsAt, interval: null, done: false };
   timers.push(t);
   t.interval = setInterval(() => timerTick(id), 1000);
+  timerScheduleNotification(t);
   timerRender();
   if (!document.getElementById('timerTray').classList.contains('open')) timerTrayToggle();
 }
@@ -88,10 +89,9 @@ function timerAddCustom() {
 function timerTick(id) {
   const t = timers.find(x => x.id === id);
   if (!t || t.done) return;
-  t.remaining--;
-  if (t.remaining <= 0) {
-    t.remaining = 0;
-    t.done      = true;
+  const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+  if (remaining <= 0) {
+    t.done = true;
     clearInterval(t.interval);
     timerNotify(t.label);
   }
@@ -145,9 +145,10 @@ function timerReset(id) {
   const t = timers.find(x => x.id === id);
   if (!t) return;
   if (t.interval) clearInterval(t.interval);
-  t.remaining = t.totalSecs;
+  t.endsAt    = Date.now() + t.totalSecs * 1000;
   t.done      = false;
   t.interval  = setInterval(() => timerTick(id), 1000);
+  timerScheduleNotification(t);
   timerRender();
 }
 
@@ -168,7 +169,7 @@ function timerRender() {
   list.innerHTML = timers.map(t => `
     <div class="timer-card ${t.done ? 'done' : ''}">
       <div class="timer-card-label">${t.label}</div>
-      <div class="timer-card-time">${t.done ? 'Done!' : timerFmt(t.remaining)}</div>
+      <div class="timer-card-time">${t.done ? 'Done!' : timerFmt(Math.max(0, remaining))}</div>
       ${t.done ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>` : ''}
       <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
     </div>`).join('');
@@ -209,5 +210,21 @@ function linkifyTimers(text) {
   });
 }
 
+function timerScheduleNotification(t) {
+  if (Notification.permission !== 'granted') return;
+  if (!('serviceWorker' in navigator)) return;
+  const delay = t.endsAt - Date.now();
+  if (delay <= 0) return;
+
+  navigator.serviceWorker.ready.then(reg => {
+    // Post a message to the SW to schedule the notification
+    reg.active.postMessage({
+      type:  'SCHEDULE_TIMER',
+      id:    t.id,
+      label: t.label,
+      delay: delay
+    });
+  });
+}
 // ── Init ─────────────────────────────────────────────────────────
 timerUpdateNotifRow();
