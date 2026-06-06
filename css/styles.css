@@ -559,7 +559,8 @@ header {
   border-radius: 8px; font-size: .55rem; font-weight: 700;
   padding: 1px 4px; min-width: 14px; text-align: center; display: none;
 }
-#tabTimer { position: relative; }
+#tabTimer  { position: relative; }
+#tabNotif  { position: relative; }
 
 
 /* ════════════════════════════════════════════════════════════════
@@ -702,6 +703,9 @@ header {
   .desktop-main { display: flex; flex: 1; overflow: hidden; }
   .toast        { bottom: 1.5rem; left: auto; right: 2rem; transform: translateY(6px); }
   .toast.show   { transform: translateY(0); }
+     input, textarea, select {
+    font-size: 16px !important;
+  }
 }
 @media print {
   body > *:not(#printArea) { display: none !important; }
