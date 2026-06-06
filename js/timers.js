@@ -138,6 +138,12 @@ function timerRemove(id) {
   const t = timers.find(x => x.id === id);
   if (t && t.interval) clearInterval(t.interval);
   timers = timers.filter(x => x.id !== id);
+
+  // Cancel the SW-scheduled notification
+  navigator.serviceWorker?.ready.then(reg => {
+    reg.active.postMessage({ type: 'CANCEL_TIMER', id });
+  });
+
   timerRender();
 }
 
