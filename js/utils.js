@@ -341,3 +341,35 @@ window.addEventListener('focus', () => {
     firestoreLoad();
   }
 });
+
+
+function toggleAvatarMenu() {
+  const menu = document.getElementById('avatarMenu');
+  if (!menu) return;
+  const isOpen = menu.style.display === 'block';
+  menu.style.display = isOpen ? 'none' : 'block';
+}
+
+// Close avatar menu when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#userBadge')) {
+    const menu = document.getElementById('avatarMenu');
+    if (menu) menu.style.display = 'none';
+  }
+  // ... rest of your existing click handler
+});
+
+function updateUserBadge(user) {
+  const badge  = document.getElementById('userBadge');
+  const avatar = document.getElementById('userAvatar');
+  const name   = document.getElementById('avatarMenuName');
+  if (!badge) return;
+
+  if (user) {
+    if (avatar && user.photoURL) avatar.src = user.photoURL;
+    if (name) name.textContent = user.displayName || user.email || '';
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
