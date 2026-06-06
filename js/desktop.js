@@ -34,7 +34,7 @@ function desk_showRecipe(id) {
 
   // Load comments for this recipe
   if (window.recipeChat_load) recipeChat_load(id);
-   if (window.trackRecipeView) trackRecipeView();
+   if (window.trackRecipeView) trackRecipeView(r);
 }
 
 function desk_publishCurrentRecipe() {
