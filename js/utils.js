@@ -393,14 +393,14 @@ async function _publishRecipe(recipe, btn) {
 let _recipesViewedThisSession = 0;
 const NUDGE_KEY = 'hk_nudge_shown';
 
-function trackRecipeView() {
+function trackRecipeView(recipe) {
   if (getMode() !== 'private') return;
-  if (sessionStorage.getItem(NUDGE_KEY)) return;  // shown once per session
+  if (sessionStorage.getItem(NUDGE_KEY)) return;
   _recipesViewedThisSession++;
-  if (_recipesViewedThisSession >= 3) _showPublishNudge();
+  if (_recipesViewedThisSession >= 3) _showPublishNudge(recipe);
 }
 
-function _showPublishNudge() {
+function _showPublishNudge(recipe) {
   sessionStorage.setItem(NUDGE_KEY, '1');
   document.getElementById('publishNudge')?.remove();
 
@@ -419,27 +419,37 @@ function _showPublishNudge() {
   nudge.innerHTML = `
     <div>
       <div style="font-weight:700;color:var(--gold);margin-bottom:.2rem">
-        🌐 Share your recipes?
+        🌐 Share this recipe?
       </div>
-      You're in private mode — your recipes are only visible to you.
-      Switch to Shared to let others enjoy them too.
+      Would you like to publish <strong style="color:var(--light-brown)">${_escNudge(recipe.title)}</strong>
+      to the shared book so others can enjoy it?
     </div>
     <div style="display:flex;gap:.5rem;justify-content:flex-end">
       <button onclick="document.getElementById('publishNudge').remove()"
               style="background:transparent;border:1px solid #555;color:var(--muted);
                      padding:.35rem .8rem;border-radius:3px;cursor:pointer;
                      font-family:'Lato',sans-serif;font-size:.75rem;">
-        Keep private
+        Not now
       </button>
-      <button onclick="setMode('public');document.getElementById('publishNudge').remove();"
+      <button onclick="_publishNudgeRecipe('${recipe.id}')"
               style="background:var(--gold);border:none;color:#fff;
                      padding:.35rem .8rem;border-radius:3px;cursor:pointer;
                      font-family:'Lato',sans-serif;font-size:.75rem;font-weight:700;">
-        Switch to Shared
+        ☁ Publish
       </button>
     </div>`;
   document.body.appendChild(nudge);
+  setTimeout(() => document.getElementById('publishNudge')?.remove(), 12000);
+}
 
-  // Auto-dismiss after 12 seconds
-  setTimeout(() => nudge.remove(), 12000);
+function _escNudge(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function _publishNudgeRecipe(recipeId) {
+  document.getElementById('publishNudge')?.remove();
+  const recipe = data.recipes.find(r => r.id === recipeId);
+  if (!recipe || !window.firestoreSaveRecipe) return;
+  await firestoreSaveRecipe(recipe);
+  showToast(`"${recipe.title}" published ✓`);
 }
