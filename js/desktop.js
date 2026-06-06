@@ -36,6 +36,13 @@ function desk_showRecipe(id) {
   if (window.recipeChat_load) recipeChat_load(id);
 }
 
+function desk_publishCurrentRecipe() {
+  if (!deskCurrentId) return;
+  const r = data.recipes.find(x => x.id === deskCurrentId);
+  if (!r) return;
+  _publishRecipe(r, document.getElementById('deskPublishBtn'));
+}
+
 // ── Show add-recipe editor ───────────────────────────────────────
 function desk_showAddRecipe() {
   deskEditingId = null;
