@@ -28,7 +28,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = e.request.url;
-  // Never intercept API calls
   if (url.includes('googleapis.com') ||
       url.includes('dropboxapi.com') ||
       url.includes('dropbox.com/oauth') ||
@@ -40,4 +39,38 @@ self.addEventListener('fetch', e => {
       .then(cached => cached || fetch(e.request))
       .catch(() => caches.match('./index.html'))
   );
+});
+
+// ── Timer scheduling ─────────────────────────────────────────────
+const scheduledTimers = new Map();
+
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SCHEDULE_TIMER') {
+    const { id, label, delay } = e.data;
+
+    // Clear any existing scheduled timer with this id (e.g. after reset)
+    if (scheduledTimers.has(id)) {
+      clearTimeout(scheduledTimers.get(id));
+    }
+
+    const handle = setTimeout(() => {
+      self.registration.showNotification('⏱ Timer done!', {
+        body:               label + ' is up.',
+        icon:               'icon-192.png',
+        requireInteraction: true,
+        tag:                'timer-' + id
+      });
+      scheduledTimers.delete(id);
+    }, delay);
+
+    scheduledTimers.set(id, handle);
+  }
+
+  if (e.data?.type === 'CANCEL_TIMER') {
+    const { id } = e.data;
+    if (scheduledTimers.has(id)) {
+      clearTimeout(scheduledTimers.get(id));
+      scheduledTimers.delete(id);
+    }
+  }
 });
