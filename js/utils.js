@@ -282,6 +282,11 @@ function getMode() {
 function setMode(mode) {
   localStorage.setItem(MODE_KEY, mode);
   updateModeUI();
+
+  // Refresh recipe list when switching to public
+  if (mode === 'public' && window.firestoreLoad) {
+    firestoreLoad();
+  }
 }
 
 function updateModeUI() {
