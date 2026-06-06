@@ -49,8 +49,7 @@ function renderSectionedList(lines, tag) {
     if (t.endsWith(':')) {
       // Sub-heading
       if (open) { html += `</${tag}>`; open = false; }
-      const headingMargin = tag === 'ul' ? 'margin-left:-1.5em;' : 'margin-left:0;';
-      html += `<li style="list-style:none;font-weight:700;margin-top:.7em;${headingMargin}padding-left:0">${esc(t.slice(0, -1))}</li>`;
+      html += `<li style="list-style:none;font-weight:700;margin-top:.7em;margin-left:0">${esc(t.slice(0, -1))}</li>`;
       open = true;
       if (tag === 'ol') stepNum = 0;
     } else {
