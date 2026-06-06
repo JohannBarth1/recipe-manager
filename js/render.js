@@ -116,7 +116,7 @@ if (bylineId) {
     bylineEl.style.display = recipe.createdByName ? 'block' : 'none';
   }
 }
-
+}
 // ── renderAll ────────────────────────────────────────────────────
 function renderAll() {
   renderDesktopSidebar();
