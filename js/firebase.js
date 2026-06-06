@@ -78,6 +78,14 @@ onAuthStateChanged(auth, async user => {
       loginScreen.classList.remove('hidden');
     }
     return;
+      // Load cleared notifications from Firestore before subscribing
+  await notif_loadCleared();   // ← add this
+
+  if (getMode() === 'public') {
+    await firestoreLoad();
+  } else {
+    _subscribeAllCommentNotifications();
+  }
   }
 
   // Signed in
