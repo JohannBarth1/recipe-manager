@@ -454,3 +454,31 @@ async function loadClearedNotifs() {
     return new Set(data?.clearedNotifs || []);
   } catch(e) { return new Set(); }
 }
+
+// ── Global community chat ────────────────────────────────────────
+const GLOBAL_CHAT_COL = 'community_chat';
+
+// Expose Firestore refs so community.js can use them
+window._firestoreRefs = { onSnapshot };
+
+// Send a global chat message
+window._globalChat_send = async function(text) {
+  if (!currentUser) { showToast('Sign in to chat'); return; }
+  try {
+    await addDoc(collection(db, GLOBAL_CHAT_COL, 'global', 'messages'), {
+      text,
+      uid:         currentUser.uid,
+      displayName: currentUser.displayName || currentUser.email,
+      photoURL:    currentUser.photoURL    || '',
+      createdAt:   serverTimestamp()
+    });
+  } catch(e) { showToast('Failed to send'); console.error(e); }
+};
+
+// Delete a global chat message
+window._globalChat_delete = async function(msgId) {
+  if (!currentUser) return;
+  try {
+    await deleteDoc(doc(db, GLOBAL_CHAT_COL, 'global', 'messages', msgId));
+  } catch(e) { showToast('Could not delete'); console.error(e); }
+};
