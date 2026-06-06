@@ -110,7 +110,7 @@ document.addEventListener('click', e => {
   if (
     notif.classList.contains('open') &&
     !notif.contains(e.target) &&
-    !e.target.closest('#notifBtn') &&
+    !e.target.closest('#headerNotifBtn') &&   // ← was checking wrong selectors
     !e.target.closest('#tabNotif')
   ) notif.classList.remove('open');
 });
