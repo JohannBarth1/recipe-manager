@@ -57,6 +57,13 @@ setLastRecipeId(id);
   if (window.recipeChat_load) recipeChat_load(id);
 }
 
+function mob_publishCurrentRecipe() {
+  if (!mobCurrentId) return;
+  const r = data.recipes.find(x => x.id === mobCurrentId);
+  if (!r) return;
+  _publishRecipe(r, document.getElementById('mobPublishBtn'));
+}
+
 // ── Back to list ─────────────────────────────────────────────────
 function mob_backToList() {
   mob_showPanel('mobPanelList');
