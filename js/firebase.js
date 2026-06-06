@@ -285,6 +285,7 @@ showToast(`Loaded ${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} ✓
 
 // Keep the old name working
 window.firestoreLoadShared = window.firestoreLoad;
+window._currentDisplayName = () => currentUser?.displayName || currentUser?.email || '';
 
 
 // ════════════════════════════════════════════════════════════════
