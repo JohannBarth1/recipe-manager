@@ -5,7 +5,7 @@
    ════════════════════════════════════════════════════════════════ */
 
 /* ── Constants ──────────────────────────────────────────────────── */
-const ADMIN_HASH        = 'a5e744d0164540d33b1d7ea616c28f2fa97e754a4a5d7bb7b11f2bcde94a8d9d';
+const ADMIN_HASH        = '3f83e9ad5be63bd5bf2fd009fffe6b7dd4066243975bc962edc37459c17e65b9';
 const COMMUNITY_SEEN_KEY = 'hk_community_seen';
 
 /* ── State ──────────────────────────────────────────────────────── */
