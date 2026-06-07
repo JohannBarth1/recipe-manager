@@ -825,7 +825,18 @@ header {
   background: var(--panel);
   flex-shrink: 0;
 }
+.notif-feed-more-btn {
+  background: none; border: none;
+  color: var(--rust); font-size: .72rem; font-weight: 700;
+  cursor: pointer; padding: 2px 0; margin-top: 2px;
+  font-family: 'Lato', sans-serif;
+}
+.notif-feed-more-btn:hover { text-decoration: underline; }
 
+.notif-feed-owner-btns {
+  display: flex; gap: .4rem;
+  margin-top: .4rem;
+}
 
 /* ════════════════════════════════════════════════════════════════
    NOTIFICATION FEED (unified community notifications)
