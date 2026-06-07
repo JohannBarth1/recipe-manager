@@ -550,3 +550,16 @@ window.setMode = function(mode) {
 window.getMode = function() {
   return localStorage.getItem('hk_mode') || 'private';
 };
+
+window._requestChat_send = async function (requestId, text) {
+  if (!currentUser) return;
+  try {
+    await addDoc(collection(db, 'request_comments', requestId, 'messages'), {
+      text,
+      uid:         currentUser.uid,
+      displayName: currentUser.displayName || currentUser.email,
+      photoURL:    currentUser.photoURL    || '',
+      createdAt:   serverTimestamp()
+    });
+  } catch (e) { showToast('Failed to send'); console.error(e); }
+};
