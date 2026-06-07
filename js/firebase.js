@@ -1,31 +1,18 @@
 /* ════════════════════════════════════════════════════════════════
    js/firebase.js  (ES module — loaded last in index.html)
-
-   Exports to window:
-     firestoreSaveRecipe(recipe)    — called by desktop.js / mobile.js on save
-     firestoreDeleteRecipe(id)      — called by desktop.js / mobile.js on delete
-     firestoreSaveChapter(chapter)  — called by render.js on chapter add
-     firestoreSaveAll()             — "Save" button (bulk push)
-     firestoreLoad()                — "Load" button (bulk pull)
-     recipeChat_load(recipeId)      — load & subscribe to comments
-     recipeChat_keydown(e, prefix)  — textarea keydown handler
-     recipeChat_send(prefix)        — send a comment
-     recipeChat_delete(msgId)       — delete own comment
-     logout()                       — sign out
    ════════════════════════════════════════════════════════════════ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 import {
   getFirestore, doc, setDoc, getDoc, deleteDoc,
   collection, addDoc, getDocs, onSnapshot,
-  query, orderBy, serverTimestamp, writeBatch
+  query, orderBy, serverTimestamp, writeBatch, updateDoc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup,
   signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-// ── Config — replace with your own project values ────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyAhaUyytbY_ynqEgdZJh40SbSJKL8jKbeg",
   authDomain:        "erecipe-ab5e4.firebaseapp.com",
@@ -40,15 +27,13 @@ const db       = getFirestore(app);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// ── Firestore collection names ───────────────────────────────────
-const RECIPES_COL  = 'shared_recipes';   // one doc per recipe
-const CHAPTERS_COL = 'shared_chapters';  // one doc per chapter
+const RECIPES_COL  = 'shared_recipes';
+const CHAPTERS_COL = 'shared_chapters';
 
-// ── Runtime state ────────────────────────────────────────────────
-let currentUser       = null;
-let chatRecipeId      = null;
-let chatUnsub         = null;   // active comment listener for the open recipe
-let allCommentUnsubs  = [];     // notification listeners for all recipes
+let currentUser      = null;
+let chatRecipeId     = null;
+let chatUnsub        = null;
+let allCommentUnsubs = [];
 
 
 // ════════════════════════════════════════════════════════════════
@@ -70,8 +55,9 @@ onAuthStateChanged(auth, async user => {
   const loginScreen = document.getElementById("loginScreen");
 
   if (!user) {
+    // ── Signed out ──────────────────────────────────────────────
     currentUser = null;
-     if (window.updateUserBadge) updateUserBadge(null);
+    if (window.updateUserBadge) updateUserBadge(null);
     _clearAllCommentSubs();
     if (loginScreen) {
       loginScreen.style.opacity = '1';
@@ -79,22 +65,11 @@ onAuthStateChanged(auth, async user => {
       loginScreen.classList.remove('hidden');
     }
     return;
-      // Load cleared notifications from Firestore before subscribing
-  if (window.notif_loadCleared) await notif_loadCleared();
-
-  if (getMode() === 'public') {
-    await firestoreLoad();
-  } else {
-    _subscribeAllCommentNotifications();
-  }
-     if (window.requests_subscribe) {
-  requests_subscribe(db, collection, query, orderBy);
-}
   }
 
-  // Signed in
+  // ── Signed in ───────────────────────────────────────────────
   currentUser = user;
-   if (window.updateUserBadge) updateUserBadge(user);
+  if (window.updateUserBadge) updateUserBadge(user);
   if (loginScreen) {
     loginScreen.classList.add('hidden');
     setTimeout(() => loginScreen.style.display = 'none', 300);
@@ -109,34 +84,34 @@ onAuthStateChanged(auth, async user => {
       updatedAt:   Date.now()
     }, { merge: true });
   } catch (e) { console.error("User profile save failed:", e); }
-// In public mode, auto-load shared recipes on every sign-in / page refresh
- if (getMode() === 'public') {
+
+  // Load cleared notifications from Firestore
+  if (window.notif_loadCleared) await notif_loadCleared();
+
+  // Load recipes
+  if (getMode() === 'public') {
     await firestoreLoad();
   } else {
     _subscribeAllCommentNotifications();
   }
 
-   // Subscribe to community chat
-if (window.community_subscribe) {
-  community_subscribe(db, collection, query, orderBy, addDoc, serverTimestamp, () => currentUser);
-}
-if (window.requests_subscribe) {
-  requests_subscribe(db, collection, query, orderBy);
-}
+  // Subscribe to community features
+  if (window.community_subscribe) {
+    community_subscribe(
+      db, collection, query, orderBy,
+      addDoc, serverTimestamp,
+      () => currentUser
+    );
+  }
 });
 
 
 // ════════════════════════════════════════════════════════════════
 // PER-RECIPE FIRESTORE OPERATIONS
-// Called automatically from desktop.js and mobile.js
 // ════════════════════════════════════════════════════════════════
 
-/**
- * Save (or update) a single recipe document.
- * Called whenever a recipe is added or edited.
- */
 window.firestoreSaveRecipe = async function (recipe) {
-  if (!currentUser) return;   // not signed in — skip silently
+  if (!currentUser) return;
   if (!recipe?.id) return;
   try {
     await setDoc(
@@ -150,10 +125,6 @@ window.firestoreSaveRecipe = async function (recipe) {
   }
 };
 
-/**
- * Save (or update) a single chapter document.
- * Called whenever a chapter is added.
- */
 window.firestoreSaveChapter = async function (chapter) {
   if (!currentUser) return;
   if (!chapter?.id) return;
@@ -166,10 +137,6 @@ window.firestoreSaveChapter = async function (chapter) {
   } catch (e) { console.error('firestoreSaveChapter error:', e); }
 };
 
-/**
- * Delete a recipe document.
- * Called whenever a recipe is deleted locally.
- */
 window.firestoreDeleteRecipe = async function (recipeId) {
   if (!currentUser) return;
   if (!recipeId) return;
@@ -180,9 +147,7 @@ window.firestoreDeleteRecipe = async function (recipeId) {
 
 
 // ════════════════════════════════════════════════════════════════
-// BULK SAVE — "Save" button
-// Pushes all local recipes & chapters to Firestore in one batch.
-// Nothing is deleted from Firestore — additive only.
+// BULK SAVE / LOAD
 // ════════════════════════════════════════════════════════════════
 
 window.firestoreSaveAll = async function () {
@@ -200,15 +165,7 @@ window.firestoreSaveAll = async function () {
     showToast(`Saved ${data.recipes.length} recipe${data.recipes.length !== 1 ? 's' : ''} ✓`);
   } catch (e) { showToast("Save failed — check console"); console.error(e); }
 };
-
-// Keep the old name working so any bookmarked calls don't break
 window.firestoreSaveShared = window.firestoreSaveAll;
-
-
-// ════════════════════════════════════════════════════════════════
-// BULK LOAD — "Load" button
-// Pulls all Firestore recipes & chapters, merges into local data.
-// ════════════════════════════════════════════════════════════════
 
 window.firestoreLoad = async function () {
   showToast("Loading shared recipes…");
@@ -218,7 +175,6 @@ window.firestoreLoad = async function () {
       getDocs(collection(db, CHAPTERS_COL))
     ]);
 
-    // Strip server-only fields before storing locally
     const recipes  = recipeSnap.docs.map(d  => { const r = d.data(); delete r.updatedAt; return r; });
     const chapters = chapterSnap.docs.map(d => { const c = d.data(); delete c.updatedAt; return c; });
 
@@ -227,7 +183,6 @@ window.firestoreLoad = async function () {
       return;
     }
 
-    // Preserve the user's local chapter ordering where possible
     const localOrder = data.chapters.map(c => c.id);
     const sorted = [
       ...chapters.filter(c =>  localOrder.includes(c.id))
@@ -235,12 +190,8 @@ window.firestoreLoad = async function () {
       ...chapters.filter(c => !localOrder.includes(c.id))
     ];
 
-    data = {
-      recipes,
-      chapters: sorted.length ? sorted : chapters
-    };
+    data = { recipes, chapters: sorted.length ? sorted : chapters };
 
-    // Fallback: if Firestore has no chapter docs, reconstruct from recipe chapterId fields
     if (!data.chapters.length && recipes.length) {
       const seen = new Set();
       data.chapters = [];
@@ -255,43 +206,31 @@ window.firestoreLoad = async function () {
     openChapters  = new Set([data.chapters[0]?.id]);
     persistToStorage();
 
-    // Reset view state
     deskCurrentId = null; deskEditingId = null;
     mobCurrentId  = null; mobEditingId  = null;
 
-renderAll();
+    renderAll();
 
-// Restore last viewed recipe if it still exists after load
-const lastId = getLastRecipeId();
-const lastRecipe = lastId && data.recipes.find(r => r.id === lastId);
+    const lastId     = getLastRecipeId();
+    const lastRecipe = lastId && data.recipes.find(r => r.id === lastId);
+    if (lastRecipe) {
+      if (window.innerWidth > 640) desk_showRecipe(lastId);
+      else mob_showRecipe(lastId);
+    } else {
+      showPanel('deskWelcome');
+      mob_backToList();
+    }
 
-if (lastRecipe) {
-  if (window.innerWidth > 640) {
-    desk_showRecipe(lastId);
-  } else {
-    mob_showRecipe(lastId);
-  }
-} else {
-  showPanel('deskWelcome');
-  mob_backToList();
-}
-
-showToast(`Loaded ${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} ✓`);
-
-    // Re-subscribe notifications for the newly loaded recipe set
+    showToast(`Loaded ${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} ✓`);
     _subscribeAllCommentNotifications();
   } catch (e) { showToast("Load failed — check console"); console.error(e); }
 };
-
-// Keep the old name working
 window.firestoreLoadShared = window.firestoreLoad;
 window._currentDisplayName = () => currentUser?.displayName || currentUser?.email || '';
 
 
 // ════════════════════════════════════════════════════════════════
 // COMMENT NOTIFICATIONS
-// Subscribe to comment streams for every recipe so we can surface
-// new comments as notification bell items.
 // ════════════════════════════════════════════════════════════════
 
 function _clearAllCommentSubs() {
@@ -304,7 +243,7 @@ function _subscribeAllCommentNotifications() {
   if (!data.recipes.length) return;
 
   for (const recipe of data.recipes) {
-    let isInitial = true;  // first snapshot is always existing data
+    let isInitial = true;
 
     const unsub = onSnapshot(
       query(
@@ -313,10 +252,22 @@ function _subscribeAllCommentNotifications() {
       ),
       snap => {
         const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Old bell dropdown notifications
         if (window.notif_onNewComments) {
           notif_onNewComments(msgs, recipe.id, recipe.title, currentUser?.uid, isInitial);
         }
-        isInitial = false;  // all subsequent snapshots are real-time updates
+
+        // New unified community feed notifications
+        if (!isInitial && window.community_onRecipeComment) {
+          snap.docChanges().forEach(change => {
+            if (change.type !== 'added') return;
+            const m = { id: change.doc.id, ...change.doc.data() };
+            community_onRecipeComment(m, recipe.id, recipe.title, currentUser?.uid);
+          });
+        }
+
+        isInitial = false;
       },
       err => console.warn('Notification sub error for', recipe.id, err)
     );
@@ -345,17 +296,16 @@ function _renderChatMessages(msgs, containerIds) {
     if (!el) return;
 
     const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
-
     if (!msgs.length) { el.innerHTML = ''; return; }
 
     el.innerHTML = msgs.map(m => {
-      const mine    = m.uid === currentUser?.uid;
-      const name    = m.displayName || 'Unknown';
-      const time    = _fmtTime(m.createdAt);
-      const avatar  = m.photoURL
+      const mine   = m.uid === currentUser?.uid;
+      const name   = m.displayName || 'Unknown';
+      const time   = _fmtTime(m.createdAt);
+      const avatar = m.photoURL
         ? `<img class="msg-avatar" src="${_escHtml(m.photoURL)}" alt="${_escHtml(name)}"/>`
         : `<div class="msg-avatar-init">${name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}</div>`;
-      const delBtn  = mine
+      const delBtn = mine
         ? `<button class="msg-delete-btn" onclick="recipeChat_delete('${m.id}')" title="Delete">✕</button>`
         : '';
       return `
@@ -374,15 +324,10 @@ function _renderChatMessages(msgs, containerIds) {
   });
 }
 
-/**
- * Load and subscribe to comments for the currently-viewed recipe.
- * Called by desk_showRecipe() and mob_showRecipe().
- */
 window.recipeChat_load = function (recipeId) {
   if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   chatRecipeId = recipeId;
 
-  // Show chat panels and clear inputs
   ['deskViewChat', 'mobViewChat'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = '';
@@ -402,31 +347,23 @@ window.recipeChat_load = function (recipeId) {
   chatUnsub = onSnapshot(q, snap => {
     const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     _renderChatMessages(msgs, ['deskChatMsgs', 'mobChatMsgs']);
-
-    // Mark all visible messages as read in the notification system
     if (window.markNotifRead) {
-      msgs.forEach(m => {
-        if (m.uid !== currentUser?.uid) markNotifRead(m.id);
-      });
+      msgs.forEach(m => { if (m.uid !== currentUser?.uid) markNotifRead(m.id); });
     }
   }, err => console.error('Chat error:', err));
 };
 
-/** Enter key sends, Shift+Enter inserts newline */
 window.recipeChat_keydown = function (e, prefix) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); recipeChat_send(prefix); }
 };
 
-/** Send a new comment */
 window.recipeChat_send = async function (prefix) {
   if (!currentUser) { showToast('Sign in to comment'); return; }
   if (!chatRecipeId) return;
-
   const input = document.getElementById(`${prefix}ChatInput`);
   const text  = input?.value.trim();
   if (!text) return;
   input.value = '';
-
   try {
     await addDoc(collection(db, 'recipe_comments', chatRecipeId, 'messages'), {
       text,
@@ -438,7 +375,6 @@ window.recipeChat_send = async function (prefix) {
   } catch (e) { showToast('Failed to send'); console.error(e); }
 };
 
-/** Delete own comment (Firestore rules enforce uid match server-side too) */
 window.recipeChat_delete = async function (msgId) {
   if (!currentUser || !chatRecipeId) return;
   if (!confirm('Delete this comment?')) return;
@@ -447,55 +383,32 @@ window.recipeChat_delete = async function (msgId) {
   } catch (e) { showToast('Could not delete comment'); console.error(e); }
 };
 
-// Save the user's cleared notification IDs to Firestore
-async function persistClearedNotifs(ids) {
+
+// ════════════════════════════════════════════════════════════════
+// CLEARED NOTIFICATIONS (persisted to Firestore)
+// ════════════════════════════════════════════════════════════════
+
+window.persistClearedNotifs = async function(ids) {
   if (!currentUser) return;
   try {
-    await setDoc(doc(db, 'users', currentUser.uid), {
-      clearedNotifs: [...ids]
-    }, { merge: true });
+    await setDoc(doc(db, 'users', currentUser.uid),
+      { clearedNotifs: [...ids] }, { merge: true });
   } catch(e) { console.error('persistClearedNotifs error:', e); }
-}
+};
 
-// Load the user's cleared notification IDs from Firestore
-async function loadClearedNotifs() {
+window.loadClearedNotifs = async function() {
   if (!currentUser) return new Set();
   try {
     const snap = await getDoc(doc(db, 'users', currentUser.uid));
-    const data = snap.data();
-    return new Set(data?.clearedNotifs || []);
+    return new Set(snap.data()?.clearedNotifs || []);
   } catch(e) { return new Set(); }
-}
-
-// ── Global community chat ────────────────────────────────────────
-const GLOBAL_CHAT_COL = 'community_chat';
-
-// Expose Firestore refs so community.js can use them
-window._firestoreRefs = { onSnapshot };
-
-// Send a global chat message
-window._globalChat_send = async function(text) {
-  if (!currentUser) { showToast('Sign in to chat'); return; }
-  try {
-    await addDoc(collection(db, GLOBAL_CHAT_COL, 'global', 'messages'), {
-      text,
-      uid:         currentUser.uid,
-      displayName: currentUser.displayName || currentUser.email,
-      photoURL:    currentUser.photoURL    || '',
-      createdAt:   serverTimestamp()
-    });
-  } catch(e) { showToast('Failed to send'); console.error(e); }
 };
 
-// Delete a global chat message
-window._globalChat_delete = async function(msgId) {
-  if (!currentUser) return;
-  try {
-    await deleteDoc(doc(db, GLOBAL_CHAT_COL, 'global', 'messages', msgId));
-  } catch(e) { showToast('Could not delete'); console.error(e); }
-};
 
-// ── Community Requests ───────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// COMMUNITY REQUESTS — Firestore operations
+// ════════════════════════════════════════════════════════════════
+
 window._submitRequest = async function({ type, title, desc }) {
   if (!currentUser) { showToast('Sign in first'); return; }
   try {
@@ -518,7 +431,7 @@ window._requestVote = async function(requestId, uid) {
     const ref    = doc(db, 'community_requests', requestId);
     const snap   = await getDoc(ref);
     if (!snap.exists()) return;
-    const voters = snap.data().voters || [];
+    const voters   = snap.data().voters || [];
     const hasVoted = voters.includes(uid);
     await setDoc(ref, {
       votes:  hasVoted ? snap.data().votes - 1 : snap.data().votes + 1,
@@ -533,5 +446,105 @@ window._requestSetStatus = async function(requestId, status) {
   } catch(e) { showToast('Status update failed'); console.error(e); }
 };
 
-// Expose current uid for vote button state
-window._currentUid = () => currentUser?.uid;
+window._requestEdit = async function(requestId, { type, title, desc }) {
+  try {
+    await setDoc(doc(db, 'community_requests', requestId), {
+      type, title, description: desc || ''
+    }, { merge: true });
+  } catch(e) { showToast('Edit failed'); console.error(e); }
+};
+
+window._requestDelete = async function(requestId) {
+  try {
+    await deleteDoc(doc(db, 'community_requests', requestId));
+  } catch(e) { showToast('Delete failed'); console.error(e); }
+};
+
+window._requestChat_delete = async function(requestId, msgId) {
+  if (!currentUser) return;
+  try {
+    await deleteDoc(doc(db, 'request_comments', requestId, 'messages', msgId));
+  } catch(e) { showToast('Could not delete message'); console.error(e); }
+};
+
+
+// ════════════════════════════════════════════════════════════════
+// BROADCASTS
+// ════════════════════════════════════════════════════════════════
+
+window._sendBroadcast = async function(message) {
+  if (!currentUser) return;
+  try {
+    await addDoc(collection(db, 'broadcasts'), {
+      message,
+      uid:       currentUser.uid,
+      createdAt: serverTimestamp()
+    });
+  } catch(e) { showToast('Broadcast failed'); console.error(e); }
+};
+
+
+// ════════════════════════════════════════════════════════════════
+// MISC HELPERS
+// ════════════════════════════════════════════════════════════════
+
+// Expose Firestore refs so community.js can use them
+window._firestoreRefs = { onSnapshot };
+
+window._currentUid         = () => currentUser?.uid;
+window._currentDisplayName = () => currentUser?.displayName || currentUser?.email || '';
+
+// User badge (avatar in header)
+window.updateUserBadge = function(user) {
+  const badge  = document.getElementById('userBadge');
+  const avatar = document.getElementById('userAvatar');
+  const name   = document.getElementById('avatarMenuName');
+  if (!badge) return;
+  if (user) {
+    if (avatar) avatar.src = user.photoURL || '';
+    if (name)   name.textContent = user.displayName || user.email || '';
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+};
+
+window.toggleAvatarMenu = function() {
+  const menu = document.getElementById('avatarMenu');
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+};
+
+// Close avatar menu when clicking outside
+document.addEventListener('click', e => {
+  const badge = document.getElementById('userBadge');
+  const menu  = document.getElementById('avatarMenu');
+  if (menu && badge && !badge.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+// Close desktop settings when clicking outside
+document.addEventListener('click', e => {
+  const settings = document.getElementById('deskSettings');
+  const btn      = document.querySelector('[onclick="toggleDeskSettings()"]');
+  if (settings && settings.classList.contains('open') &&
+      !settings.contains(e.target) && !btn?.contains(e.target)) {
+    settings.classList.remove('open');
+  }
+});
+
+window.toggleDeskSettings = function() {
+  document.getElementById('deskSettings')?.classList.toggle('open');
+};
+
+window.setMode = function(mode) {
+  localStorage.setItem('hk_mode', mode);
+  document.querySelectorAll('.mode-pill-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+    b.classList.toggle('pub',    b.dataset.mode === 'public' && mode === 'public');
+  });
+};
+
+window.getMode = function() {
+  return localStorage.getItem('hk_mode') || 'private';
+};
