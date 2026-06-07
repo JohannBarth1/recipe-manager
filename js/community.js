@@ -14,8 +14,12 @@ let _requests          = [];
 let _requestsUnsub     = null;
 
 // Per-request chat state
-let _openRequestId     = null;      // which request card is expanded
-let _requestChatUnsubs = {};        // requestId → unsub fn
+let _openRequestId     = null;   // which request chat is expanded
+let _requestChatUnsubs = {};     // requestId → unsub fn
+
+// Inline form state
+let _editingRequestId  = null;   // which card is showing the edit form
+let _showingNewForm    = false;  // whether the new-request form is visible
 
 /* ════════════════════════════════════════════════════════════════
    PANEL TOGGLE & TAB SWITCHER
@@ -26,40 +30,30 @@ window.toggleCommunityPanel = function () {
   if (!panel) return;
   const isOpen = panel.classList.toggle('open');
   if (isOpen) {
-    // Mark all notifications read when panel opens
     if (window.notif_markAllReadOnOpen) notif_markAllReadOnOpen();
   }
 };
 
 window.switchCommunityTab = function (tab) {
-  // Update tab buttons in ALL community panels (mobile + desktop)
   document.querySelectorAll('.community-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === tab);
   });
-
-  // Hide all sections
   document.querySelectorAll('.community-section').forEach(s => {
     s.classList.remove('active');
   });
-
-  // Show the matching sections
   const sectionMap = {
-    notifications: ['communityNotifs',      'communityNotifsDesk'],
-    requests:      ['communityRequests',     'communityRequestsDesk'],
-    challenges:    ['communityChallenges',   'communityChallengesDesk']
+    notifications: ['communityNotifs',    'communityNotifsDesk'],
+    requests:      ['communityRequests',  'communityRequestsDesk'],
+    challenges:    ['communityChallenges','communityChallengesDesk']
   };
   (sectionMap[tab] || []).forEach(id => {
     document.getElementById(id)?.classList.add('active');
   });
-
-  // Re-render relevant content
   if (tab === 'notifications') {
     if (window._renderCommunityFeed) _renderCommunityFeed();
     if (window.notif_markAllReadOnOpen) notif_markAllReadOnOpen();
   }
-  if (tab === 'requests') {
-    _renderRequests();
-  }
+  if (tab === 'requests') _renderRequests();
 };
 
 /* ════════════════════════════════════════════════════════════════
@@ -78,18 +72,15 @@ window.community_subscribe = function (
   db, collection, query, orderBy,
   addDoc, serverTimestamp, currentUserFn
 ) {
-  // Subscribe to requests
   requests_subscribe(db, collection, query, orderBy);
 };
 
 /* ════════════════════════════════════════════════════════════════
-   RECIPE COMMENT HOOK — called from firebase.js _subscribeAllCommentNotifications
+   RECIPE COMMENT HOOK
    ════════════════════════════════════════════════════════════════ */
 
 window.community_onRecipeComment = function (msg, recipeId, recipeTitle, myUid) {
-  // Delegate to notifications.js — it handles the feed rendering
   if (window.notif_onNewComments) {
-    // Pass as a single-item array with isInitial=false
     notif_onNewComments([msg], recipeId, recipeTitle, myUid, false);
   }
 };
@@ -125,20 +116,119 @@ function _renderRequests() {
     ? _requests
     : _requests.filter(r => r.type === _requestsFilter);
 
-  const html = filtered.length
+  // Build the list HTML — prepend inline new-request form if open
+  const newFormHtml = _showingNewForm ? _newRequestFormHtml() : '';
+
+  const listHtml = filtered.length
     ? filtered.map(r => _requestCardHtml(r, myUid)).join('')
     : '<div class="request-empty">No requests yet — add the first one!</div>';
 
   ['requestsList', 'requestsListDesk'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = html;
+    if (el) el.innerHTML = newFormHtml + listHtml;
+  });
+
+  // Update the "+ New" button label
+  document.querySelectorAll('.requests-new-btn').forEach(btn => {
+    btn.textContent = _showingNewForm ? '✕ Cancel' : '+ New';
   });
 }
+
+/* ════════════════════════════════════════════════════════════════
+   INLINE NEW REQUEST FORM
+   ════════════════════════════════════════════════════════════════ */
+
+function _newRequestFormHtml() {
+  return `
+    <div class="request-inline-form" id="newRequestForm">
+      <div class="request-inline-form-title">New Request</div>
+      <div class="form-row">
+        <label>Type</label>
+        <select id="newRequestType">
+          <option value="recipe">🍰 Recipe Request</option>
+          <option value="feature">⚙ Feature Request</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Title</label>
+        <input type="text" id="newRequestTitle"
+               placeholder="e.g. Add a sourdough recipe"
+               autocomplete="off"/>
+      </div>
+      <div class="form-row">
+        <label>Description <span style="font-weight:400;text-transform:none">(optional)</span></label>
+        <textarea id="newRequestDesc" rows="2"
+                  placeholder="Any extra details…"></textarea>
+      </div>
+      <div class="request-inline-form-actions">
+        <button class="btn-cancel" onclick="requestCancelNew()">Cancel</button>
+        <button class="btn-save"   onclick="submitNewRequest()">Submit</button>
+      </div>
+    </div>`;
+}
+
+window.showNewRequestModal = function () {
+  _showingNewForm = !_showingNewForm;
+  // Close edit form if open
+  if (_showingNewForm) _editingRequestId = null;
+  _renderRequests();
+  if (_showingNewForm) {
+    setTimeout(() => document.getElementById('newRequestTitle')?.focus(), 80);
+  }
+};
+
+window.requestCancelNew = function () {
+  _showingNewForm = false;
+  _renderRequests();
+};
+
+window.submitNewRequest = async function () {
+  const type  = document.getElementById('newRequestType')?.value;
+  const title = document.getElementById('newRequestTitle')?.value.trim();
+  const desc  = document.getElementById('newRequestDesc')?.value.trim();
+  if (!title) { showToast('Please enter a title'); return; }
+  _showingNewForm = false;
+  if (window._submitRequest) await window._submitRequest({ type, title, desc });
+  showToast('Request submitted ✓');
+};
+
+/* ════════════════════════════════════════════════════════════════
+   REQUEST CARD
+   ════════════════════════════════════════════════════════════════ */
 
 function _requestCardHtml(r, myUid) {
   const voted    = (r.voters || []).includes(myUid);
   const isOwner  = r.uid === myUid;
   const chatOpen = _openRequestId === r.id;
+  const editing  = _editingRequestId === r.id;
+
+  // Show inline edit form instead of normal card content when editing
+  if (editing) {
+    return `
+      <div class="request-card" id="rcard-${r.id}">
+        <div class="request-inline-form-title">Edit Request</div>
+        <div class="form-row">
+          <label>Type</label>
+          <select id="editRequestType">
+            <option value="recipe"  ${r.type === 'recipe'  ? 'selected' : ''}>🍰 Recipe Request</option>
+            <option value="feature" ${r.type === 'feature' ? 'selected' : ''}>⚙ Feature Request</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Title</label>
+          <input type="text" id="editRequestTitle"
+                 value="${_cEsc(r.title)}" autocomplete="off"/>
+        </div>
+        <div class="form-row">
+          <label>Description <span style="font-weight:400;text-transform:none">(optional)</span></label>
+          <textarea id="editRequestDesc" rows="2">${_cEsc(r.description || '')}</textarea>
+        </div>
+        <div class="request-inline-form-actions">
+          <button class="btn-cancel" onclick="requestCancelEdit()">Cancel</button>
+          <button class="btn-save"   onclick="submitRequestEdit('${r.id}')">Save</button>
+        </div>
+      </div>`;
+  }
 
   return `
     <div class="request-card" id="rcard-${r.id}">
@@ -147,8 +237,8 @@ function _requestCardHtml(r, myUid) {
           ${r.type === 'recipe' ? '🍰 Recipe' : '⚙ Feature'}
         </span>
         <span class="request-status ${r.status || 'new'}"
-              onclick="requestAdmin_updateStatus('${r.id}','${r.status || 'new'}')"
-              title="Click to update status (admin)">
+              onclick="requestCycleStatus('${r.id}','${r.status || 'new'}')"
+              title="Click to change status">
           ${_statusLabel(r.status)}
         </span>
       </div>
@@ -165,7 +255,7 @@ function _requestCardHtml(r, myUid) {
           </button>
           ${isOwner ? `
             <button class="request-card-btn"
-                    onclick="requestEditModal('${r.id}')">✏ Edit</button>
+                    onclick="requestStartEdit('${r.id}')">✏ Edit</button>
             <button class="request-card-btn danger"
                     onclick="requestDeleteConfirm('${r.id}')">🗑 Delete</button>
           ` : ''}
@@ -204,17 +294,75 @@ function _statusLabel(status) {
 }
 
 /* ════════════════════════════════════════════════════════════════
+   STATUS — cycle through without password
+   ════════════════════════════════════════════════════════════════ */
+
+window.requestCycleStatus = async function (requestId, currentStatus) {
+  const cycle = ['new', 'considering', 'planned', 'done'];
+  const next  = cycle[(cycle.indexOf(currentStatus) + 1) % cycle.length];
+  if (window._requestSetStatus) await window._requestSetStatus(requestId, next);
+  showToast(`Status: ${_statusLabel(next)}`);
+};
+
+/* ════════════════════════════════════════════════════════════════
+   INLINE EDIT FORM
+   ════════════════════════════════════════════════════════════════ */
+
+window.requestStartEdit = function (requestId) {
+  _editingRequestId = requestId;
+  _showingNewForm   = false;       // close new form if open
+  _renderRequests();
+  setTimeout(() => document.getElementById('editRequestTitle')?.focus(), 80);
+};
+
+window.requestCancelEdit = function () {
+  _editingRequestId = null;
+  _renderRequests();
+};
+
+window.submitRequestEdit = async function (requestId) {
+  const type  = document.getElementById('editRequestType')?.value;
+  const title = document.getElementById('editRequestTitle')?.value.trim();
+  const desc  = document.getElementById('editRequestDesc')?.value.trim();
+  if (!title) { showToast('Please enter a title'); return; }
+  _editingRequestId = null;
+  if (window._requestEdit) await window._requestEdit(requestId, { type, title, desc });
+  showToast('Request updated ✓');
+};
+
+/* ════════════════════════════════════════════════════════════════
+   FILTER / VOTE / DELETE
+   ════════════════════════════════════════════════════════════════ */
+
+window.requestsFilter = function (type) {
+  _requestsFilter = type;
+  document.querySelectorAll('.requests-filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === type);
+  });
+  _renderRequests();
+};
+
+window.requestVote = async function (requestId) {
+  const uid = window._currentUid?.();
+  if (!uid) { showToast('Sign in to vote'); return; }
+  if (window._requestVote) await window._requestVote(requestId, uid);
+};
+
+window.requestDeleteConfirm = function (requestId) {
+  if (!confirm('Delete this request?')) return;
+  if (window._requestDelete) window._requestDelete(requestId);
+};
+
+/* ════════════════════════════════════════════════════════════════
    PER-REQUEST CHAT
    ════════════════════════════════════════════════════════════════ */
 
 window.requestToggleChat = function (requestId) {
   const wasOpen = _openRequestId === requestId;
 
-  // Collapse any open chat
   if (_openRequestId) {
     const oldChat = document.getElementById(`rchat-${_openRequestId}`);
     if (oldChat) oldChat.classList.remove('open');
-    // Unsubscribe old listener
     if (_requestChatUnsubs[_openRequestId]) {
       _requestChatUnsubs[_openRequestId]();
       delete _requestChatUnsubs[_openRequestId];
@@ -222,17 +370,10 @@ window.requestToggleChat = function (requestId) {
     _openRequestId = null;
   }
 
-  if (wasOpen) {
-    // Was already open — we just closed it, done
-    _renderRequests();
-    return;
-  }
+  if (wasOpen) { _renderRequests(); return; }
 
-  // Open new chat
   _openRequestId = requestId;
-  _renderRequests(); // re-render so card shows open state
-
-  // Subscribe to messages
+  _renderRequests();
   _subscribeRequestChat(requestId);
 };
 
@@ -240,7 +381,6 @@ function _subscribeRequestChat(requestId) {
   const { onSnapshot } = window._firestoreRefs || {};
   if (!onSnapshot || !window._firestoreDb) return;
 
-  // We need collection/query/orderBy — stored on firebase.js exposes them
   const { collection, query, orderBy } = window._firestoreQueryRefs || {};
   if (!collection) return;
 
@@ -249,21 +389,25 @@ function _subscribeRequestChat(requestId) {
     orderBy('createdAt', 'asc')
   );
 
+  let isInitialLoad = true;
+
   const unsub = onSnapshot(q, snap => {
     const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     _renderRequestChatMsgs(requestId, msgs);
 
-    // Notify others via notifications.js
-    const myUid = window._currentUid?.();
-    snap.docChanges().forEach(change => {
-      if (change.type !== 'added') return;
-      const m = { id: change.doc.id, ...change.doc.data() };
-      if (m.uid === myUid) return;
-      const req = _requests.find(r => r.id === requestId);
-      if (window.notif_onRequestComment) {
-        notif_onRequestComment(m, requestId, req?.title || 'a request', myUid);
-      }
-    });
+    if (!isInitialLoad) {
+      const myUid = window._currentUid?.();
+      snap.docChanges().forEach(change => {
+        if (change.type !== 'added') return;
+        const m = { id: change.doc.id, ...change.doc.data() };
+        if (m.uid === myUid) return;
+        const req = _requests.find(r => r.id === requestId);
+        if (window.notif_onRequestComment) {
+          notif_onRequestComment(m, requestId, req?.title || 'a request', myUid);
+        }
+      });
+    }
+    isInitialLoad = false;
   }, err => console.error('Request chat sub error:', requestId, err));
 
   _requestChatUnsubs[requestId] = unsub;
@@ -276,10 +420,7 @@ function _renderRequestChatMsgs(requestId, msgs) {
   const myUid    = window._currentUid?.();
   const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
 
-  if (!msgs.length) {
-    el.innerHTML = '';
-    return;
-  }
+  if (!msgs.length) { el.innerHTML = ''; return; }
 
   el.innerHTML = msgs.map(m => {
     const mine   = m.uid === myUid;
@@ -324,7 +465,6 @@ window.requestChat_send = async function (requestId) {
   if (!text) return;
   input.value = '';
 
-  // Use firebase.js helper
   if (window._requestChat_send) {
     await window._requestChat_send(requestId, text);
   }
@@ -335,178 +475,6 @@ window._deleteRequestChatMsg = async function (requestId, msgId) {
   if (window._requestChat_delete) {
     await window._requestChat_delete(requestId, msgId);
   }
-};
-
-/* ════════════════════════════════════════════════════════════════
-   REQUESTS — filter / vote / admin
-   ════════════════════════════════════════════════════════════════ */
-
-window.requestsFilter = function (type) {
-  _requestsFilter = type;
-  document.querySelectorAll('.requests-filter-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.filter === type);
-  });
-  _renderRequests();
-};
-
-window.requestVote = async function (requestId) {
-  const uid = window._currentUid?.();
-  if (!uid) { showToast('Sign in to vote'); return; }
-  if (window._requestVote) await window._requestVote(requestId, uid);
-};
-
-window.requestDeleteConfirm = function (requestId) {
-  if (!confirm('Delete this request?')) return;
-  if (window._requestDelete) window._requestDelete(requestId);
-};
-
-window.requestEditModal = function (requestId) {
-  const r = _requests.find(x => x.id === requestId);
-  if (!r) return;
-
-  document.getElementById('editRequestOverlay')?.remove();
-  const overlay = document.createElement('div');
-  overlay.id    = 'editRequestOverlay';
-  overlay.style.cssText =
-    'position:fixed;inset:0;background:rgba(26,18,8,.55);z-index:300;' +
-    'display:flex;align-items:center;justify-content:center;padding:1rem';
-  overlay.innerHTML = `
-    <div style="background:var(--warm-white);border:1px solid var(--border);
-                border-radius:6px;padding:1.5rem;width:100%;max-width:380px">
-      <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;
-                 color:var(--brown);margin-bottom:1rem">Edit Request</h3>
-      <div class="form-row">
-        <label>Type</label>
-        <select id="editRequestType">
-          <option value="recipe" ${r.type === 'recipe' ? 'selected' : ''}>🍰 Recipe Request</option>
-          <option value="feature" ${r.type === 'feature' ? 'selected' : ''}>⚙ Feature Request</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>Title</label>
-        <input type="text" id="editRequestTitle" value="${_cEsc(r.title)}"/>
-      </div>
-      <div class="form-row">
-        <label>Description (optional)</label>
-        <textarea id="editRequestDesc" rows="3">${_cEsc(r.description || '')}</textarea>
-      </div>
-      <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">
-        <button onclick="document.getElementById('editRequestOverlay').remove()"
-                class="btn-cancel">Cancel</button>
-        <button onclick="submitRequestEdit('${requestId}')" class="btn-save">Save</button>
-      </div>
-    </div>`;
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-  document.body.appendChild(overlay);
-  setTimeout(() => document.getElementById('editRequestTitle')?.focus(), 80);
-};
-
-window.submitRequestEdit = async function (requestId) {
-  const type  = document.getElementById('editRequestType')?.value;
-  const title = document.getElementById('editRequestTitle')?.value.trim();
-  const desc  = document.getElementById('editRequestDesc')?.value.trim();
-  if (!title) { showToast('Please enter a title'); return; }
-  document.getElementById('editRequestOverlay')?.remove();
-  if (window._requestEdit) await window._requestEdit(requestId, { type, title, desc });
-  showToast('Request updated ✓');
-};
-
-// ── Admin status update ──────────────────────────────────────────
-window.requestAdmin_updateStatus = async function (requestId, currentStatus) {
-  const pw = prompt('Admin password:');
-  if (!pw) return;
-  const hashed = await _sha256(pw.trim());
-  if (hashed !== ADMIN_HASH) { showToast('Incorrect password'); return; }
-
-  document.getElementById('statusPickerOverlay')?.remove();
-  const overlay = document.createElement('div');
-  overlay.id    = 'statusPickerOverlay';
-  overlay.style.cssText =
-    'position:fixed;inset:0;background:rgba(26,18,8,.55);z-index:300;' +
-    'display:flex;align-items:center;justify-content:center;padding:1rem';
-  overlay.innerHTML = `
-    <div style="background:var(--warm-white);border:1px solid var(--border);
-                border-radius:6px;padding:1.5rem;width:100%;max-width:300px">
-      <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;
-                 color:var(--brown);margin-bottom:1rem">Update Status</h3>
-      ${['new', 'considering', 'planned', 'done'].map(s => `
-        <button onclick="requestAdmin_setStatus('${requestId}','${s}')"
-                style="width:100%;text-align:left;padding:.6rem .9rem;
-                       margin-bottom:.4rem;border-radius:4px;cursor:pointer;
-                       border:1px solid var(--border);
-                       background:${currentStatus === s ? 'var(--panel)' : 'var(--warm-white)'};
-                       font-family:'Lato',sans-serif;font-size:.88rem;color:var(--ink);display:block">
-          ${_statusLabel(s)}
-        </button>`).join('')}
-      <button onclick="document.getElementById('statusPickerOverlay').remove()"
-              style="width:100%;margin-top:.4rem;padding:.5rem;border:none;
-                     background:transparent;color:var(--muted);cursor:pointer;
-                     font-family:'Lato',sans-serif;font-size:.82rem">
-        Cancel
-      </button>
-    </div>`;
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-  document.body.appendChild(overlay);
-};
-
-window.requestAdmin_setStatus = async function (requestId, status) {
-  document.getElementById('statusPickerOverlay')?.remove();
-  if (window._requestSetStatus) await window._requestSetStatus(requestId, status);
-  showToast(`Status updated to: ${_statusLabel(status)}`);
-};
-
-/* ════════════════════════════════════════════════════════════════
-   NEW REQUEST MODAL
-   ════════════════════════════════════════════════════════════════ */
-
-window.showNewRequestModal = function () {
-  document.getElementById('newRequestOverlay')?.remove();
-  const overlay = document.createElement('div');
-  overlay.id    = 'newRequestOverlay';
-  overlay.style.cssText =
-    'position:fixed;inset:0;background:rgba(26,18,8,.55);z-index:300;' +
-    'display:flex;align-items:center;justify-content:center;padding:1rem';
-  overlay.innerHTML = `
-    <div style="background:var(--warm-white);border:1px solid var(--border);
-                border-radius:6px;padding:1.5rem;width:100%;max-width:380px">
-      <h3 style="font-family:'Playfair Display',serif;font-size:1.1rem;
-                 color:var(--brown);margin-bottom:1rem">New Request</h3>
-      <div class="form-row">
-        <label>Type</label>
-        <select id="newRequestType">
-          <option value="recipe">🍰 Recipe Request</option>
-          <option value="feature">⚙ Feature Request</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>Title</label>
-        <input type="text" id="newRequestTitle"
-               placeholder="e.g. Add a sourdough recipe"/>
-      </div>
-      <div class="form-row">
-        <label>Description (optional)</label>
-        <textarea id="newRequestDesc" rows="3"
-                  placeholder="Any extra details…"></textarea>
-      </div>
-      <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem">
-        <button onclick="document.getElementById('newRequestOverlay').remove()"
-                class="btn-cancel">Cancel</button>
-        <button onclick="submitNewRequest()" class="btn-save">Submit</button>
-      </div>
-    </div>`;
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-  document.body.appendChild(overlay);
-  setTimeout(() => document.getElementById('newRequestTitle')?.focus(), 80);
-};
-
-window.submitNewRequest = async function () {
-  const type  = document.getElementById('newRequestType')?.value;
-  const title = document.getElementById('newRequestTitle')?.value.trim();
-  const desc  = document.getElementById('newRequestDesc')?.value.trim();
-  if (!title) { showToast('Please enter a title'); return; }
-  document.getElementById('newRequestOverlay')?.remove();
-  if (window._submitRequest) await window._submitRequest({ type, title, desc });
-  showToast('Request submitted ✓');
 };
 
 /* ════════════════════════════════════════════════════════════════
@@ -536,11 +504,11 @@ function _initBroadcastTrigger() {
 
     const cancel = () => clearTimeout(pressTimer);
 
-    el.addEventListener('mousedown',  start);
-    el.addEventListener('touchstart', start, { passive: true });
-    el.addEventListener('mouseup',    cancel);
-    el.addEventListener('mouseleave', cancel);
-    el.addEventListener('touchend',   cancel);
+    el.addEventListener('mousedown',   start);
+    el.addEventListener('touchstart',  start,  { passive: true });
+    el.addEventListener('mouseup',     cancel);
+    el.addEventListener('mouseleave',  cancel);
+    el.addEventListener('touchend',    cancel);
     el.addEventListener('touchcancel', cancel);
   });
 }
@@ -566,7 +534,7 @@ function _cEsc(s) {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   INIT (runs once DOM is ready)
+   INIT
    ════════════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => {
