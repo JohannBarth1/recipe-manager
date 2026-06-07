@@ -72,8 +72,6 @@ window.notif_onNewComments = function (msgs, recipeId, recipeTitle, myUid, isIni
 
     updateNotifBadge();
     _renderCommunityFeed();
-
-    showToast(`💬 ${m.displayName || 'Someone'} commented on ${recipeTitle}`);
   });
 };
 
@@ -96,7 +94,6 @@ window.notif_onRequestComment = function (msg, requestId, requestTitle, myUid) {
 
   updateNotifBadge();
   _renderCommunityFeed();
-  showToast(`💬 ${msg.displayName || 'Someone'} replied on "${requestTitle}"`);
 };
 
 // ── Called by community.js when a broadcast arrives ─────────────
