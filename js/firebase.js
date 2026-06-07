@@ -95,13 +95,18 @@ onAuthStateChanged(auth, async user => {
     _subscribeAllCommentNotifications();
   }
 
-  // Subscribe to community features
+// Subscribe to community features
   if (window.community_subscribe) {
     community_subscribe(
       db, collection, query, orderBy,
       addDoc, serverTimestamp,
       () => currentUser
     );
+  }
+
+  // Subscribe to broadcasts
+  if (window.broadcasts_subscribe) {
+    broadcasts_subscribe(db, collection, query, orderBy);
   }
 });
 
