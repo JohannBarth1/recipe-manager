@@ -482,10 +482,14 @@ window._deleteRequestChatMsg = async function (requestId, msgId) {
    ════════════════════════════════════════════════════════════════ */
 
 function _initBroadcastTrigger() {
-  ['commBroadcastTriggerDesk', 'commBroadcastTriggerMob'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
+  // Desktop: identified by id; Mobile: identified by data-broadcast-trigger
+  // (mobile tab keeps id="tabCommunity" so mob_switchTab works)
+  const triggerEls = [
+    document.getElementById('commBroadcastTriggerDesk'),
+    document.querySelector('[data-broadcast-trigger]')
+  ].filter(Boolean);
 
+  triggerEls.forEach(el => {
     let pressTimer = null;
 
     const start = () => {
@@ -511,6 +515,46 @@ function _initBroadcastTrigger() {
     el.addEventListener('touchend',    cancel);
     el.addEventListener('touchcancel', cancel);
   });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   BROADCAST — subscribe and display in notifications feed
+   ════════════════════════════════════════════════════════════════ */
+
+window.broadcasts_subscribe = function (db, collection, query, orderBy) {
+  const { onSnapshot } = window._firestoreRefs || {};
+  if (!onSnapshot) return;
+
+  let isInitial = true;
+
+  const q = query(
+    collection(db, 'broadcasts'),
+    orderBy('createdAt', 'desc')
+  );
+
+  onSnapshot(q, snap => {
+    if (isInitial) {
+      // On first load show existing broadcasts in feed without toasting
+      snap.docs.forEach(d => {
+        const b = { id: d.id, ...d.data() };
+        _addBroadcastToFeed(b, false);
+      });
+      isInitial = false;
+      return;
+    }
+    // Real-time: new broadcast arrived
+    snap.docChanges().forEach(change => {
+      if (change.type !== 'added') return;
+      const b = { id: change.doc.id, ...change.doc.data() };
+      _addBroadcastToFeed(b, true);
+    });
+  }, err => console.error('Broadcasts sub error:', err));
+};
+
+function _addBroadcastToFeed(broadcast, showToastMsg) {
+  if (window.notif_addBroadcast) {
+    notif_addBroadcast(broadcast, showToastMsg);
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════
