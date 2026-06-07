@@ -490,6 +490,8 @@ window._sendBroadcast = async function(message) {
 
 // Expose Firestore refs so community.js can use them
 window._firestoreRefs = { onSnapshot };
+window._firestoreDb        = db;
+window._firestoreQueryRefs = { collection, query, orderBy };
 
 window._currentUid         = () => currentUser?.uid;
 window._currentDisplayName = () => currentUser?.displayName || currentUser?.email || '';
