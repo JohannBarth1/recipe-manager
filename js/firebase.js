@@ -500,7 +500,18 @@ window._sendBroadcast = async function(message) {
   } catch(e) { showToast('Broadcast failed'); console.error(e); }
 };
 
+window._broadcastEdit = async function (broadcastId, message) {
+  try {
+    await setDoc(doc(db, 'broadcasts', broadcastId),
+      { message }, { merge: true });
+  } catch (e) { showToast('Edit failed'); console.error(e); }
+};
 
+window._broadcastDelete = async function (broadcastId) {
+  try {
+    await deleteDoc(doc(db, 'broadcasts', broadcastId));
+  } catch (e) { showToast('Delete failed'); console.error(e); }
+};
 // ════════════════════════════════════════════════════════════════
 // MISC HELPERS
 // ════════════════════════════════════════════════════════════════
