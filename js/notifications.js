@@ -103,12 +103,14 @@ window.notif_addBroadcast = function (broadcast, showToastMsg) {
 
   notifItems.unshift({
     id:            broadcast.id,
+    uid:           broadcast.uid  || '',
     text:          broadcast.message || '',
     commenterName: 'Admin',
     _createdAt:    broadcast.createdAt,
     timeAgo:       _timeAgo(broadcast.createdAt),
-    read:          !showToastMsg,   // mark read if loaded on initial page load
-    type:          'broadcast'
+    read:          !showToastMsg,
+    type:          'broadcast',
+    _expanded:     false
   });
 
   updateNotifBadge();
@@ -203,6 +205,43 @@ function _renderCommunityFeed() {
           : n.type === 'request_comment'
             ? `Reply on "${_nEsc(n.requestTitle || '')}"`
             : `Comment on ${_nEsc(n.recipeName || '')}`;
+
+        if (n.type === 'broadcast') {
+          const myUid   = window._currentUid?.();
+          const isOwner = n.uid && n.uid === myUid;
+          const full    = n.text || '';
+          const LIMIT   = 120;
+          const expanded = n._expanded || false;
+          const preview  = full.length > LIMIT && !expanded
+            ? full.slice(0, LIMIT) + '…'
+            : full;
+          const showMoreBtn = full.length > LIMIT
+            ? `<button class="notif-feed-more-btn"
+                       onclick="event.stopPropagation();notifBroadcastToggle(${i})">
+                 ${expanded ? 'Show less' : 'Show more'}
+               </button>`
+            : '';
+          const ownerBtns = isOwner ? `
+            <div class="notif-feed-owner-btns">
+              <button class="request-card-btn"
+                      onclick="event.stopPropagation();notifBroadcastEdit(${i})">✏ Edit</button>
+              <button class="request-card-btn danger"
+                      onclick="event.stopPropagation();notifBroadcastDelete(${i})">🗑 Delete</button>
+            </div>` : '';
+          return `
+            <div class="notif-feed-item ${n.read ? '' : 'unread'}"
+                 onclick="notifFeedClick(${i})">
+              <div class="notif-feed-icon">${icon}</div>
+              <div class="notif-feed-body">
+                <div class="notif-feed-title">${title}</div>
+                <div class="notif-feed-text">${_nEsc(preview)}</div>
+                ${showMoreBtn}
+                ${ownerBtns}
+                <div class="notif-feed-time">${n.timeAgo}</div>
+              </div>
+            </div>`;
+        }
+
         const preview = (n.text || '').slice(0, 100) + (n.text.length > 100 ? '…' : '');
         return `
           <div class="notif-feed-item ${n.read ? '' : 'unread'}"
@@ -274,6 +313,41 @@ window.notif_markAllReadOnOpen = function () {
   notifItems.forEach(n => n.read = true);
   updateNotifBadge();
   _renderCommunityFeed();
+};
+
+// ── Broadcast interactions ───────────────────────────────────────
+window.notifBroadcastToggle = function (i) {
+  if (!notifItems[i]) return;
+  notifItems[i]._expanded = !notifItems[i]._expanded;
+  _renderCommunityFeed();
+};
+
+window.notifBroadcastEdit = function (i) {
+  const n = notifItems[i];
+  if (!n) return;
+  const newMsg = prompt('Edit broadcast:', n.text);
+  if (!newMsg?.trim() || newMsg.trim() === n.text) return;
+  if (window._broadcastEdit) {
+    window._broadcastEdit(n.id, newMsg.trim()).then(() => {
+      n.text = newMsg.trim();
+      _renderCommunityFeed();
+      showToast('Broadcast updated ✓');
+    });
+  }
+};
+
+window.notifBroadcastDelete = function (i) {
+  const n = notifItems[i];
+  if (!n) return;
+  if (!confirm('Delete this broadcast?')) return;
+  if (window._broadcastDelete) {
+    window._broadcastDelete(n.id).then(() => {
+      notifItems.splice(i, 1);
+      updateNotifBadge();
+      _renderCommunityFeed();
+      showToast('Broadcast deleted');
+    });
+  }
 };
 
 // ── Helpers ──────────────────────────────────────────────────────
