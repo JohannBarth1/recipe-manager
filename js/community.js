@@ -389,25 +389,32 @@ function _subscribeRequestChat(requestId) {
     orderBy('createdAt', 'asc')
   );
 
-  let isInitialLoad = true;
+  // Track message IDs present on first snapshot so we don't
+  // notify for messages that already existed when the chat opened
+  let initialIds = null;
 
   const unsub = onSnapshot(q, snap => {
     const msgs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     _renderRequestChatMsgs(requestId, msgs);
 
-    if (!isInitialLoad) {
-      const myUid = window._currentUid?.();
-      snap.docChanges().forEach(change => {
-        if (change.type !== 'added') return;
-        const m = { id: change.doc.id, ...change.doc.data() };
-        if (m.uid === myUid) return;
-        const req = _requests.find(r => r.id === requestId);
-        if (window.notif_onRequestComment) {
-          notif_onRequestComment(m, requestId, req?.title || 'a request', myUid);
-        }
-      });
+    if (initialIds === null) {
+      // First snapshot — record existing message IDs, no notifications
+      initialIds = new Set(msgs.map(m => m.id));
+      return;
     }
-    isInitialLoad = false;
+
+    // Subsequent snapshots — only notify for genuinely new messages
+    const myUid = window._currentUid?.();
+    snap.docChanges().forEach(change => {
+      if (change.type !== 'added') return;
+      const m = { id: change.doc.id, ...change.doc.data() };
+      if (initialIds.has(m.id)) return;  // was already there on open
+      if (m.uid === myUid) return;        // own message
+      const req = _requests.find(r => r.id === requestId);
+      if (window.notif_onRequestComment) {
+        notif_onRequestComment(m, requestId, req?.title || 'a request', myUid);
+      }
+    });
   }, err => console.error('Request chat sub error:', requestId, err));
 
   _requestChatUnsubs[requestId] = unsub;
