@@ -99,6 +99,29 @@ window.notif_onRequestComment = function (msg, requestId, requestTitle, myUid) {
   showToast(`💬 ${msg.displayName || 'Someone'} replied on "${requestTitle}"`);
 };
 
+// ── Called by community.js when a broadcast arrives ─────────────
+window.notif_addBroadcast = function (broadcast, showToastMsg) {
+  // Don't duplicate — check if already in feed
+  if (notifItems.find(n => n.id === broadcast.id)) return;
+
+  notifItems.unshift({
+    id:            broadcast.id,
+    text:          broadcast.message || '',
+    commenterName: 'Admin',
+    _createdAt:    broadcast.createdAt,
+    timeAgo:       _timeAgo(broadcast.createdAt),
+    read:          !showToastMsg,   // mark read if loaded on initial page load
+    type:          'broadcast'
+  });
+
+  updateNotifBadge();
+  _renderCommunityFeed();
+
+  if (showToastMsg) {
+    showToast(`📢 ${broadcast.message}`);
+  }
+};
+
 // ── Dismiss all (community panel button) ────────────────────────
 window.dismissAllNotifs = function () {
   notifItems.forEach(n => _clearedNotifs.add(n.id));
@@ -176,10 +199,13 @@ function _renderCommunityFeed() {
   const containers = ['communityNotifsList', 'communityNotifsListDesk'];
   const html = notifItems.length
     ? notifItems.slice(0, 50).map((n, i) => {
-        const icon  = n.type === 'request_comment' ? '📋' : '💬';
-        const title = n.type === 'request_comment'
-          ? `Reply on "${_nEsc(n.requestTitle || '')}"`
-          : `Comment on ${_nEsc(n.recipeName || '')}`;
+        const icon  = n.type === 'broadcast'       ? '📢'
+                      : n.type === 'request_comment' ? '📋' : '💬';
+        const title = n.type === 'broadcast'
+          ? 'Admin Broadcast'
+          : n.type === 'request_comment'
+            ? `Reply on "${_nEsc(n.requestTitle || '')}"`
+            : `Comment on ${_nEsc(n.recipeName || '')}`;
         const preview = (n.text || '').slice(0, 100) + (n.text.length > 100 ? '…' : '');
         return `
           <div class="notif-feed-item ${n.read ? '' : 'unread'}"
