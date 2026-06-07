@@ -334,22 +334,6 @@ function updateUserBadge(user) {
 // Call on startup so UI reflects the saved mode
 updateModeUI();
 
-// ── Auto-refresh on page visibility / focus ──────────────────────
-// Reloads shared recipes whenever the user returns to the tab or app.
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && typeof getMode === 'function') {
-    if (getMode() === 'public' && window.firestoreLoad) {
-      firestoreLoad();
-    }
-  }
-});
-
-window.addEventListener('focus', () => {
-  if (getMode() === 'public' && window.firestoreLoad) {
-    firestoreLoad();
-  }
-});
-
 
 function toggleAvatarMenu() {
   const menu = document.getElementById('avatarMenu');
