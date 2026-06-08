@@ -242,27 +242,69 @@ function timerAddCustomDesk() {
 
 // ── Linkify time mentions in recipe text ─────────────────────────
 // Turns "bake 25 minutes" into "bake 25 minutes [⏱ Start]"
-const TIME_RE = /(\d+(?:[.,½¼¾]\d*)?)\s*(hours?|hrs?|minutes?|mins?)/gi;
+const TIME_RE =
+  /(\d+(?:[.,½¼¾]\d*)?(?:\s*-\s*\d+(?:[.,½¼¾]\d*)?)?)\s*(hours?|hrs?|minutes?|mins?)/gi;
 
 function linkifyTimers(text) {
   return text.replace(TIME_RE, (match, num, unit, offset, string) => {
+
+    // Use the LAST number in a range (25-30 minutes => 30)
+    const lastNum = num.split('-').pop().trim();
+
     let n = parseFloat(
-      num.replace(',', '.').replace('½', '.5').replace('¼', '.25').replace('¾', '.75')
+      lastNum
+        .replace(',', '.')
+        .replace('½', '.5')
+        .replace('¼', '.25')
+        .replace('¾', '.75')
     );
+
+    if (isNaN(n)) return match;
+
     const isHour = /^h/i.test(unit);
-    const mins   = isHour ? Math.round(n * 60) : Math.round(n);
+    const mins = isHour ? Math.round(n * 60) : Math.round(n);
+
     if (mins < 1 || mins > 600) return match;
 
-    // Build a short context label from surrounding sentence
-    const before      = string.slice(0, offset);
-    const sentStart   = Math.max(before.lastIndexOf('.'), before.lastIndexOf('\n')) + 1;
-    const after       = string.slice(offset + match.length);
-    const sentEnd     = after.search(/[.\n]|$/);
-    const sentence    = (before.slice(sentStart) + match + after.slice(0, sentEnd)).trim();
-    const rawSentence = sentence.replace(/<[^>]+>/g, '').trim();
-   const context     = rawSentence.replace(TIME_RE, '').replace(/\s+/g, ' ').trim().slice(0, 60);
-    const safeCtx     = context.replace(/'/g, "\\'");
-    const label       = match.trim();
+    // Find surrounding sentence
+    const before = string.slice(0, offset);
+    const after = string.slice(offset + match.length);
+
+    const sentStart =
+      Math.max(
+        before.lastIndexOf('.'),
+        before.lastIndexOf('\n')
+      ) + 1;
+
+    const sentEnd = after.search(/[.\n]|$/);
+
+    const sentence = (
+      before.slice(sentStart) +
+      match +
+      after.slice(0, sentEnd)
+    ).trim();
+
+    const rawSentence = sentence
+      .replace(/<[^>]+>/g, '')
+      .trim();
+
+    // Remove time expression and leading step numbers
+    let context = rawSentence
+      .replace(match, '')
+      .replace(/^\s*\d+[.)]?\s*/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Keep labels reasonably short
+    if (context.length > 60) {
+      context = context.slice(0, 57).trim() + '...';
+    }
+
+    const safeCtx = context
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'");
+
+    const label = match.trim();
 
     return `${match}<button class="inline-timer-btn" onclick="timerAdd(${mins},'${label}','${safeCtx}')">⏱ Start</button>`;
   });
