@@ -482,3 +482,10 @@ async function _publishNudgeRecipe(recipeId) {
   await firestoreSaveRecipe(recipe);
   showToast(`"${recipe.title}" published ✓`);
 }
+
+// Close all desktop slide-ins except the one specified
+function closeOtherSlidein(keep) {
+  if (keep !== 'community') document.getElementById('communitySlidein')?.classList.remove('open');
+  if (keep !== 'timers')    document.getElementById('timersSlidein')?.classList.remove('open');
+  if (keep !== 'settings')  document.getElementById('settingsSlidein')?.classList.remove('open');
+}
