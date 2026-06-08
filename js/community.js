@@ -116,16 +116,14 @@ function _renderRequests() {
     ? _requests
     : _requests.filter(r => r.type === _requestsFilter);
 
-  // Build the list HTML — prepend inline new-request form if open
-  const newFormHtml = _showingNewForm ? _newRequestFormHtml() : '';
-
   const listHtml = filtered.length
     ? filtered.map(r => _requestCardHtml(r, myUid)).join('')
     : '<div class="request-empty">No requests yet — add the first one!</div>';
 
-  ['requestsList', 'requestsListDesk'].forEach(id => {
+  ['requestsList', 'requestsListDesk'].forEach((id, i) => {
+    const suffix = i === 0 ? 'mob' : 'desk';
     const el = document.getElementById(id);
-    if (el) el.innerHTML = newFormHtml + listHtml;
+    if (el) el.innerHTML = (_showingNewForm ? _newRequestFormHtml(suffix) : '') + listHtml;
   });
 
   // Update the "+ New" button label
@@ -138,26 +136,26 @@ function _renderRequests() {
    INLINE NEW REQUEST FORM
    ════════════════════════════════════════════════════════════════ */
 
-function _newRequestFormHtml() {
+function _newRequestFormHtml(suffix) {
   return `
-    <div class="request-inline-form" id="newRequestForm">
+    <div class="request-inline-form" id="newRequestForm-${suffix}">
       <div class="request-inline-form-title">New Request</div>
       <div class="form-row">
         <label>Type</label>
-        <select id="newRequestType">
+        <select id="newRequestType-${suffix}">
           <option value="recipe">🍰 Recipe Request</option>
           <option value="feature">⚙ Feature Request</option>
         </select>
       </div>
       <div class="form-row">
         <label>Title</label>
-        <input type="text" id="newRequestTitle"
+        <input type="text" id="newRequestTitle-${suffix}"
                placeholder="e.g. Add a sourdough recipe"
                autocomplete="off"/>
       </div>
       <div class="form-row">
         <label>Description <span style="font-weight:400;text-transform:none">(optional)</span></label>
-        <textarea id="newRequestDesc" rows="2"
+        <textarea id="newRequestDesc-${suffix}" rows="2"
                   placeholder="Any extra details…"></textarea>
       </div>
       <div class="request-inline-form-actions">
@@ -169,23 +167,24 @@ function _newRequestFormHtml() {
 
 window.showNewRequestModal = function () {
   _showingNewForm = !_showingNewForm;
-  // Close edit form if open
   if (_showingNewForm) _editingRequestId = null;
   _renderRequests();
   if (_showingNewForm) {
-    setTimeout(() => document.getElementById('newRequestTitle')?.focus(), 80);
+    // Focus whichever is visible
+    setTimeout(() => {
+      const el = document.getElementById('newRequestTitle-desk')
+               || document.getElementById('newRequestTitle-mob');
+      el?.focus();
+    }, 80);
   }
 };
 
-window.requestCancelNew = function () {
-  _showingNewForm = false;
-  _renderRequests();
-};
-
 window.submitNewRequest = async function () {
-  const type  = document.getElementById('newRequestType')?.value;
-  const title = document.getElementById('newRequestTitle')?.value.trim();
-  const desc  = document.getElementById('newRequestDesc')?.value.trim();
+  // Try desktop first, fall back to mobile
+  const suffix = document.getElementById('newRequestTitle-desk') ? 'desk' : 'mob';
+  const type  = document.getElementById(`newRequestType-${suffix}`)?.value;
+  const title = document.getElementById(`newRequestTitle-${suffix}`)?.value.trim();
+  const desc  = document.getElementById(`newRequestDesc-${suffix}`)?.value.trim();
   if (!title) { showToast('Please enter a title'); return; }
   _showingNewForm = false;
   if (window._submitRequest) await window._submitRequest({ type, title, desc });
