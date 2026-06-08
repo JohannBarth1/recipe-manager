@@ -307,7 +307,7 @@ function linkifyTimers(text) {
 
     const label = match.trim();
 
-    return `${match}<button class="inline-timer-btn" onclick="timerAdd(${mins},'${label}','${safeCtx}')">⏱ Start</button>`;
+    return `${match}<button class="inline-timer-btn" onclick="timerAdd(${mins}, '${label}', '${safeCtx}')">⏱ Start</button>`;
   });
 }
 
