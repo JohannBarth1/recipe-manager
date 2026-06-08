@@ -19,7 +19,7 @@ function showRichToast(label, timeStr) {
   toast.innerHTML = `
     <div class="timer-card-label">
       <div style="font-size:.65rem; letter-spacing:.18em; text-transform:uppercase; color:var(--rust); font-weight:700; margin-bottom:.3rem;">
-        ⏱ Timer Started (Click to view)
+        ⏱ Timer Started
       </div>
       ${label}
     </div>
