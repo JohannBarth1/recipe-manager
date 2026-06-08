@@ -70,21 +70,29 @@ function timerUpdateNotifRow() {
 // ── Add a timer ──────────────────────────────────────────────────
 function timerAdd(minutes, label, context) {
   ensureAudioCtx();
-  const id           = timerNextId++;
-  const displayLabel = context ? `${label} — ${context}` : label;
-  const endsAt       = Date.now() + minutes * 60 * 1000;
-  const t = { id, label: displayLabel, totalSecs: minutes * 60, endsAt, interval: null, done: false };
+  const id      = timerNextId++;
+  const endsAt  = Date.now() + minutes * 60 * 1000;
+  // Store time label and context separately
+  const t = {
+    id,
+    label:      context || label,  // step text if available, otherwise "5 min"
+    timeLabel:  label,             // always "5 min" / "25 min" etc.
+    totalSecs:  minutes * 60,
+    endsAt,
+    interval:   null,
+    done:        false
+  };
   timers.push(t);
   t.interval = setInterval(() => timerTick(id), 1000);
   timerScheduleNotification(t);
-   timerRender();
-// Open the correct timers panel depending on viewport
-if (window.innerWidth <= 640) {
-  mob_switchTab('timers');
-} else {
-  const panel = document.getElementById('timersSlidein');
-  if (panel && !panel.classList.contains('open')) toggleTimerPanel();
-}
+  timerRender();
+
+  if (window.innerWidth <= 640) {
+    showToast(`⏱ ${t.label} started`);
+  } else {
+    const panel = document.getElementById('timersSlidein');
+    if (panel && !panel.classList.contains('open')) toggleTimerPanel();
+  }
 }
 
 function timerAddCustom() {
@@ -181,16 +189,25 @@ function timerFmt(secs) {
 
 // ── Render timer list ────────────────────────────────────────────
 function timerRender() {
-  const html = timers.map(t => {
-    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
-    return `
-      <div class="timer-card ${t.done ? 'done' : ''}">
-        <div class="timer-card-label">${t.label}</div>
-        <div class="timer-card-time">${t.done ? 'Done!' : timerFmt(Math.max(0, remaining))}</div>
-        ${t.done ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>` : ''}
-        <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
-      </div>`;
-  }).join('');
+list.innerHTML = timers.map(t => {
+  const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+  return `
+    <div class="timer-card ${t.done ? 'done' : ''}">
+      <div class="timer-card-label">
+        ${t.label}
+        <div style="font-size:.65rem;color:var(--muted);margin-top:2px;font-weight:400">
+          ${t.timeLabel}
+        </div>
+      </div>
+      <div class="timer-card-time">
+        ${t.done ? 'Done!' : timerFmt(Math.max(0, remaining))}
+      </div>
+      ${t.done
+        ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>`
+        : ''}
+      <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
+    </div>`;
+}).join('');
 
   // Update both lists
   ['timerList', 'timerListDesk'].forEach(id => {
@@ -242,7 +259,8 @@ function linkifyTimers(text) {
     const after       = string.slice(offset + match.length);
     const sentEnd     = after.search(/[.\n]|$/);
     const sentence    = (before.slice(sentStart) + match + after.slice(0, sentEnd)).trim();
-    const context     = sentence.replace(/<[^>]+>/g, '').trim().slice(0, 60);
+    const rawSentence = sentence.replace(/<[^>]+>/g, '').trim();
+   const context     = rawSentence.replace(TIME_RE, '').replace(/\s+/g, ' ').trim().slice(0, 60);
     const safeCtx     = context.replace(/'/g, "\\'");
     const label       = match.trim();
 
