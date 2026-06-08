@@ -300,16 +300,21 @@ function setMode(mode) {
 function updateModeUI() {
   const mode     = getMode();
   const isPublic = mode === 'public';
-const publishBtns = document.querySelectorAll('.btn-publish');
-publishBtns.forEach(btn => {
-  btn.style.display = isPublic ? 'none' : '';
-});
+
   // Mode pill buttons
   document.querySelectorAll('.mode-pill-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
   });
 
-  // Show/hide sync button groups
+  // Publish buttons — visible in private mode only
+  // Use setTimeout so this runs after any recipe view has rendered
+  setTimeout(() => {
+    document.querySelectorAll('.btn-publish').forEach(btn => {
+      btn.style.display = isPublic ? 'none' : '';
+    });
+  }, 0);
+
+  // Load/Save backup buttons — visible in private mode only
   document.querySelectorAll('.sync-actions').forEach(el => {
     el.style.display = isPublic ? 'none' : '';
   });
