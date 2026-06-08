@@ -84,12 +84,12 @@ function timerAdd(minutes, label, context) {
   };
   timers.push(t);
   t.interval = setInterval(() => timerTick(id), 1000);
-  showRichToast(context || label, `${mins} minutes`);
+  showRichToast(safeCtx || label, `${mins} min`);
   timerScheduleNotification(t);
   timerRender();
 
   if (window.innerWidth <= 640) {
-    showRichToast(context || label, `${mins} minutes`);
+    showRichToast(safeCtx || label, `${mins} min`);
   } else {
     const panel = document.getElementById('timersSlidein');
     if (panel && !panel.classList.contains('open')) toggleTimerPanel();
