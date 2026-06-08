@@ -72,24 +72,28 @@ function timerAdd(minutes, label, context) {
   ensureAudioCtx();
   const id      = timerNextId++;
   const endsAt  = Date.now() + minutes * 60 * 1000;
-  // Store time label and context separately
+  
   const t = {
     id,
-    label:      context || label,  // step text if available, otherwise "5 min"
-    timeLabel:  label,             // always "5 min" / "25 min" etc.
+    label:      context || label,  
+    timeLabel:  label,             
     totalSecs:  minutes * 60,
     endsAt,
     interval:   null,
-    done:        false
+    done:       false
   };
   timers.push(t);
   t.interval = setInterval(() => timerTick(id), 1000);
-  showRichToast(safeCtx || label, `${mins} min`);
+  
+  // FIX: Use 'context' here instead of 'safeCtx'
+  showRichToast(context || label, `${minutes} min`); 
+  
   timerScheduleNotification(t);
   timerRender();
 
   if (window.innerWidth <= 640) {
-    showRichToast(safeCtx || label, `${mins} min`);
+    // FIX: Use 'context' here instead of 'safeCtx'
+    showRichToast(context || label, `${minutes} min`);
   } else {
     const panel = document.getElementById('timersSlidein');
     if (panel && !panel.classList.contains('open')) toggleTimerPanel();
