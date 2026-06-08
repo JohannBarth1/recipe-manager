@@ -15,13 +15,16 @@ function mob_showPanel(panelId) {
 
 // ── Tab switcher ─────────────────────────────────────────────────
 function mob_switchTab(tab) {
-  document.getElementById('timerTray').classList.remove('open');
-  document.getElementById('notifDropdown').classList.remove('open');
   document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
 
   if (tab === 'recipes') {
     document.getElementById('tabRecipes').classList.add('active');
     mob_showPanel('mobPanelList');
+  } else if (tab === 'timers') {
+    document.getElementById('tabTimer').classList.add('active');
+    mob_showPanel('mobPanelTimers');
+    timerUpdateNotifRow();
+    timerRender();
   } else if (tab === 'community') {
     document.getElementById('tabCommunity').classList.add('active');
     mob_showPanel('mobPanelCommunity');
