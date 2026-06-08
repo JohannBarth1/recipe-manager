@@ -84,8 +84,8 @@ function timerAdd(minutes, label, context) {
   };
   timers.push(t);
   t.interval = setInterval(() => timerTick(id), 1000);
-  timerScheduleNotification(t);
    showToast(`⏱ ${t.label} started`);
+  timerScheduleNotification(t);
   timerRender();
 
   if (window.innerWidth <= 640) {
