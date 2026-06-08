@@ -12,6 +12,25 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
+function showRichToast(label, timeLabel) {
+  // 1. Create the element
+  const toast = document.createElement('div');
+  toast.className = 'timer-toast show';
+  
+  // 2. Add the content
+  toast.innerHTML = `
+    <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">⏱ Timer Started</div>
+    <div style="font-size:0.85rem; line-height:1.2;">${label}</div>
+    <div style="font-size:0.75rem; opacity:0.8; margin-top:4px;">${timeLabel}</div>
+  `;
+  
+  // 3. Append to body (guarantees top-level z-index)
+  document.body.appendChild(toast);
+  
+  // 4. Remove after 2.6s
+  setTimeout(() => toast.remove(), 2600);
+}
+
 // ── Name / filename modal ────────────────────────────────────────
 let nameModalCallback = null;
 
