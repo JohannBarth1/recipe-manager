@@ -110,6 +110,7 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
+   if (window.updateModeUI) updateModeUI();
 
 // ════════════════════════════════════════════════════════════════
 // PER-RECIPE FIRESTORE OPERATIONS
