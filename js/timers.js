@@ -189,39 +189,39 @@ function timerFmt(secs) {
 
 // ── Render timer list ────────────────────────────────────────────
 function timerRender() {
-list.innerHTML = timers.map(t => {
-  const remaining = Math.round((t.endsAt - Date.now()) / 1000);
-  return `
-    <div class="timer-card ${t.done ? 'done' : ''}">
-      <div class="timer-card-label">
-        ${t.label}
-        <div style="font-size:.65rem;color:var(--muted);margin-top:2px;font-weight:400">
-          ${t.timeLabel}
+  const html = timers.map(t => {
+    const remaining = Math.round((t.endsAt - Date.now()) / 1000);
+    return `
+      <div class="timer-card ${t.done ? 'done' : ''}">
+        <div class="timer-card-label">
+          ${t.label}
+          <div style="font-size:.65rem;color:var(--muted);margin-top:2px;font-weight:400">
+            ${t.timeLabel}
+          </div>
         </div>
-      </div>
-      <div class="timer-card-time">
-        ${t.done ? 'Done!' : timerFmt(Math.max(0, remaining))}
-      </div>
-      ${t.done
-        ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>`
-        : ''}
-      <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
-    </div>`;
-}).join('');
+        <div class="timer-card-time">
+          ${t.done ? 'Done!' : timerFmt(Math.max(0, remaining))}
+        </div>
+        ${t.done
+          ? `<button class="timer-card-btn" onclick="timerReset(${t.id})">↺</button>`
+          : ''}
+        <button class="timer-card-btn" onclick="timerRemove(${t.id})">✕</button>
+      </div>`;
+  }).join('');
 
-  // Update both lists
+  // Update both mobile panel and desktop slide-in lists
   ['timerList', 'timerListDesk'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
   });
 
-  // Running label
+  // Running label visibility
   ['timerListLabel', 'timerListLabelDesk'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = timers.length ? '' : 'none';
   });
 
-  // Badge on timer tab + desktop header
+  // Badge on timer tab and desktop header button
   const running = timers.filter(t => !t.done).length;
   ['timerBadge', 'timerBadgeDesk'].forEach(id => {
     const el = document.getElementById(id);
