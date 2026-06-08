@@ -1064,6 +1064,11 @@ header {
   transform: translateX(-50%) translateY(0);
 }
 
+.timer-rich-toast:active {
+  transform: translateX(-50%) translateY(0) scale(0.98);
+  filter: brightness(0.95);
+}
+
 /* ════════════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ════════════════════════════════════════════════════════════════ */
