@@ -302,9 +302,11 @@ function updateModeUI() {
   const mode     = getMode();
   const isPublic = mode === 'public';
 
-  // Mode pill buttons
+  // Mode pill buttons — both desktop and mobile sets
   document.querySelectorAll('.mode-pill-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.mode === mode);
+    btn.classList.toggle('pub',
+      btn.dataset.mode === 'public' && isPublic);
   });
 
   // Publish buttons — visible in private mode only
@@ -327,7 +329,7 @@ function updateModeUI() {
 
 // Call on startup so UI reflects the saved mode
 updateModeUI();
-
+window.updateModeUI = updateModeUI;
 
 function toggleAvatarMenu() {
   const menu = document.getElementById('avatarMenu');
