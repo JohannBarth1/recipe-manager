@@ -573,7 +573,3 @@ document.addEventListener('click', e => {
 window.toggleDeskSettings = function() {
   document.getElementById('deskSettings')?.classList.toggle('open');
 };
-
-window.getMode = function() {
-  return localStorage.getItem('hk_mode') || 'private';
-};
