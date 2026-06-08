@@ -202,25 +202,25 @@ function _requestCardHtml(r, myUid) {
   const editing  = _editingRequestId === r.id;
 
   // Show inline edit form instead of normal card content when editing
-  if (editing) {
+if (editing) {
     return `
       <div class="request-card" id="rcard-${r.id}">
         <div class="request-inline-form-title">Edit Request</div>
         <div class="form-row">
           <label>Type</label>
-          <select id="editRequestType">
+          <select id="editRequestType-${r.id}">
             <option value="recipe"  ${r.type === 'recipe'  ? 'selected' : ''}>🍰 Recipe Request</option>
             <option value="feature" ${r.type === 'feature' ? 'selected' : ''}>⚙ Feature Request</option>
           </select>
         </div>
         <div class="form-row">
           <label>Title</label>
-          <input type="text" id="editRequestTitle"
+          <input type="text" id="editRequestTitle-${r.id}"
                  value="${_cEsc(r.title)}" autocomplete="off"/>
         </div>
         <div class="form-row">
           <label>Description <span style="font-weight:400;text-transform:none">(optional)</span></label>
-          <textarea id="editRequestDesc" rows="2">${_cEsc(r.description || '')}</textarea>
+          <textarea id="editRequestDesc-${r.id}" rows="2">${_cEsc(r.description || '')}</textarea>
         </div>
         <div class="request-inline-form-actions">
           <button class="btn-cancel" onclick="requestCancelEdit()">Cancel</button>
@@ -309,9 +309,9 @@ window.requestCycleStatus = async function (requestId, currentStatus) {
 
 window.requestStartEdit = function (requestId) {
   _editingRequestId = requestId;
-  _showingNewForm   = false;       // close new form if open
+  _showingNewForm   = false;
   _renderRequests();
-  setTimeout(() => document.getElementById('editRequestTitle')?.focus(), 80);
+  setTimeout(() => document.getElementById(`editRequestTitle-${requestId}`)?.focus(), 80);
 };
 
 window.requestCancelEdit = function () {
@@ -320,9 +320,9 @@ window.requestCancelEdit = function () {
 };
 
 window.submitRequestEdit = async function (requestId) {
-  const type  = document.getElementById('editRequestType')?.value;
-  const title = document.getElementById('editRequestTitle')?.value.trim();
-  const desc  = document.getElementById('editRequestDesc')?.value.trim();
+  const type  = document.getElementById(`editRequestType-${requestId}`)?.value;
+  const title = document.getElementById(`editRequestTitle-${requestId}`)?.value.trim();
+  const desc  = document.getElementById(`editRequestDesc-${requestId}`)?.value.trim();
   if (!title) { showToast('Please enter a title'); return; }
   _editingRequestId = null;
   if (window._requestEdit) await window._requestEdit(requestId, { type, title, desc });
