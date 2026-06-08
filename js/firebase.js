@@ -574,14 +574,6 @@ window.toggleDeskSettings = function() {
   document.getElementById('deskSettings')?.classList.toggle('open');
 };
 
-window.setMode = function(mode) {
-  localStorage.setItem('hk_mode', mode);
-  document.querySelectorAll('.mode-pill-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.mode === mode);
-    b.classList.toggle('pub',    b.dataset.mode === 'public' && mode === 'public');
-  });
-};
-
 window.getMode = function() {
   return localStorage.getItem('hk_mode') || 'private';
 };
