@@ -13,15 +13,13 @@ function showToast(msg) {
 }
 
 function showRichToast(label, timeStr) {
-  // Create the floating wrapper
   const toast = document.createElement('div');
   toast.className = 'timer-rich-toast show';
   
-  // Re-use your existing timer-card classes for identical styling
   toast.innerHTML = `
     <div class="timer-card-label">
       <div style="font-size:.65rem; letter-spacing:.18em; text-transform:uppercase; color:var(--rust); font-weight:700; margin-bottom:.3rem;">
-        ⏱ Timer Started
+        ⏱ Timer Started (Click to view)
       </div>
       ${label}
     </div>
@@ -29,14 +27,27 @@ function showRichToast(label, timeStr) {
       ${timeStr}
     </div>
   `;
-  
+
+  // --- Add Click Handler ---
+  toast.style.cursor = 'pointer'; // Visual cue for the user
+  toast.addEventListener('click', () => {
+    // Navigate based on your existing logic
+    if (window.innerWidth <= 640) {
+      mob_switchTab('timers');
+    } else {
+      const panel = document.getElementById('timersSlidein');
+      if (panel && !panel.classList.contains('open')) toggleTimerPanel();
+    }
+    toast.remove(); // Close the toast when clicked
+  });
+  // -------------------------
+
   document.body.appendChild(toast);
   
-  // Animate out and remove from DOM after 3 seconds
   setTimeout(() => {
     toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300); // wait for CSS transition to finish
-  }, 3000);
+    setTimeout(() => toast.remove(), 300);
+  }, 4000); // Increased duration slightly so the user has time to read and click
 }
 
 // ── Name / filename modal ────────────────────────────────────────
