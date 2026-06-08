@@ -192,8 +192,9 @@ async function gdriveLoad() {
     if (!files.length) { showToast('No recipe files found in your Recipes folder'); return; }
 
     // Show picker modal
-    _showDriveFilePicker(files, async (fileId, fileName) => {
-      showToast(`Loading ${fileName}…`);
+   _showDriveFilePicker(files, async (fileId, fileName) => {
+     _setLastDriveFile(fileId, fileName);
+     showToast(`Loading ${fileName}…`);
       const r3 = await gdriveApiCall(token, `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
       if (!r3) { gdriveAuth(doLoad); return; }
       try {
@@ -279,6 +280,8 @@ function getMode() {
   return localStorage.getItem(MODE_KEY) || 'public';
 }
 
+const GDRIVE_LAST_FILE_KEY = 'hk_gdrive_last_file';
+
 function setMode(mode) {
   localStorage.setItem(MODE_KEY, mode);
 
@@ -286,16 +289,71 @@ function setMode(mode) {
     updateModeUI();
     if (window.firestoreLoad) firestoreLoad();
   } else {
-    // Reload local data first, then update UI
-    data         = loadFromStorage();
-    openChapters = new Set([data.chapters[0]?.id]);
+    // Clear recipe list immediately
+    data         = { chapters: [], recipes: [] };
+    openChapters = new Set();
     deskCurrentId = null;
     mobCurrentId  = null;
     renderAll();
     showPanel('deskWelcome');
     if (window.mob_backToList) mob_backToList();
     updateModeUI();
+
+    // Check for a previously loaded Drive file
+    const lastFile = _getLastDriveFile();
+    if (lastFile) {
+      // Reload silently
+      _gdriveLoadFileById(lastFile.id, lastFile.name);
+    } else {
+      // Go through the full picker flow
+      gdriveLoad();
+    }
   }
+}
+
+function _getLastDriveFile() {
+  try {
+    const s = localStorage.getItem(GDRIVE_LAST_FILE_KEY);
+    return s ? JSON.parse(s) : null;
+  } catch (e) { return null; }
+}
+
+function _setLastDriveFile(id, name) {
+  localStorage.setItem(GDRIVE_LAST_FILE_KEY, JSON.stringify({ id, name }));
+}
+
+async function _gdriveLoadFileById(fileId, fileName) {
+  const doLoad = async (token) => {
+    showToast(`Loading ${fileName}…`);
+    const r = await gdriveApiCall(
+      token,
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`
+    );
+    if (!r) {
+      // Token expired — re-auth then retry
+      gdriveAuth(doLoad);
+      return;
+    }
+    try {
+      const parsed = await r.json();
+      if (!parsed.chapters || !parsed.recipes) throw new Error('Invalid format');
+      data         = parsed;
+      openChapters = new Set([data.chapters[0]?.id]);
+      persistToStorage();
+      deskCurrentId = null; mobCurrentId = null;
+      renderAll();
+      showPanel('deskWelcome');
+      if (window.mob_backToList) mob_backToList();
+      showToast(`Loaded: ${fileName} ✓`);
+    } catch (e) {
+      showToast('Could not reload file — please use Load button');
+      console.error(e);
+    }
+  };
+
+  const token = getGdriveToken();
+  if (token) doLoad(token);
+  else gdriveAuth(doLoad);
 }
 
 function updateModeUI() {
