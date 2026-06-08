@@ -1055,12 +1055,10 @@ header {
   box-shadow: 0 4px 20px rgba(26,12,8,0.25);
   z-index: 99999;
   opacity: 0;
-  pointer-events: none;
+  pointer-events: auto;
   transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-}
 
-.timer-rich-toast.show {
-  opacity: 1;
+   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
 
