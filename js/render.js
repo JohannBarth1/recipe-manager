@@ -242,12 +242,16 @@ function moveChapter(id, dir) {
 }
 
 function deleteChapter(id) {
-  const ch    = data.chapters.find(c => c.id === id);
-  const count = data.recipes.filter(r => r.chapterId === id).length;
-  const warn  = count > 0
+  const ch      = data.chapters.find(c => c.id === id);
+  const recipes = data.recipes.filter(r => r.chapterId === id);
+  const count   = recipes.length;
+  const warn    = count > 0
     ? ` It contains ${count} recipe${count > 1 ? 's' : ''} which will also be deleted.`
     : '';
   if (!confirm(`Delete chapter "${ch.name}"?${warn}`)) return;
+
+  // Capture recipe IDs before wiping local data
+  const deletedRecipeIds = recipes.map(r => r.id);
 
   data.chapters = data.chapters.filter(c => c.id !== id);
   data.recipes  = data.recipes.filter(r => r.chapterId !== id);
@@ -256,8 +260,20 @@ function deleteChapter(id) {
     deskCurrentId = null;
     showPanel('deskWelcome');
   }
+  if (mobCurrentId && !data.recipes.find(r => r.id === mobCurrentId)) {
+    mobCurrentId = null;
+  }
   persistToStorage();
   renderAll();
+
+  // Sync to Firestore
+  if (getMode() === 'public') {
+    if (window.firestoreDeleteChapter) firestoreDeleteChapter(id);
+    deletedRecipeIds.forEach(rid => {
+      if (window.firestoreDeleteRecipe) firestoreDeleteRecipe(rid);
+    });
+  }
+
   showToast(`"${ch.name}" deleted`);
 }
 
