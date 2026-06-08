@@ -306,7 +306,7 @@ function linkifyTimers(text) {
       .replace(/'/g, "\\'");
 
     const label = match.trim();
-
+   console.log("HTML being generated:", `${match}<button class="inline-timer-btn" onclick="timerAdd(${mins}, '${label}', '${safeCtx}')">⏱ Start</button>`);
     return `${match}<button class="inline-timer-btn" onclick="timerAdd(${mins}, '${label}', '${safeCtx}')">⏱ Start</button>`;
   });
 }
