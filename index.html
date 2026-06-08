@@ -66,53 +66,45 @@
     </div>
   </div>
   <div class="header-actions">
-    <button class="hbtn hbtn-ghost" onclick="timerTrayToggle()" title="Timers">⏱ Timers</button>
-    <!-- Community button — long-press for admin broadcast -->
-    <button class="hbtn hbtn-ghost" id="commBroadcastTriggerDesk"
-            onclick="toggleCommunityPanel()"
-            title="Community" style="position:relative">
-      🏘️
-      <span class="notif-badge" id="communityBadgeDesk"
-            style="top:-5px;right:-5px"></span>
+  <button class="hbtn hbtn-ghost" onclick="toggleTimerPanel()" title="Timers"
+          style="position:relative">
+    ⏱
+    <span class="notif-badge" id="timerBadgeDesk" style="top:-5px;right:-5px"></span>
+  </button>
+  <button class="hbtn hbtn-ghost" id="commBroadcastTriggerDesk"
+          onclick="toggleCommunityPanel()" title="Community" style="position:relative">
+    🏘️
+    <span class="notif-badge" id="communityBadgeDesk" style="top:-5px;right:-5px"></span>
+  </button>
+  <button class="hbtn hbtn-ghost" onclick="toggleSettingsPanel()">⚙</button>
+  <div id="userBadge" style="display:none;align-items:center;gap:5px;position:relative">
+    <button style="position:relative;display:inline-flex;cursor:pointer;
+                   background:transparent;border:none;padding:0;
+                   -webkit-appearance:none;appearance:none;
+                   -webkit-tap-highlight-color:transparent;"
+            onclick="toggleAvatarMenu()">
+      <img id="userAvatar" src="" width="28" height="28"
+           style="border-radius:50%;border:2px solid #444;display:block"/>
+      <span id="syncDot" style="position:absolute;bottom:-1px;right:-1px;
+        width:9px;height:9px;border-radius:50%;border:2px solid var(--ink);
+        background:var(--muted);display:block"></span>
     </button>
-    <button class="hbtn hbtn-ghost" onclick="toggleDeskSettings()">⚙</button>
-    <div id="userBadge" style="display:none;align-items:center;gap:5px;position:relative">
-      <button style="position:relative;display:inline-flex;cursor:pointer;
-                     background:transparent;border:none;padding:0;
-                     -webkit-appearance:none;appearance:none;
-                     -webkit-tap-highlight-color:transparent;"
-              onclick="toggleAvatarMenu()">
-        <img id="userAvatar" src="" width="28" height="28"
-             style="border-radius:50%;border:2px solid #444;display:block"/>
-        <span id="syncDot" style="
-          position:absolute;bottom:-1px;right:-1px;
-          width:9px;height:9px;border-radius:50%;
-          border:2px solid var(--ink);
-          background:var(--muted);
-          display:block"></span>
+    <div id="avatarMenu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;
+      background:var(--warm-white);border:1px solid var(--border);border-radius:6px;
+      padding:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.15);
+      z-index:999;white-space:nowrap;min-width:140px">
+      <div id="avatarMenuName" style="font-size:.72rem;color:var(--muted);
+        padding:.3rem .5rem .5rem;border-bottom:1px solid var(--border);
+        margin-bottom:.3rem"></div>
+      <button onclick="logout()" style="width:100%;text-align:left;padding:.45rem .5rem;
+        background:none;border:none;cursor:pointer;font-family:'Lato',sans-serif;
+        font-size:.82rem;color:var(--danger);border-radius:3px;
+        display:flex;align-items:center;gap:.5rem">
+        🚪 Sign Out
       </button>
-      <!-- Avatar dropdown menu -->
-      <div id="avatarMenu" style="
-        display:none;
-        position:absolute;top:calc(100% + 8px);right:0;
-        background:var(--warm-white);border:1px solid var(--border);
-        border-radius:6px;padding:.5rem;
-        box-shadow:0 4px 16px rgba(0,0,0,.15);
-        z-index:200;white-space:nowrap;min-width:140px">
-        <div id="avatarMenuName" style="
-          font-size:.72rem;color:var(--muted);padding:.3rem .5rem .5rem;
-          border-bottom:1px solid var(--border);margin-bottom:.3rem"></div>
-        <button onclick="logout()" style="
-          width:100%;text-align:left;padding:.45rem .5rem;
-          background:none;border:none;cursor:pointer;
-          font-family:'Lato',sans-serif;font-size:.82rem;
-          color:var(--danger);border-radius:3px;
-          display:flex;align-items:center;gap:.5rem">
-          🚪 Sign Out
-        </button>
-      </div>
     </div>
   </div>
+</div>
 </header>
 
 
@@ -443,53 +435,143 @@
 
       </div>
     </div><!-- /mobPanelCommunity -->
-
+<!-- Panel: Timers -->
+<div class="mob-panel" id="mobPanelTimers">
+  <div class="slidein-header">
+    <span style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown)">
+      ⏱ Timers
+    </span>
+  </div>
+  <div class="mob-settings-scroll">
+    <div id="timerNotifRow" style="margin-bottom:.8rem;font-size:.8rem;
+         color:var(--muted);display:flex;align-items:center;justify-content:space-between">
+      <span id="timerNotifStatus">Alerts: off</span>
+      <button class="timer-preset-btn" onclick="timerRequestPermission()">Enable alerts</button>
+    </div>
+    <div class="timer-section-label">Quick start</div>
+    <div class="timer-presets">
+      <button class="timer-preset-btn" onclick="timerAdd(5,'5 min')">5 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(10,'10 min')">10 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(15,'15 min')">15 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(20,'20 min')">20 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(30,'30 min')">30 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(60,'1 hr')">1 hr</button>
+    </div>
+    <div class="timer-custom-row">
+      <input type="number" id="timerCustomVal" min="1" max="999" placeholder="e.g. 25"/>
+      <select id="timerCustomUnit">
+        <option value="min">min</option>
+        <option value="hr">hr</option>
+      </select>
+      <button onclick="timerAddCustom()">+ Start</button>
+    </div>
+    <div class="timer-section-label" id="timerListLabel" style="display:none">Running</div>
+    <div class="timer-list" id="timerList"></div>
+  </div>
+</div>
   </div><!-- /mob-panels -->
 
 </div><!-- /app -->
 
 
 <!-- ═══════════════════════════════════════════════════════════════
-     DESKTOP SETTINGS PANEL
+     DESKTOP SETTINGS slide-in
 ════════════════════════════════════════════════════════════════ -->
-<div class="desk-settings" id="deskSettings">
-  <h3>⚙ Settings</h3>
-  <span class="ds-label">Mode</span>
-  <div style="display:flex;gap:.4rem;margin-top:.35rem;margin-bottom:.5rem;
-              background:var(--panel);border-radius:20px;padding:3px;width:fit-content">
-    <button class="mode-pill-btn" data-mode="private"
-            onclick="setMode('private')">🔒 Private</button>
-    <button class="mode-pill-btn" data-mode="public"
-            onclick="setMode('public')">🌐 Shared</button>
+<!-- Desktop Settings slide-in -->
+<div class="settings-slidein" id="settingsSlidein">
+  <div class="slidein-header">
+    <span style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown)">
+      ⚙ Settings
+    </span>
+    <button onclick="toggleSettingsPanel()"
+            style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem">✕</button>
   </div>
-  <hr class="ds-divider"/>
-  <div class="sync-actions">
-    <span class="ds-label">Backup</span>
-    <p class="ds-note">Load a recipe book from Google Drive,
-       or save your current book.</p>
-    <div class="ds-row" style="margin-top:.4rem">
-      <button onclick="gdriveLoad()" class="primary">☁ Load</button>
-      <button onclick="firestoreSaveAll()">☁ Save</button>
+  <div class="mob-settings-scroll">
+    <div class="action-group">
+      <div class="action-group-label">Mode</div>
+      <div style="display:flex;gap:.4rem;background:var(--panel);
+                  border-radius:20px;padding:3px;width:fit-content;margin-top:.4rem">
+        <button class="mode-pill-btn" data-mode="private"
+                onclick="setMode('private')">🔒 Private</button>
+        <button class="mode-pill-btn" data-mode="public"
+                onclick="setMode('public')">🌐 Shared</button>
+      </div>
     </div>
-    <hr class="ds-divider"/>
-  </div>
-  <span class="ds-label">Export</span>
-  <div class="ds-row" style="margin-top:.35rem">
-    <button onclick="exportEpub()">⬇ EPUB</button>
-    <button onclick="printCards()">🖨 Cards</button>
-  </div>
-  <hr class="ds-divider"/>
-  <details>
-    <summary style="font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;
-                    color:var(--muted);font-weight:700;cursor:pointer;
-                    padding-bottom:.4rem">
-      Local backup
-    </summary>
-    <div class="ds-row" style="margin-top:.5rem">
-      <button onclick="saveLocalFile()">⬇ Download</button>
-      <button onclick="loadLocalFile()">⬆ Load file</button>
+    <div class="action-group sync-actions">
+      <div class="action-group-label">Backup</div>
+      <div class="action-row">
+        <button class="action-btn primary" onclick="gdriveLoad()">
+          <span class="ab-icon">☁</span>Load
+        </button>
+        <button class="action-btn" onclick="firestoreSaveAll()">
+          <span class="ab-icon">☁</span>Save
+        </button>
+      </div>
+      <p class="settings-note">Load from Google Drive, or save your current book.</p>
     </div>
-  </details>
+    <div class="action-group">
+      <div class="action-group-label">Export</div>
+      <div class="action-row">
+        <button class="action-btn dark" onclick="exportEpub()">
+          <span class="ab-icon">📖</span>EPUB
+        </button>
+        <button class="action-btn dark" onclick="printCards()">
+          <span class="ab-icon">🖨</span>Cards
+        </button>
+      </div>
+    </div>
+    <details>
+      <summary style="font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;
+                      color:var(--muted);font-weight:700;cursor:pointer;
+                      padding-bottom:.4rem;border-bottom:1px solid var(--border);
+                      display:block;margin-bottom:.5rem">Local backup</summary>
+      <div class="action-row" style="margin-top:.5rem">
+        <button class="action-btn" onclick="saveLocalFile()">
+          <span class="ab-icon">⬇</span>Download
+        </button>
+        <button class="action-btn" onclick="loadLocalFile()">
+          <span class="ab-icon">⬆</span>Load file
+        </button>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- Desktop Timers slide-in -->
+<div class="timers-slidein" id="timersSlidein">
+  <div class="slidein-header">
+    <span style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--brown)">
+      ⏱ Timers
+    </span>
+    <button onclick="toggleTimerPanel()"
+            style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem">✕</button>
+  </div>
+  <div class="mob-settings-scroll">
+    <div id="timerNotifRowDesk" style="margin-bottom:.8rem;font-size:.8rem;
+         color:var(--muted);display:flex;align-items:center;justify-content:space-between">
+      <span id="timerNotifStatusDesk">Alerts: off</span>
+      <button class="timer-preset-btn" onclick="timerRequestPermission()">Enable alerts</button>
+    </div>
+    <div class="timer-section-label">Quick start</div>
+    <div class="timer-presets">
+      <button class="timer-preset-btn" onclick="timerAdd(5,'5 min')">5 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(10,'10 min')">10 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(15,'15 min')">15 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(20,'20 min')">20 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(30,'30 min')">30 min</button>
+      <button class="timer-preset-btn" onclick="timerAdd(60,'1 hr')">1 hr</button>
+    </div>
+    <div class="timer-custom-row">
+      <input type="number" id="timerCustomValDesk" min="1" max="999" placeholder="e.g. 25"/>
+      <select id="timerCustomUnitDesk">
+        <option value="min">min</option>
+        <option value="hr">hr</option>
+      </select>
+      <button onclick="timerAddCustomDesk()">+ Start</button>
+    </div>
+    <div class="timer-section-label" id="timerListLabelDesk" style="display:none">Running</div>
+    <div class="timer-list" id="timerListDesk"></div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -570,70 +652,23 @@
 ════════════════════════════════════════════════════════════════ -->
 <nav class="mob-nav">
   <div class="mob-nav-inner">
-    <button class="mob-tab active" id="tabRecipes"
-            onclick="mob_switchTab('recipes')">
+    <button class="mob-tab active" id="tabRecipes" onclick="mob_switchTab('recipes')">
       <span class="tab-icon">📋</span><span>Recipes</span>
     </button>
-    <button class="mob-tab" id="tabTimer" onclick="timerTrayToggle()">
+    <button class="mob-tab" id="tabTimer" onclick="mob_switchTab('timers')">
       <span class="tab-icon">⏱</span><span>Timers</span>
       <span class="timer-badge" id="timerBadge"></span>
     </button>
-    <!-- Community tab — long-press for admin broadcast -->
-    <button class="mob-tab" id="tabCommunity"
-        data-broadcast-trigger
-        onclick="mob_switchTab('community')">
+    <button class="mob-tab" id="tabCommunity" data-broadcast-trigger
+            onclick="mob_switchTab('community')">
       <span class="tab-icon">🏘️</span><span>Community</span>
-      <span class="timer-badge" id="communityBadge"
-            style="top:2px;right:8px"></span>
+      <span class="timer-badge" id="communityBadge" style="top:2px;right:8px"></span>
     </button>
-    <button class="mob-tab" id="tabSettings"
-            onclick="mob_switchTab('settings')">
+    <button class="mob-tab" id="tabSettings" onclick="mob_switchTab('settings')">
       <span class="tab-icon">⚙️</span><span>Settings</span>
     </button>
   </div>
 </nav>
-
-
-<!-- ═══════════════════════════════════════════════════════════════
-     TIMER MODAL
-════════════════════════════════════════════════════════════════ -->
-<div class="timer-overlay" id="timerTray"
-     onclick="if(event.target===this)timerTrayToggle()">
-  <div class="timer-modal">
-    <h3>⏱ Timers
-      <button class="timer-modal-close" onclick="timerTrayToggle()">✕</button>
-    </h3>
-    <div id="timerNotifRow"
-         style="margin-bottom:.8rem;font-size:.8rem;color:var(--muted);
-                display:flex;align-items:center;justify-content:space-between">
-      <span id="timerNotifStatus">Alerts: off</span>
-      <button class="timer-preset-btn"
-              onclick="timerRequestPermission()">Enable alerts</button>
-    </div>
-    <div class="timer-section-label">Quick start</div>
-    <div class="timer-presets">
-      <button class="timer-preset-btn" onclick="timerAdd(5,'5 min')">5 min</button>
-      <button class="timer-preset-btn" onclick="timerAdd(10,'10 min')">10 min</button>
-      <button class="timer-preset-btn" onclick="timerAdd(15,'15 min')">15 min</button>
-      <button class="timer-preset-btn" onclick="timerAdd(20,'20 min')">20 min</button>
-      <button class="timer-preset-btn" onclick="timerAdd(30,'30 min')">30 min</button>
-      <button class="timer-preset-btn" onclick="timerAdd(60,'1 hr')">1 hr</button>
-    </div>
-    <div class="timer-custom-row">
-      <input type="number" id="timerCustomVal" min="1" max="999"
-             placeholder="e.g. 25"/>
-      <select id="timerCustomUnit">
-        <option value="min">min</option>
-        <option value="hr">hr</option>
-      </select>
-      <button onclick="timerAddCustom()">+ Start</button>
-    </div>
-    <div class="timer-section-label" id="timerListLabel"
-         style="display:none">Running</div>
-    <div class="timer-list" id="timerList"></div>
-  </div>
-</div>
-
 
 <!-- ═══════════════════════════════════════════════════════════════
      CHAPTER MODAL
