@@ -281,19 +281,20 @@ function getMode() {
 
 function setMode(mode) {
   localStorage.setItem(MODE_KEY, mode);
-  updateModeUI();
 
-  if (mode === 'public' && window.firestoreLoad) {
-    firestoreLoad();
-  } else if (mode === 'private') {
-    // Reload from localStorage and re-render
+  if (mode === 'public') {
+    updateModeUI();
+    if (window.firestoreLoad) firestoreLoad();
+  } else {
+    // Reload local data first, then update UI
     data         = loadFromStorage();
     openChapters = new Set([data.chapters[0]?.id]);
     deskCurrentId = null;
     mobCurrentId  = null;
     renderAll();
     showPanel('deskWelcome');
-    mob_backToList();
+    if (window.mob_backToList) mob_backToList();
+    updateModeUI();
   }
 }
 
@@ -307,12 +308,9 @@ function updateModeUI() {
   });
 
   // Publish buttons — visible in private mode only
-  // Use setTimeout so this runs after any recipe view has rendered
-  setTimeout(() => {
-    document.querySelectorAll('.btn-publish').forEach(btn => {
-      btn.style.display = isPublic ? 'none' : '';
-    });
-  }, 0);
+  document.querySelectorAll('.btn-publish').forEach(btn => {
+    btn.style.display = isPublic ? 'none' : '';
+  });
 
   // Load/Save backup buttons — visible in private mode only
   document.querySelectorAll('.sync-actions').forEach(el => {
@@ -324,23 +322,6 @@ function updateModeUI() {
   if (dot) {
     dot.style.background = isPublic ? '#2a7a4a' : 'var(--muted)';
     dot.title            = isPublic ? 'Shared mode — syncing' : 'Private mode';
-  }
-}
-
-// Call this after auth resolves to show the avatar
-function updateUserBadge(user) {
-  const badge  = document.getElementById('userBadge');
-  const avatar = document.getElementById('userAvatar');
-  if (!badge || !avatar) return;
-  if (user && user.photoURL) {
-    avatar.src         = user.photoURL;
-    badge.style.display= 'flex';
-  } else if (user) {
-    // No photo — show initials instead
-    avatar.style.display = 'none';
-    badge.style.display  = 'flex';
-  } else {
-    badge.style.display  = 'none';
   }
 }
 
