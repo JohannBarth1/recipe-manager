@@ -77,8 +77,14 @@ function timerAdd(minutes, label, context) {
   timers.push(t);
   t.interval = setInterval(() => timerTick(id), 1000);
   timerScheduleNotification(t);
-  timerRender();
-  if (!document.getElementById('timerTray').classList.contains('open')) timerTrayToggle();
+   timerRender();
+// Open the correct timers panel depending on viewport
+if (window.innerWidth <= 640) {
+  mob_switchTab('timers');
+} else {
+  const panel = document.getElementById('timersSlidein');
+  if (panel && !panel.classList.contains('open')) toggleTimerPanel();
+}
 }
 
 function timerAddCustom() {
