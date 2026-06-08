@@ -283,9 +283,17 @@ function setMode(mode) {
   localStorage.setItem(MODE_KEY, mode);
   updateModeUI();
 
-  // Refresh recipe list when switching to public
   if (mode === 'public' && window.firestoreLoad) {
     firestoreLoad();
+  } else if (mode === 'private') {
+    // Reload from localStorage and re-render
+    data         = loadFromStorage();
+    openChapters = new Set([data.chapters[0]?.id]);
+    deskCurrentId = null;
+    mobCurrentId  = null;
+    renderAll();
+    showPanel('deskWelcome');
+    mob_backToList();
   }
 }
 
