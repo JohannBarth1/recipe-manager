@@ -17,20 +17,22 @@ function ensureAudioCtx() {
 let timers     = [];
 let timerNextId = 1;
 
-// ── Tray toggle ──────────────────────────────────────────────────
+// ── Panel toggle ─────────────────────────────────────────────────
 function timerTrayToggle() {
-  const tray   = document.getElementById('timerTray');
-  tray.classList.toggle('open');
-  const isOpen = tray.classList.contains('open');
-
-  document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
-  if (isOpen) {
-    const tt = document.getElementById('tabTimer');
-    if (tt) tt.classList.add('active');
+  // Legacy — now routes to correct handler based on viewport
+  if (window.innerWidth <= 640) {
+    mob_switchTab('timers');
   } else {
-    document.getElementById('tabRecipes').classList.add('active');
+    toggleTimerPanel();
   }
+}
+
+function toggleTimerPanel() {
+  const panel = document.getElementById('timersSlidein');
+  if (!panel) return;
+  panel.classList.toggle('open');
   timerUpdateNotifRow();
+  timerRender();
 }
 
 // ── Notification permission row ──────────────────────────────────
@@ -43,22 +45,26 @@ function timerRequestPermission() {
 }
 
 function timerUpdateNotifRow() {
-  const row    = document.getElementById('timerNotifRow');
-  const status = document.getElementById('timerNotifStatus');
-  if (!row) return;
-  if (!('Notification' in window)) { row.style.display = 'none'; return; }
-
-  if (Notification.permission === 'granted') {
-    status.textContent         = '🔔 Alerts on';
-    status.style.color         = '#2a7a4a';
-    row.querySelector('button').style.display = 'none';
-  } else if (Notification.permission === 'denied') {
-    status.textContent         = '🔕 Alerts blocked in browser settings';
-    row.querySelector('button').style.display = 'none';
-  } else {
-    status.textContent         = 'Alerts: off';
-    row.querySelector('button').style.display = '';
-  }
+  [
+    { row: 'timerNotifRow',     status: 'timerNotifStatus'     },
+    { row: 'timerNotifRowDesk', status: 'timerNotifStatusDesk' }
+  ].forEach(({ row, status }) => {
+    const rowEl    = document.getElementById(row);
+    const statusEl = document.getElementById(status);
+    if (!rowEl || !statusEl) return;
+    if (!('Notification' in window)) { rowEl.style.display = 'none'; return; }
+    if (Notification.permission === 'granted') {
+      statusEl.textContent = '🔔 Alerts on';
+      statusEl.style.color = '#2a7a4a';
+      rowEl.querySelector('button').style.display = 'none';
+    } else if (Notification.permission === 'denied') {
+      statusEl.textContent = '🔕 Alerts blocked';
+      rowEl.querySelector('button').style.display = 'none';
+    } else {
+      statusEl.textContent = 'Alerts: off';
+      rowEl.querySelector('button').style.display = '';
+    }
+  });
 }
 
 // ── Add a timer ──────────────────────────────────────────────────
@@ -169,10 +175,7 @@ function timerFmt(secs) {
 
 // ── Render timer list ────────────────────────────────────────────
 function timerRender() {
-  const list = document.getElementById('timerList');
-  if (!list) return;
-
-  list.innerHTML = timers.map(t => {
+  const html = timers.map(t => {
     const remaining = Math.round((t.endsAt - Date.now()) / 1000);
     return `
       <div class="timer-card ${t.done ? 'done' : ''}">
@@ -183,12 +186,35 @@ function timerRender() {
       </div>`;
   }).join('');
 
-  const lbl = document.getElementById('timerListLabel');
-  if (lbl) lbl.style.display = timers.length ? '' : 'none';
+  // Update both lists
+  ['timerList', 'timerListDesk'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
 
-  const badge   = document.getElementById('timerBadge');
+  // Running label
+  ['timerListLabel', 'timerListLabelDesk'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = timers.length ? '' : 'none';
+  });
+
+  // Badge on timer tab + desktop header
   const running = timers.filter(t => !t.done).length;
-  if (badge) { badge.textContent = running; badge.style.display = running > 0 ? 'block' : 'none'; }
+  ['timerBadge', 'timerBadgeDesk'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = running; el.style.display = running > 0 ? 'block' : 'none'; }
+  });
+}
+
+// ── Desktop custom timer (uses separate inputs) ──────────────────
+function timerAddCustomDesk() {
+  const val  = parseInt(document.getElementById('timerCustomValDesk').value);
+  const unit = document.getElementById('timerCustomUnitDesk').value;
+  if (!val || val < 1) { showToast('Enter a valid number'); return; }
+  const mins  = unit === 'hr' ? val * 60 : val;
+  const label = unit === 'hr' ? `${val} hr` : `${val} min`;
+  document.getElementById('timerCustomValDesk').value = '';
+  timerAdd(mins, label);
 }
 
 // ── Linkify time mentions in recipe text ─────────────────────────
