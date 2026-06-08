@@ -125,6 +125,11 @@ header {
 .hbtn-ghost             { background: transparent; color: var(--light-brown); border: 1px solid #555; }
 .hbtn-ghost:hover       { background: #2a2010; }
 
+.slidein-header-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--brown);
+}
 
 /* ── Notification bell ──────────────────────────────────────────── */
 .notif-btn {
