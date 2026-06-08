@@ -122,6 +122,7 @@ function renderAll() {
   renderDesktopSidebar();
   renderMobileList();
   populateChapterSelects();
+  if (window.updateModeUI) updateModeUI();
 }
 
 // ── Desktop sidebar ──────────────────────────────────────────────
