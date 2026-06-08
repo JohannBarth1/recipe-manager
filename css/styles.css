@@ -994,6 +994,34 @@ header {
 .request-vote:hover { background: var(--panel); }
 .request-vote.voted { background: var(--ink); color: var(--light-brown); border-color: var(--ink); }
 
+/* ════════════════════════════════════════════════════════════════
+   SLIDE-IN PANELS (Timers + Settings — desktop)
+   ════════════════════════════════════════════════════════════════ */
+.slidein-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .9rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+
+.settings-slidein,
+.timers-slidein {
+  position: fixed; top: var(--header-h); right: -340px;
+  width: 320px; bottom: 0;
+  background: var(--warm-white);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 76;
+  transition: right .3s ease;
+  box-shadow: -4px 0 20px rgba(0,0,0,.1);
+}
+.settings-slidein.open { right: 0; }
+.timers-slidein.open   { right: 0; }
+
+/* When community is also open, stack them */
+.community-slidein.open ~ .settings-slidein.open { right: 360px; }
+.community-slidein.open ~ .timers-slidein.open   { right: 360px; }
 
 /* ════════════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
@@ -1029,6 +1057,8 @@ header {
   .form-row select {
     font-size: 16px !important;
   }
+   .settings-slidein { display: none; }
+  .timers-slidein   { display: none; }
 }
 
 @media (min-width: 641px) {
