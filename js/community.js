@@ -25,14 +25,15 @@ let _showingNewForm    = false;  // whether the new-request form is visible
    PANEL TOGGLE & TAB SWITCHER
    ════════════════════════════════════════════════════════════════ */
 
-window.toggleCommunityPanel = function () {
+function toggleCommunityPanel() {
   const panel = document.getElementById('communitySlidein');
   if (!panel) return;
-  const isOpen = panel.classList.toggle('open');
-  if (isOpen) {
-    if (window.notif_markAllReadOnOpen) notif_markAllReadOnOpen();
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    _markCommunityRead();
+    _renderNotifFeed();
   }
-};
+}
 
 window.switchCommunityTab = function (tab) {
   document.querySelectorAll('.community-tab').forEach(t => {
