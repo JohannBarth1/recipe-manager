@@ -94,18 +94,14 @@ function handleFileLoad(e) {
 
 // ── Desktop settings panel ───────────────────────────────────────
 function toggleDeskSettings() {
-  document.getElementById('deskSettings').classList.toggle('open');
+  toggleSettingsPanel(); // alias for backwards compatibility
+}
+function toggleSettingsPanel() {
+  document.getElementById('settingsSlidein')?.classList.toggle('open');
 }
 
 // Close settings / notif dropdown when clicking outside
 document.addEventListener('click', e => {
-  const settings = document.getElementById('deskSettings');
-  if (
-    settings.classList.contains('open') &&
-    !settings.contains(e.target) &&
-    !e.target.closest('[onclick="toggleDeskSettings()"]')
-  ) settings.classList.remove('open');
-
   const notif = document.getElementById('notifDropdown');
   if (
     notif.classList.contains('open') &&
@@ -113,6 +109,10 @@ document.addEventListener('click', e => {
     !e.target.closest('#headerNotifBtn') &&   // ← was checking wrong selectors
     !e.target.closest('#tabNotif')
   ) notif.classList.remove('open');
+     if (!e.target.closest('#userBadge')) {
+    const menu = document.getElementById('avatarMenu');
+    if (menu) menu.style.display = 'none';
+  }
 });
 
 // ── Wake lock (keep screen on while cooking) ─────────────────────
@@ -395,15 +395,6 @@ function toggleAvatarMenu() {
   const isOpen = menu.style.display === 'block';
   menu.style.display = isOpen ? 'none' : 'block';
 }
-
-// Close avatar menu when clicking outside
-document.addEventListener('click', e => {
-  if (!e.target.closest('#userBadge')) {
-    const menu = document.getElementById('avatarMenu');
-    if (menu) menu.style.display = 'none';
-  }
-  // ... rest of your existing click handler
-});
 
 function updateUserBadge(user) {
   const badge  = document.getElementById('userBadge');
