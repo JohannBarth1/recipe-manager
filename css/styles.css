@@ -1029,6 +1029,42 @@ header {
 .community-slidein.open ~ .timers-slidein.open   { right: 360px; }
 
 /* ════════════════════════════════════════════════════════════════
+   RICH TIMER TOAST
+   ════════════════════════════════════════════════════════════════ */
+.timer-rich-toast {
+  position: fixed;
+  /* Use your mobile nav height variable + a small gap */
+  bottom: calc(var(--mob-nav-h) + 1.2rem); 
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  
+  /* Layout mimicking your .timer-card */
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  width: calc(100% - 2.4rem);
+  max-width: 380px;
+  
+  /* Styling mimicking your .timer-card */
+  background: var(--panel);
+  border: 1px solid var(--gold); /* Emphasized border for action confirmation */
+  border-radius: 4px;
+  padding: .65rem .9rem;
+  
+  /* Float and transition */
+  box-shadow: 0 4px 20px rgba(26,12,8,0.25);
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.timer-rich-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ════════════════════════════════════════════════════════════════
    RESPONSIVE BREAKPOINTS
    ════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
