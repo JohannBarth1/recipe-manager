@@ -12,23 +12,31 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
 }
 
-function showRichToast(label, timeLabel) {
-  // 1. Create the element
+function showRichToast(label, timeStr) {
+  // Create the floating wrapper
   const toast = document.createElement('div');
-  toast.className = 'timer-toast show';
+  toast.className = 'timer-rich-toast show';
   
-  // 2. Add the content
+  // Re-use your existing timer-card classes for identical styling
   toast.innerHTML = `
-    <div style="font-weight:bold; font-size:0.9rem; margin-bottom:2px;">⏱ Timer Started</div>
-    <div style="font-size:0.85rem; line-height:1.2;">${label}</div>
-    <div style="font-size:0.75rem; opacity:0.8; margin-top:4px;">${timeLabel}</div>
+    <div class="timer-card-label">
+      <div style="font-size:.65rem; letter-spacing:.18em; text-transform:uppercase; color:var(--rust); font-weight:700; margin-bottom:.3rem;">
+        ⏱ Timer Started
+      </div>
+      ${label}
+    </div>
+    <div class="timer-card-time">
+      ${timeStr}
+    </div>
   `;
   
-  // 3. Append to body (guarantees top-level z-index)
   document.body.appendChild(toast);
   
-  // 4. Remove after 2.6s
-  setTimeout(() => toast.remove(), 2600);
+  // Animate out and remove from DOM after 3 seconds
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300); // wait for CSS transition to finish
+  }, 3000);
 }
 
 // ── Name / filename modal ────────────────────────────────────────
