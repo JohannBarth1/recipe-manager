@@ -27,10 +27,12 @@ function showRichToast(label, timeStr) {
       ${timeStr}
     </div>
   `;
-
+toast.style.pointerEvents = 'auto';
   // --- Add Click Handler ---
   toast.style.cursor = 'pointer'; // Visual cue for the user
-  toast.addEventListener('click', () => {
+  toast.addEventListener('click', (e) => {
+    // Stop propagation so it doesn't trigger anything else accidentally
+    e.stopPropagation();
     // Navigate based on your existing logic
     if (window.innerWidth <= 640) {
       mob_switchTab('timers');
