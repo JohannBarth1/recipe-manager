@@ -332,7 +332,7 @@ header {
 /* ════════════════════════════════════════════════════════════════
    EDITOR
    ════════════════════════════════════════════════════════════════ */
-.editor { padding: 2rem 2.5rem; max-width: 740px; display: none; }
+.editor { padding: 2rem 2.5rem; max-width: 100%; display: none; }
 .editor.active { display: block; }
 .editor h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--brown); margin-bottom: 1.3rem; }
 
@@ -1036,10 +1036,10 @@ header {
   .desktop-main { display: flex; flex: 1; overflow: hidden; }
   .toast        { bottom: 1.5rem; left: auto; right: 2rem; transform: translateY(6px); }
   .toast.show   { transform: translateY(0); }
-  .editor       { max-width: 900px; }
-  #deskFIngredients { min-height: 180px; }
-  #deskFSteps       { min-height: 220px; }
-  #deskFDesc        { min-height: 80px; }
+  .editor            { max-width: 100%; }
+  #deskFIngredients  { min-height: 360px; }
+  #deskFSteps        { min-height: 440px; }
+  #deskFDesc         { min-height: 160px; }
 }
 
 @media print {
