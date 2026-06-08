@@ -150,6 +150,13 @@ window.firestoreDeleteRecipe = async function (recipeId) {
   } catch (e) { console.error('firestoreDeleteRecipe error:', e); }
 };
 
+window.firestoreDeleteChapter = async function (chapterId) {
+  if (!currentUser) return;
+  if (!chapterId) return;
+  try {
+    await deleteDoc(doc(db, CHAPTERS_COL, chapterId));
+  } catch (e) { console.error('firestoreDeleteChapter error:', e); }
+};
 
 // ════════════════════════════════════════════════════════════════
 // BULK SAVE / LOAD
